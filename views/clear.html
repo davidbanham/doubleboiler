@@ -1,0 +1,19 @@
+{{ define "clear_input" }}
+<i class="material-icons" 
+   onclick="
+   const el = document.getElementById('{{.}}');
+   el.value = '';
+   el.closest('form').submit();
+   "
+   >clear</i>
+{{ end }}
+
+{{ define "clear_select" }}
+<i class="material-icons" 
+   onclick="
+   const el = document.getElementById('{{.}}');
+   el.selectedIndex = -1;
+   el.closest('form').submit();
+   "
+   >clear</i>
+{{ end }}

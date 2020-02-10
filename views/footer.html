@@ -1,0 +1,56 @@
+{{ define "footer" }}
+{{if chrome .Context}}
+{{ if loggedIn .Context}}
+<div class="fixed-action-btn noprint">
+  <a href="/help" title="Help!" class="btn-floating btn-large red">
+    <i class="large material-icons">live_help</i>
+  </a>
+</div>
+{{ end }}
+
+<footer class="page-footer">
+  <div class="footer-copyright">
+    <div class="container">
+      Doubleboiler is (made by) <a class="text-lighten-3" href="https://notbad.software">notbad software</a>
+      <br>
+      <a class="text-lighten-3" href="/eula.pdf">Terms and Conditions</a>
+      <br>
+      <a class="text-lighten-3" href="/privacy_collection_statement.pdf">Privacy Collection Statement</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  $(document).ready(function() {
+    $('select:not(.picker select):not(.choices-picker)').material_select();
+    $(".button-collapse").sideNav();
+    $(".dropdown-button").dropdown();
+  });
+</script>
+
+{{ if isLocal }}
+<script type="text/javascript">
+  (function() {
+    const connectWs = function(retrigger) {
+      var conn = new WebSocket("wss://"+location.host+"/change-watcher");
+      conn.onclose = function(evt) {
+        connectWs(true);
+      };
+      conn.onmessage = function(evt) {
+        window.location = window.location;
+      };
+      conn.onopen = function(evt) {
+        if (retrigger) {
+          window.location = window.location;
+        }
+      };
+    };
+    connectWs();
+  })();
+</script>
+{{ end }}
+
+</body>
+</html>
+{{ end }}
+{{ end }}

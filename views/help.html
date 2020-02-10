@@ -1,0 +1,34 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h3 class="header center">Help</h3>
+  </div>
+</div>
+<div class="section">
+  <div class="container">
+    <div class="row">
+      {{ template "orgpicker" . }}
+      <div class="col m6 offset-m3">
+        <p>Need help?</p>
+        <p>Use this form to reach your organisation's nominated admin contact.</p>
+        <p><a href="mailto:{{.Email}}">{{.Email}}</a></p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col m6 offset-m3">
+        <form action="/contact" method="post">
+          <input type="hidden" name="target" value="{{.Email}}"></input>
+          <input type="email" name="email" value="{{.User.Email}}"></input>
+          <label for="phone">Phone Number</label>
+          <input type="tel" name="phone" placeholder="(optional)"></input>
+          <label for="body">What's up?</label>
+          <textarea style="height: 350px" name="body" placeholder="Tell us what's going on, we'll help out."></textarea>
+          <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+          <button class="btn btn-large waves-effect" type="submit">Submit</button>
+        </form>
+        <br>
+      </div>
+    </div>
+  </div>
+</div>
+{{ template "footer" . }}

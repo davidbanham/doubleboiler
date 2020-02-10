@@ -1,0 +1,23 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h3 class="header center">Oh no!</h3>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <p>An error has occurred</p>
+      {{range breakLines .Message}}
+      <p>{{.}}</p>
+      {{end}}
+    </div>
+
+    <div class="row">
+      <button class="btn waves-effect" onclick="window.history.back()">Go Back</button>
+    </div>
+  </div>
+</div>
+
+{{ template "footer" . }}

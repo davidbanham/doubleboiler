@@ -1,0 +1,60 @@
+{{ define "self_replicating_field" }}
+<div id="{{.}}AdderContainer">
+  <div class="input-field {{.}}AdderElem">
+    <input autocomplete="off" type="text" name="{{.}}">
+  </div>
+</div>
+<script>
+  (function() {
+    document.getElementById("{{.}}AdderContainer").oninput = function() {
+      const container = document.getElementById("{{.}}AdderContainer");
+      const elems = document.getElementsByClassName("{{.}}AdderElem")
+      const elem = elems[elems.length-1]
+      if (elem.getElementsByTagName("input")[0].value == "") return;
+      const copy = elem.cloneNode(true)
+      const input = copy.getElementsByTagName("input")[0].value = null
+      container.appendChild(copy)
+    };
+  })()
+</script>
+{{ end }}
+
+{{ define "self_replicating_date_field" }}
+<div id="{{.}}AdderContainer">
+  <div class="input-field {{.}}AdderElem">
+    <input autocomplete="off" type="date" class="datepicker" name="{{.}}"></input>
+  </div>
+</div>
+<script>
+  (function() {
+    document.getElementById("{{.}}AdderContainer").oninput = function() {
+      const container = document.getElementById("{{.}}AdderContainer");
+      const elems = document.getElementsByClassName("{{.}}AdderElem")
+      const elem = elems[elems.length-1]
+      if (elem.getElementsByTagName("input")[0].value == "") return;
+      const copy = elem.cloneNode(true)
+      const input = copy.getElementsByTagName("input")[0].value = null
+      container.appendChild(copy)
+    };
+  })()
+</script>
+{{ end }}
+
+{{ define "replicate_button" }}
+<button type="button" class="btn waves-effect" id="{{.Target}}AdderButton">
+  Add
+</button>
+<script>
+  (function() {
+    document.getElementById("{{.Target}}AdderButton").onclick = function() {
+      const elem = document.getElementById("{{.Target}}")
+      const container = elem.parentNode;
+      const copy = elem.cloneNode(true)
+      container.insertBefore(copy, elem)
+      {{if not (eq .Callback "")}}
+      {{.Callback}}();
+      {{ end }}
+    };
+  })()
+</script>
+{{ end }}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 300 70" x="0px" y="0px">
+  <title>Doubleboiler</title>
+  <polygon points="10 10, 290 10, 290 60, 10 60"
+    stroke="white" fill-opacity="0" fill="yellow" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <text transform="translate(0, 12.5)" text-anchor="middle" x="150" y="35" fill="white" font-size="35" font-weight="bold" font-family="Oswald">
+  DOUBLEBOILER
+  </text>
+</svg>

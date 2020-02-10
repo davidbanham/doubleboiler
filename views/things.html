@@ -1,0 +1,43 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h1 class="header center">Things</h1>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col s12">
+        <ul class="collection">
+          <li class="collection-item avatar active">
+            <a href="/create-thing">
+              <i class="material-icons circle">add_box</i>
+              <span class="title">Add New Thing</span>
+            </a>
+            <span class="secondary-content">
+              <a href="/create-thing">
+                <i class="material-icons">playlist_add</i>
+              </a>
+            </span>
+            </a>
+          </li>
+          {{range .Things}}
+          <li class="collection-item avatar">
+            <a href="/things/{{.ID}}">
+              <i class="material-icons circle">business</i>
+              <span class="title">{{.Name}}</span>
+            </a>
+            <span class="secondary-content">
+              <a href="/things/{{.ID}}">
+                <i class="material-icons">play_circle_filled</i>
+              </a>
+            </span>
+          </li>
+          {{end}}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{{ template "footer" . }}

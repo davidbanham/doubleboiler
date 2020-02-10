@@ -1,0 +1,50 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h3 class="header center">User Settings</h3>
+  </div>
+</div>
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col l12 xl3 sideactions">
+        <div class="row">
+          <a class="btn waves-effect" href="/logout">Log Out</a>
+        </div>
+
+        <div class="row">
+          <form action="/reset-password" method="post">
+            <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+            <input type="hidden" value="{{.TargetUser.Email}}" name="email"></input>
+            <button class="btn waves-effect" type="submit">Reset Password</button>
+          </form>
+        </div>
+
+        {{if isAppAdmin .Context}}
+        <div class="row">
+          <form action="/users/{{.TargetUser.ID}}/impersonate" method="post">
+            <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+            <button class="btn waves-effect" type="submit">Impersonate</button>
+          </form>
+        </div>
+        {{end}}
+      </div>
+      <div class="col l12 xl8">
+        <div class="row">
+          <form action="/users/{{.TargetUser.ID}}" method="post">
+            <div class="col s10">
+              <input type="hidden" name="id" value="{{.TargetUser.ID}}"></input>
+              <input type="hidden" name="revision" value="{{.TargetUser.Revision}}"></input>
+              <input type="email" name="email" value="{{.TargetUser.Email}}"></input>
+              <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+            </div>
+            <div class="col s2">
+              <button class="btn small">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{ template "footer" . }}

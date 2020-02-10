@@ -1,0 +1,266 @@
+.gravatar {
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 4px 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.page-footer a {
+  color: white;
+}
+
+strong {
+  font-weight: 700;
+}
+
+.post-content h4 {
+  padding-top: 2em;
+}
+
+.linkbutton {
+  background:none!important;
+  color:inherit;
+  border:none;
+  padding:0!important;
+  font: inherit;
+  /*border is optional*/
+  border-bottom:1px solid #444;
+  cursor: pointer;
+}
+
+/*Hack to make SVG a link*/
+.svglink {
+  font-size: 80px;
+}
+
+.svglink object {
+  fill: white;
+  stroke: white;
+  height: 60px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.svglink img {
+  height: 60px;
+  padding-top: 3px;
+}
+
+.promo{
+  width:100%
+}
+.promopaid .promo i {
+  color: green;
+}
+.promo i{
+  margin:40px 0;
+  color:#ee6e73;
+  font-size:7rem;
+  display:block;
+}
+.promo-caption{
+  font-size:1.7rem;
+  font-weight:500;
+  margin-top:5px;
+  margin-bottom:0;
+}
+
+.dropdown-content {
+  min-width: 150px;
+}
+
+.sideactions {
+  width: 100%;
+}
+
+.sideactions .btn {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+[class*='cal-'] {
+  float: left;
+}
+
+.bordered-day {
+  font-weight: bolder;
+  border-bottom: 1px solid black;
+}
+
+.beds-diff {
+  color: white;
+  opacity: .9;
+}
+
+.cal-day {
+  width: 14.285%;
+}
+
+.cal-1-day {
+  width: 14.285%;
+}
+
+.cal-2-day {
+  width: 28.571%;
+}
+
+.cal-3-day {
+  width: 42.855%;
+}
+
+.cal-4-day {
+  width: 57.140%;
+}
+
+.cal-5-day {
+  width: 71.425%;
+}
+
+.cal-6-day {
+  width: 85.710%;
+}
+
+.cal-7-day {
+  width: 100%;
+}
+
+.calcol:not(:last-child) {
+  padding-right: 30px !important;
+}
+
+.fixed-action-btn.horizontal ul {
+  text-align: right;
+  right: 80%;
+  transform: translateY(-80%);
+}
+
+body {
+  background-color: #F3F8FF;
+}
+
+input:not([type]), input[type="date"]:not(.browser-default), input[type="datetime-local"]:not(.browser-default), input[type="datetime"]:not(.browser-default), input[type="email"]:not(.browser-default), input[type="number"]:not(.browser-default), input[type="password"]:not(.browser-default), input[type="search"]:not(.browser-default), input[type="tel"]:not(.browser-default), input[type="text"]:not(.browser-default), input[type="time"]:not(.browser-default), input[type="url"]:not(.browser-default), textarea.materialize-textarea {
+  background-color: white;
+  text-indent: 10px;
+}
+
+.input-field label:not(.label-icon).active {
+  transform: translateY(-180%);
+}
+
+.select-wrapper + label {
+  top: -18px;
+}
+
+.input-field label {
+  transform: translateX(10px);
+}
+
+.choices__list {
+  z-index: 2 !important;
+}
+
+.fixed-action-btn.inline-btn {
+  z-index: 1;
+  position: relative;
+}
+
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  z-index: 100;
+  background-color: #F3F8FF;
+  top: 0px;
+}
+
+.wider {
+  width: 110%;
+  transform: translateX(-10px);
+}
+
+.picker select {
+  display: inline;
+  height: 60px;
+}
+
+.namelist {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+  max-height: 30px;
+}
+
+.bookingbuttons .btn {
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+@media print {
+  .noprint, nav, footer {
+    display: none;
+  }
+
+  .row .col.s6 {
+    height: 30px;
+    width: 100%; !important
+  }
+
+  a {
+    text-decoration: none;
+    color: black;
+  }
+
+  .light {
+    float: left;
+  }
+
+  .promo-caption {
+    float: right;
+  }
+}
+
+.compact-table {
+  line-height: .3;
+}
+
+.over {
+  border: 2px dashed #000;
+  border-bottom: 2px dashed #000 !important;
+}
+
+.tap-target {
+  background-color: orange;
+}
+
+.helped {
+  width: -webkit-calc(100% - 28px) !important;
+  width:    -moz-calc(100% - 28px) !important;
+  width:         calc(100% - 28px) !important;
+}
+
+.inline-i {
+  position: relative;
+  margin-left: 30px;
+  top: 18px;
+}
+
+li.divider {
+  height: 5px !important;
+}
+
+.center.promo > img {
+  max-width: 100%;
+  height: 100px;
+}
+
+.fullbordered > td {
+  border-right: 1px solid black;
+}
+
+.aitabs .indicator {
+  visibility: hidden;
+}
+
+.aitabs a {
+  visibility: hidden;
+}

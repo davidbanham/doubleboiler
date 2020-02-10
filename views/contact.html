@@ -1,0 +1,20 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h3 class="header center">Thanks!</h3>
+  </div>
+</div>
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col m6 offset-m3">
+        {{if eq .Text ""}}
+        <p>We'll be in touch soon.</p>
+        {{else}}
+        <p>{{.Text}}</p>
+        {{end}}
+      </div>
+    </div>
+  </div>
+</div>
+{{ template "footer" . }}

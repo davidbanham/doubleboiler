@@ -1,0 +1,31 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h3 class="header center">Organisations</h3>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col s12">
+        <ul class="collection">
+          {{range .Organisations}}
+          <li class="collection-item avatar">
+            <a href="/organisations/{{.ID}}">
+              <i class="material-icons circle">business</i>
+              <span class="title">{{.Name}}</span>
+            </a>
+            <span class="secondary-content">
+              <a href="/organisations/{{.ID}}">
+                <i class="material-icons">play_circle_filled</i>
+              </a>
+            </span>
+          </li>
+          {{end}}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{{ template "footer" . }}

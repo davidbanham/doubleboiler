@@ -1,0 +1,24 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h3 class="header center">Users</h3>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <ul class="collection">
+      {{range .Users}}
+        <li class="collection-item avatar">
+          <img src="https://www.gravatar.com/avatar/{{.Email | hash}}.jpg?s=70" class="circle" alt="{{.Email}} avatar">
+          <a href="/users/{{.ID}}">
+            <span class="title">{{.Email}}</span>
+          </a>
+        </li>
+      {{end}}
+      </ul>
+    </div>
+  </div>
+</div>
+{{ template "footer" . }}

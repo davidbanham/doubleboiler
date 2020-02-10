@@ -1,0 +1,1 @@
+INSERT INTO users (id, revision, email, password, admin, verified) VALUES ('8328ab1a-2d43-420e-982b-d082b609f120', 'seed', 'admin@example.com', '$2a$10$h58tKs281b8hxOBEQb2qeuUkxWRj44jZcIqxnMSS8fxDcw6Bp.HrS', true, true);

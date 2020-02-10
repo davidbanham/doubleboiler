@@ -1,0 +1,21 @@
+{{ template "header" . }}
+
+<div class="section">
+  <div class="container">
+    {{range .Changes}}
+    <div class="row">
+      <h4>{{humanDate .Date}}</h4>
+      <ul>
+      {{range .Items}}
+      <h5>{{.Title}}</h5>
+      {{ range breakLines .Body }}
+      <p>{{.}}</p>
+      {{ end }}
+      {{end}}
+      </ul>
+    </div>
+    {{end}}
+  </div>
+</div>
+
+{{ template "footer" . }}

@@ -1,0 +1,35 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h3 class="header center">Request a Demo</h3>
+  </div>
+</div>
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col m6 offset-m3">
+        <p>Use this form or send us an email.</p>
+        <p><a href="mailto:{{.Email}}">{{.Email}}</a></p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col m6 offset-m3">
+        <form action="contact" method="post">
+          <label for="email">Your Email</label>
+          <input type="email" name="email" value=""></input>
+          <label for="phone">Phone Number</label>
+          <input type="tel" name="phone" placeholder="(optional)"></input>
+          <label for="body">Body</label>
+          <textarea style="height: 350px" name="body">
+Organisation name: 
+Number of employees:
+          </textarea>
+          <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+          <button class="btn btn-large waves-effect" type="submit">Submit</button>
+        </form>
+        <br>
+      </div>
+    </div>
+  </div>
+</div>
+{{ template "footer" . }}

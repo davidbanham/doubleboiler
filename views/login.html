@@ -1,0 +1,37 @@
+{{ template "header" . }}
+<div class="section">
+  <div class="container">
+    <h3 class="header center">Login</h3>
+  </div>
+</div>
+<div class="section">
+  <div class="container">
+    <div class="row">
+      <div class="col s6 offset-s3">
+        <form action="login" method="post">
+          <label for="email">Email</label>
+          <input type="email" name="email" />
+          <label for="password">Password</label>
+          <input type="password" name="password" />
+          <input type="hidden" name="next" value="{{ .Next }}">
+          <button class="btn btn-large waves-effect" type="submit">Submit</button>
+        </form>
+        <br>
+      </div>
+    </div>
+    <div class="row">
+    </div>
+    <div class="row">
+      <div class="col s6 offset-s3">
+        <a href="/reset-password" class="btn wave-effect">Reset password</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.get('clear_session_cache')) {
+    window.sessionStorage.clear();
+  };
+</script>
+{{ template "footer" . }}

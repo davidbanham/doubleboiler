@@ -1,0 +1,24 @@
+{{ define "signup_form" }}
+<form action="/users" method="post">
+  <p>
+  <label for="email">Your Email Address</label>
+  <input type="email" name="email" required></input>
+  <label for="orgname">Organisation Name</label>
+  <input type="text" name="orgname" required></input>
+  <label for="orgname">Country</label>
+  <input type="text" name="orgcountry" required></input>
+  </p>
+
+  <p class="center">
+  <input type="checkbox" name="terms" id="terms" value="agreed" required />
+  <label for="terms">I agree to the Doubleboiler <a href="/eula.pdf">Terms and Conditions</a></label>
+  </p>
+
+  <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+  <input type="hidden" name="next" value="signup-successful"></input>
+  <input type="hidden" name="flow" value="trial"></input>
+  <p class="center">
+  <button class="btn waves-effect" type="submit">Submit</button>
+  </p>
+</form>
+{{ end }}

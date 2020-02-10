@@ -1,0 +1,10 @@
+{{ define "time" }}
+  <span class="{{ isoTime . }}">{{ humanTime . }}</span>
+  <script>
+    var times = document.getElementsByClassName('{{ isoTime . }}');
+
+    for (var i = 0; i < times.length; i++) {
+      times[i].innerText = moment("{{ isoTime . }}").format("MMMM Do YYYY, HH:mm a");
+    }
+  </script>
+{{ end }}
