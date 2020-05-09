@@ -13,3 +13,8 @@ migrate_undo:
 .PHONY: test_migrate
 test_migrate:
 	migrate -url $(TESTING_DB_URI) -path ./migrations up
+
+.PHONY: migration
+migname ?= $(shell bash -c 'read -p "Name: " name; echo $$name')
+migration:
+	migrate -url $(DEV_DB_URI) -path ./migrations create $(migname)
