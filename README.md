@@ -1,4 +1,4 @@
-## Double Boiler
+## DoubleBoiler
 
 ### Quickstart
 Edit the brand field in the Makefile to the name of your app
