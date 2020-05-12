@@ -2,21 +2,18 @@ package config
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/errorreporting"
+	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/storage"
 	"github.com/davidbanham/required_env"
-	_ "github.com/lib/pq"
 )
 
-var Db *sql.DB
+var Db *firestore.Client
 
 var PORT string
 var SECRET string
@@ -52,7 +49,6 @@ var Bucket *storage.BucketHandle
 func init() {
 	required_env.Ensure(map[string]string{
 		"PORT":                   "",
-		"DB_URI":                 "",
 		"HASH_KEY":               "",
 		"BLOCK_KEY":              "",
 		"AWS_ACCESS_KEY_ID":      "",
@@ -77,33 +73,15 @@ func init() {
 	})
 
 	PORT = os.Getenv("PORT")
+	GOOGLE_PROJECT_ID = os.Getenv("GOOGLE_PROJECT_ID")
 
 	var err error
-	dbURI := os.Getenv("DB_URI")
-	if strings.Contains(os.Getenv("DB_URI"), "%s") {
-		dbURI = fmt.Sprintf(os.Getenv("DB_URI"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"))
-	}
-	if err := os.Setenv("DB_URI", dbURI); err != nil {
-		log.Fatal(err)
-	}
-	Db, err = sql.Open("postgres", dbURI)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if os.Getenv("MAX_OPEN_SQL_CONNS") != "" {
-		num, err := strconv.Atoi(os.Getenv("MAX_OPEN_SQL_CONNS"))
-		log.Printf("INFO setting maximum DB connections for the pool to %d", num)
-		if err != nil {
-			log.Printf("ERROR parsing max open conns string: %w", err)
-		}
-		Db.SetMaxOpenConns(num)
-	}
-
 	ctx := context.Background()
 
-	// Sets your Google Cloud Platform project ID.
-	//projectID := os.Getenv("GOOGLE_PROJECT_ID")
+	Db, err = firestore.NewClient(ctx, GOOGLE_PROJECT_ID)
+	if err != nil {
+		log.Fatalf("Failed to create firestore client: %v", err)
+	}
 
 	// Creates a client.
 	client, err := storage.NewClient(ctx)
@@ -147,7 +125,6 @@ func init() {
 
 	KEWPIE_BACKEND = os.Getenv("KEWPIE_BACKEND")
 
-	GOOGLE_PROJECT_ID = os.Getenv("GOOGLE_PROJECT_ID")
 	GOOGLE_PUBSUB_AUDIENCE = os.Getenv("GOOGLE_PUBSUB_AUDIENCE")
 
 	ErrorReporter, err = errorreporting.NewClient(ctx, GOOGLE_PROJECT_ID, errorreporting.Config{

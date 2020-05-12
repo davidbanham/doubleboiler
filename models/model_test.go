@@ -2,9 +2,6 @@ package models
 
 import (
 	"context"
-	"database/sql"
-	"doubleboiler/config"
-	"fmt"
 	"testing"
 
 	bandname "github.com/davidbanham/bandname_go"
@@ -16,25 +13,11 @@ func randString() string {
 }
 
 func getCtx(t *testing.T) context.Context {
-	ctx := context.Background()
-	tx, err := config.Db.BeginTx(ctx, nil)
-	assert.Nil(t, err)
-	return context.WithValue(ctx, "tx", tx)
+	return context.Background()
 }
 
 func closeTx(t *testing.T, ctx context.Context) {
-	db := ctx.Value("tx")
-	switch v := db.(type) {
-	case *sql.Tx:
-		t.Log("Rolling back")
-		v.Rollback()
-	case Querier:
-		t.Log("No tx")
-		return
-	default:
-		t.Log(fmt.Errorf("Unknown db type"))
-		t.FailNow()
-	}
+	return
 }
 
 var modelsUnderTest [][]model
@@ -98,7 +81,7 @@ func TestFindByColumn(t *testing.T) {
 	for _, c := range models {
 		m := c[len(c)-1]
 		found := m.blank()
-		err := found.FindByColumn(ctx, "id", m.id())
+		err := found.FindByColumn(ctx, "ID", m.id())
 		assert.Nil(t, err)
 		found.nullDynamicValues()
 		m.nullDynamicValues()

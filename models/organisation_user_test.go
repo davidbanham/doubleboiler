@@ -1,11 +1,5 @@
 package models
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
 func init() {
 	modelsUnderTest = append(modelsUnderTest, organisationUserFix())
 	modelCollectionsUnderTest = append(modelCollectionsUnderTest, organisationUsersFix())
@@ -29,7 +23,6 @@ func (c OrganisationUser) id() string {
 }
 
 func (i *OrganisationUser) nullDynamicValues() {
-	i.Email = ""
 }
 
 func organisationUserFix() []model {
@@ -77,41 +70,4 @@ func (c *OrganisationUsers) Iter() <-chan model {
 		close(ch)
 	}()
 	return ch
-}
-
-func TestOrganisationUserRevisionCollision(t *testing.T) {
-	t.Parallel()
-	ctx := getCtx(t)
-
-	user := userFixture()
-	user.Save(ctx)
-	org := organisationFixture()
-	org.Save(ctx)
-
-	fix := organisationUserFixture(user.ID, org.ID)
-	assert.Nil(t, fix.Save(ctx))
-	fix.Revision = "yeahnah"
-	assert.Error(t, fix.Save(ctx))
-
-	closeTx(t, ctx)
-}
-
-func TestOrganisationUserRevisionChange(t *testing.T) {
-	t.Parallel()
-	ctx := getCtx(t)
-
-	user := userFixture()
-	user.Save(ctx)
-	org := organisationFixture()
-	org.Save(ctx)
-
-	fix := organisationUserFixture(user.ID, org.ID)
-	defaultRev := fix.Revision
-	assert.Nil(t, fix.Save(ctx))
-	assert.Equal(t, defaultRev, fix.Revision)
-	firstRev := fix.Revision
-	assert.Nil(t, fix.Save(ctx))
-	assert.NotEqual(t, firstRev, fix.Revision)
-
-	closeTx(t, ctx)
 }

@@ -1,11 +1,5 @@
 package models
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
 func init() {
 	modelsUnderTest = append(modelsUnderTest, thingFix())
 	modelCollectionsUnderTest = append(modelCollectionsUnderTest, thingsFix())
@@ -64,37 +58,4 @@ func (c *Things) Iter() <-chan model {
 		close(ch)
 	}()
 	return ch
-}
-
-func TestThingRevisionCollision(t *testing.T) {
-	t.Parallel()
-	ctx := getCtx(t)
-
-	org := organisationFixture()
-	org.Save(ctx)
-
-	fix := thingFixture(org.ID)
-	assert.Nil(t, fix.Save(ctx))
-	fix.Revision = "yeahnah"
-	assert.Error(t, fix.Save(ctx))
-
-	closeTx(t, ctx)
-}
-
-func TestThingRevisionChange(t *testing.T) {
-	t.Parallel()
-	ctx := getCtx(t)
-
-	org := organisationFixture()
-	org.Save(ctx)
-
-	fix := thingFixture(org.ID)
-	defaultRev := fix.Revision
-	assert.Nil(t, fix.Save(ctx))
-	assert.Equal(t, defaultRev, fix.Revision)
-	firstRev := fix.Revision
-	assert.Nil(t, fix.Save(ctx))
-	assert.NotEqual(t, firstRev, fix.Revision)
-
-	closeTx(t, ctx)
 }

@@ -2,19 +2,27 @@ package models
 
 import (
 	"context"
-	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
 	"doubleboiler/util"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 
+	"cloud.google.com/go/firestore"
 	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/davidbanham/notifications"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/api/iterator"
 )
+
+var usersTable *firestore.CollectionRef
+
+func init() {
+	usersTable = getTable("users")
+}
 
 type User struct {
 	ID                    string
@@ -23,7 +31,6 @@ type User struct {
 	Admin                 bool
 	Verified              bool
 	VerificationEmailSent bool
-	Revision              string
 }
 
 func (u *User) New(email, rawpassword string) {
@@ -32,39 +39,40 @@ func (u *User) New(email, rawpassword string) {
 	u.Email = strings.ToLower(email)
 	u.Password = string(hash)
 	u.Verified = false
-	u.Revision = uuid.NewV4().String()
 }
 
-func (u *User) Save(ctx context.Context) error {
-	db := ctx.Value("tx").(Querier)
+func (user *User) Save(ctx context.Context) error {
+	doc := usersTable.Doc(user.ID)
+	_, err := doc.Set(ctx, user)
+	return err
+}
 
-	row := db.QueryRowContext(ctx, "INSERT INTO users (id, revision, email, password, verified, verification_email_sent) VALUES ($1, $2, $4, $5, $6, $7) ON CONFLICT (revision) DO UPDATE SET (revision, email, password, verified, verification_email_sent) = ($3, $4, $5, $6, $7) RETURNING revision", u.ID, u.Revision, uuid.NewV4().String(), strings.ToLower(u.Email), u.Password, u.Verified, u.VerificationEmailSent)
-	err := row.Scan(&u.Revision)
+func (user *User) FindByID(ctx context.Context, id string) error {
+	docsnap, err := usersTable.Doc(id).Get(ctx)
 	if err != nil {
 		return err
 	}
-
-	task := kewpie.Task{}
-	err = task.Marshal(u)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return docsnap.DataTo(&user)
 }
 
-func (u *User) FindByID(ctx context.Context, id string) error {
-	return u.FindByColumn(ctx, "id", id)
-}
+func (user *User) FindByColumn(ctx context.Context, col, val string) error {
+	q := usersTable.Where(col, "==", val)
 
-func (u *User) FindByColumn(ctx context.Context, col, val string) error {
-	db := ctx.Value("tx").(Querier)
-
-	err := db.QueryRowContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE "+col+" = $1", val).Scan(&u.ID, &u.Revision, &u.Email, &u.Password, &u.Admin, &u.Verified, &u.VerificationEmailSent)
-	if err != nil {
-		return err
+	iter := q.Documents(ctx)
+	defer iter.Stop()
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		if err := doc.DataTo(&user); err != nil {
+			return err
+		}
+		return nil
 	}
-
 	return nil
 }
 
@@ -107,12 +115,8 @@ func (u *User) SendVerificationEmail(ctx context.Context, org Organisation) erro
 		return err
 	}
 
-	db := ctx.Value("tx").(Querier)
-	_, err := db.ExecContext(ctx, "UPDATE users SET verification_email_sent = true WHERE id = $1", u.ID)
-	if err == nil {
-		u.VerificationEmailSent = true
-	}
-	return err
+	u.VerificationEmailSent = true
+	return u.Save(ctx)
 }
 
 func (u User) HasEmail() bool {
@@ -126,35 +130,30 @@ func (u User) HasEmail() bool {
 type Users []User
 
 func (users *Users) FindAll(ctx context.Context, q Query, qa ...string) error {
-	db := ctx.Value("tx").(Querier)
-
-	var rows *sql.Rows
-	var err error
+	var iter *firestore.DocumentIterator
 
 	switch q {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users")
-	case ByOrg:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE id IN (SELECT user_id FROM members WHERE organisation_id = $1)", qa[0])
+		iter = usersTable.Documents(ctx)
 	}
 
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		u := User{}
-
-		err = rows.Scan(&u.ID, &u.Revision, &u.Email, &u.Password, &u.Admin, &u.Verified, &u.VerificationEmailSent)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
 		if err != nil {
+			log.Fatalf("Failed to iterate: %v", err)
+		}
+		user := User{}
+		if err := doc.DataTo(&user); err != nil {
 			return err
 		}
-		(*users) = append((*users), u)
+		(*users) = append((*users), user)
 	}
-	return err
+	return nil
 }
 
 func HashPassword(rawpassword string) (string, error) {

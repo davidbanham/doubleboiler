@@ -2,38 +2,29 @@ package models
 
 import (
 	"context"
-	"database/sql"
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"fmt"
+	"log"
 
+	"cloud.google.com/go/firestore"
 	uuid "github.com/satori/go.uuid"
+	"google.golang.org/api/iterator"
 )
+
+var organisationUsersTable *firestore.CollectionRef
+
+func init() {
+	organisationUsersTable = getTable("organisations_users")
+}
 
 type OrganisationUser struct {
 	ID             string
 	UserID         string
 	OrganisationID string
-	Email          string
 	Revision       string
 	Roles          Roles
 }
 
 type Roles map[string]bool
-
-func (r Roles) Value() (driver.Value, error) {
-	return json.Marshal(r)
-}
-
-func (r *Roles) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
-	}
-
-	return json.Unmarshal(b, &r)
-}
 
 func (c *OrganisationUser) New(userID, organisationID string, roles Roles) {
 	c.ID = uuid.NewV4().String()
@@ -43,94 +34,75 @@ func (c *OrganisationUser) New(userID, organisationID string, roles Roles) {
 	c.Roles = roles
 }
 
-func (c *OrganisationUser) Save(ctx context.Context) error {
-	db := ctx.Value("tx").(Querier)
-
-	row := db.QueryRowContext(ctx, "INSERT INTO organisations_users (id, revision, user_id, organisation_id, roles) VALUES ($1, $2, $4, $5, $6) ON CONFLICT (revision) DO UPDATE SET (revision, user_id, organisation_id, roles) = ($3, $4, $5, $6) RETURNING revision", c.ID, c.Revision, uuid.NewV4().String(), c.UserID, c.OrganisationID, c.Roles)
-	return row.Scan(&c.Revision)
-}
-
-func (c *OrganisationUser) FindByID(ctx context.Context, id string) error {
-	return c.FindByColumn(ctx, "id", id)
-}
-
-func (c *OrganisationUser) FindByColumn(ctx context.Context, col, val string) error {
-	db := ctx.Value("tx").(Querier)
-
-	err := db.QueryRowContext(ctx, `SELECT
-	organisations_users.id,
-	organisations_users.revision,
-	organisations_users.user_id,
-	organisations_users.organisation_id,
-	organisations_users.roles,
-	users.email
-	FROM organisations_users
-	INNER JOIN users
-	ON organisations_users.user_id = users.id
-	WHERE organisations_users.id = $1`, val).Scan(&c.ID, &c.Revision, &c.UserID, &c.OrganisationID, &c.Roles, &c.Email)
+func (organisationUser *OrganisationUser) Save(ctx context.Context) error {
+	doc := organisationUsersTable.Doc(organisationUser.ID)
+	_, err := doc.Set(ctx, organisationUser)
 	return err
 }
 
-func (c OrganisationUser) Delete(ctx context.Context) error {
-	db := ctx.Value("tx").(Querier)
+func (organisationUser *OrganisationUser) FindByID(ctx context.Context, id string) error {
+	docsnap, err := organisationUsersTable.Doc(id).Get(ctx)
+	if err != nil {
+		return err
+	}
+	return docsnap.DataTo(&organisationUser)
+}
 
-	_, err := db.ExecContext(ctx, "DELETE FROM organisations_users WHERE id = $1 AND revision = $2", c.ID, c.Revision)
+func (organisationUser *OrganisationUser) FindByColumn(ctx context.Context, col, val string) error {
+	q := organisationUsersTable.Where(col, "==", val)
+
+	iter := q.Documents(ctx)
+	defer iter.Stop()
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		if err := doc.DataTo(&organisationUser); err != nil {
+			return err
+		}
+		return nil
+	}
+	return nil
+}
+
+func (organisationUser OrganisationUser) Delete(ctx context.Context) error {
+	_, err := organisationUsersTable.Doc(organisationUser.ID).Delete(ctx)
 	return err
 }
 
 type OrganisationUsers []OrganisationUser
 
-func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query, qa ...string) error {
-
-	db := ctx.Value("tx").(Querier)
-
-	var rows *sql.Rows
-	var err error
+func (organisationUsers *OrganisationUsers) FindAll(ctx context.Context, q Query, qa ...string) error {
+	var iter *firestore.DocumentIterator
 
 	switch q {
 	default:
 		return fmt.Errorf("Unknown query")
-	case All:
-		rows, err = db.QueryContext(ctx, `SELECT
-	organisations_users.id,
-	organisations_users.revision,
-	organisations_users.user_id,
-	organisations_users.organisation_id,
-	organisations_users.roles,
-	users.email
-	FROM organisations_users
-	INNER JOIN users
-	ON organisations_users.user_id = users.id`)
-		defer rows.Close()
-		if err != nil {
-			return err
-		}
+	case ByOrg:
+		iter = organisationUsersTable.Where("organisation_id", "==", qa[0]).Documents(ctx)
 	case ByUser:
-		rows, err = db.QueryContext(ctx, `SELECT
-	organisations_users.id,
-	organisations_users.revision,
-	organisations_users.user_id,
-	organisations_users.organisation_id,
-	organisations_users.roles,
-	users.email
-	FROM organisations_users
-	INNER JOIN users
-	ON organisations_users.user_id = users.id
-	WHERE users.id = $1`, qa[0])
-		defer rows.Close()
+		iter = organisationUsersTable.Where("user_id", "==", qa[0]).Documents(ctx)
+	case All:
+		iter = organisationUsersTable.Documents(ctx)
+	}
+
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
 		if err != nil {
+			log.Fatalf("Failed to iterate: %v", err)
+		}
+		organisationUser := OrganisationUser{}
+		if err := doc.DataTo(&organisationUser); err != nil {
 			return err
 		}
+		(*organisationUsers) = append((*organisationUsers), organisationUser)
 	}
-
-	for rows.Next() {
-		ou := OrganisationUser{}
-		if err := rows.Scan(&ou.ID, &ou.Revision, &ou.UserID, &ou.OrganisationID, &ou.Roles, &ou.Email); err != nil {
-			return err
-		}
-
-		(*organisationusers) = append((*organisationusers), ou)
-	}
-
 	return nil
 }

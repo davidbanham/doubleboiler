@@ -3,8 +3,9 @@ module doubleboiler
 go 1.13
 
 require (
-	cloud.google.com/go v0.52.0
-	cloud.google.com/go/storage v1.5.0
+	cloud.google.com/go v0.55.0
+	cloud.google.com/go/firestore v1.2.0
+	cloud.google.com/go/storage v1.6.0
 	github.com/davidbanham/bandname_go v0.0.0-20180317100912-bb6893a85259
 	github.com/davidbanham/certcache v0.0.0-20180228104134-93d5ff2ba3a1
 	github.com/davidbanham/english_conjoin v0.0.0-20190322044305-fef4c88385d1
@@ -25,5 +26,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/stripe/stripe-go v68.18.0+incompatible // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	google.golang.org/api v0.20.0
 	gopkg.in/fsnotify.v1 v1.4.7
 )
