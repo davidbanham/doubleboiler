@@ -60,7 +60,7 @@ func (thing *Thing) FindByColumn(ctx context.Context, col, val string) error {
 		}
 		return nil
 	}
-	return nil
+	return ErrNotFound
 }
 
 type Things []Thing

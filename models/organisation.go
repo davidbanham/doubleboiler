@@ -57,7 +57,7 @@ func (organisation *Organisation) FindByColumn(ctx context.Context, col, val str
 		}
 		return nil
 	}
-	return nil
+	return ErrNotFound
 }
 
 func (organisation *Organisation) FindByID(ctx context.Context, id string) error {

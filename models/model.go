@@ -37,6 +37,7 @@ const (
 
 var ErrRelationships = fmt.Errorf("This entity has active relationships")
 var ErrOrgLive = fmt.Errorf("This action is not permitted once an organisation is live")
+var ErrNotFound = fmt.Errorf("Not found")
 
 func Parallelize(functions ...func() error) (errors []error) {
 	var waitGroup sync.WaitGroup

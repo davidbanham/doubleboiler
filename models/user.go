@@ -73,7 +73,7 @@ func (user *User) FindByColumn(ctx context.Context, col, val string) error {
 		}
 		return nil
 	}
-	return nil
+	return ErrNotFound
 }
 
 func (u *User) SendVerificationEmail(ctx context.Context, org Organisation) error {
