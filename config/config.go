@@ -68,7 +68,7 @@ func init() {
 		"MAINTENANCE_MODE":       "false",
 		"KEWPIE_BACKEND":         "",
 		"GOOGLE_PROJECT_ID":      "",
-		"SAMPLEORG_ID":           "3f815ebd-2eb7-4dae-be2d-460c726438e2",
+		"SAMPLEORG_ID":           "none",
 		"GOOGLE_PUBSUB_AUDIENCE": "",
 	})
 

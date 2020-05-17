@@ -44,7 +44,7 @@ func TestUserCreateOrUpdateHandler(t *testing.T) {
 	// Check that test data is created
 
 	org := models.Organisation{}
-	assert.Nil(t, org.FindByColumn(ctx, "name", form.Get("orgname")))
+	assert.Nil(t, org.FindByColumn(ctx, "Name", form.Get("orgname")))
 
 	closeTx(t, ctx)
 }

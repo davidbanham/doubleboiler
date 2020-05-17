@@ -28,7 +28,7 @@ func passwordResetHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	u := m.User{}
-	err := u.FindByColumn(r.Context(), "email", strings.ToLower(r.FormValue("email")))
+	err := u.FindByColumn(r.Context(), "Email", strings.ToLower(r.FormValue("email")))
 	if err != nil {
 		errRes(w, r, 500, "Error looking up user", err)
 		return

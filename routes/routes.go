@@ -33,7 +33,6 @@ func Init() (h http.Handler) {
 	h = pathMiddleware(h)
 	h = loginMiddleware(h)
 	h = userMiddleware(h)
-	h = txMiddleware(h)
 	h = authFreeMiddleware(h)
 	h = recoverWrap(h)
 	h = handlers.LoggingHandler(os.Stdout, h)

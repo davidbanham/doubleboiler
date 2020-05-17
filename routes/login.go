@@ -70,12 +70,16 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	inputEmail := strings.ToLower(r.FormValue("email"))
 	u := m.User{}
-	err := u.FindByColumn(r.Context(), "email", inputEmail)
+	err := u.FindByColumn(r.Context(), "Email", inputEmail)
 	if err != nil {
 		log.Println("ERROR finding user for login", err)
 		errRes(w, r, 401, "Email not found", err)
 		return
 	}
+
+	log.Printf("DEBUG u: %+v \n", u)
+	log.Printf("DEBUG u.Password: %+v \n", u.Password)
+	log.Printf("DEBUG r.Form[password][0]: %+v \n", r.Form["password"][0])
 
 	passwordFailed := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(r.Form["password"][0]))
 	if passwordFailed != nil {

@@ -22,10 +22,8 @@
         <form action="/organisations/{{.Organisation.ID}}" method="post">
           <div id="organisationsettings">
             <input type="hidden" name="id" value="{{.Organisation.ID}}"></input>
-            <input type="hidden" name="revision" value="{{.Organisation.Revision}}"></input>
-            {{range .Organisation.Users}}
+            {{range .OrganisationUsers}}
             <input type="hidden" name="users.id" value="{{.ID}}"></input>
-            <input type="hidden" name="users.revision" value="{{.Revision}}"></input>
             <input type="hidden" name="users.userid" value="{{.UserID}}"></input>
             <input type="hidden" name="users.organisationid" value="{{.OrganisationID}}"></input>
             {{end}}
@@ -55,10 +53,10 @@
             </form>
             <ul class="collection">
               {{$csrf := csrf .Context}}
-              {{range .Organisation.Users}}
+              {{range .OrganisationUsers}}
               <li class="collection-item avatar">
-                <img src="https://www.gravatar.com/avatar/{{.Email | hash}}.jpg?s=70" class="circle" alt="{{.Email}} avatar">
-                <span class="title">{{.Email}}</span>
+                <img src="https://www.gravatar.com/avatar/{{.Email $.Context | hash}}.jpg?s=70" class="circle" alt="{{.Email $.Context}} avatar">
+                <span class="title">{{.Email $.Context}}</span>
                 <form action="/organisations/remove-user/{{.ID}}" method="post">
                   <input type="hidden" name="csrf" value="{{$csrf}}"></input>
                   <button class="btn waves-effect" type="submit">Remove</button>

@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
 	"doubleboiler/models"
@@ -60,9 +59,9 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	email := strings.ToLower(r.FormValue("email"))
 	user := m.User{}
-	err := user.FindByColumn(r.Context(), "email", strings.ToLower(email))
+	err := user.FindByColumn(r.Context(), "Email", strings.ToLower(email))
 	if err != nil {
-		if err != sql.ErrNoRows {
+		if err != models.ErrNotFound {
 			errRes(w, r, 500, "Error looking up user", err)
 			return
 		}
@@ -81,7 +80,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 	} else if err == nil {
 		err = sendOrgAdditionEmail(user, org)
 		if err != nil {
-			errRes(w, r, 500, "Error notifying user about new org", err)
+			errRes(w, r, 500, "Error notifying user about new org"+user.Email, err)
 			return
 		}
 	}

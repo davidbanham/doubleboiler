@@ -107,7 +107,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		u.FindByColumn(r.Context(), "email", r.FormValue("email"))
+		u.FindByColumn(r.Context(), "Email", r.FormValue("email"))
 		// Ignore errors since we might be just trying to create this user
 	}
 
@@ -334,8 +334,8 @@ func createOrgFromSignup(ctx context.Context, u m.User, orgname, orgcountry, org
 	org.New(
 		orgname,
 		orgcountry,
-		[]m.OrganisationUser{
-			orgUser,
+		[]string{
+			u.ID,
 		},
 		orgcurrency,
 	)

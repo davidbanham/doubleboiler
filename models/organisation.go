@@ -20,7 +20,8 @@ type Organisation struct {
 	ID      string
 	Name    string
 	Country string
-	Users   []string
+	// FIXME Should these be subdocuments?
+	Users []string
 }
 
 func (o *Organisation) New(name, country string, users []string, currency string) {
@@ -83,7 +84,7 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query, qa ...
 	default:
 		return fmt.Errorf("Unknown query")
 	case OrganisationsContainingUser:
-		iter = organisationsTable.Where("users", "array-contains", qa[0]).Documents(ctx)
+		iter = organisationsTable.Where("Users", "array-contains", qa[0]).Documents(ctx)
 	case All:
 		iter = organisationsTable.Documents(ctx)
 	}

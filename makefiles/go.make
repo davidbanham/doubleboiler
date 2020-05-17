@@ -20,7 +20,7 @@ check: test vet lint
 
 .PHONY: reset_test_db
 reset_test_db:
-	migrate -url "$(TESTING_DB_URI)" -path ./migrations reset
+	#migrate -url "$(TESTING_DB_URI)" -path ./migrations reset
 
 .PHONY: test
 test: export TEST_MOCKS_ON := true

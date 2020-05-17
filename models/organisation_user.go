@@ -74,6 +74,15 @@ func (organisationUser OrganisationUser) Delete(ctx context.Context) error {
 	return err
 }
 
+func (organisationUser OrganisationUser) Email(ctx context.Context) (string, error) {
+	// FIXME This is hilariously unperformant with the way it's used
+	user := User{}
+	if err := user.FindByID(ctx, organisationUser.UserID); err != nil {
+		return "", err
+	}
+	return user.Email, nil
+}
+
 type OrganisationUsers []OrganisationUser
 
 func (organisationUsers *OrganisationUsers) FindAll(ctx context.Context, q Query, qa ...string) error {
@@ -83,9 +92,9 @@ func (organisationUsers *OrganisationUsers) FindAll(ctx context.Context, q Query
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByOrg:
-		iter = organisationUsersTable.Where("organisation_id", "==", qa[0]).Documents(ctx)
+		iter = organisationUsersTable.Where("OrganisationID", "==", qa[0]).Documents(ctx)
 	case ByUser:
-		iter = organisationUsersTable.Where("user_id", "==", qa[0]).Documents(ctx)
+		iter = organisationUsersTable.Where("UserID", "==", qa[0]).Documents(ctx)
 	case All:
 		iter = organisationUsersTable.Documents(ctx)
 	}

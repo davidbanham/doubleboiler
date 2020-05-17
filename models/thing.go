@@ -72,7 +72,7 @@ func (things *Things) FindAll(ctx context.Context, q Query, qa ...string) error 
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByOrg:
-		iter = thingsTable.Where("organisation_id", "==", qa[0]).Documents(ctx)
+		iter = thingsTable.Where("OrganisationID", "==", qa[0]).Documents(ctx)
 	case All:
 		iter = thingsTable.Documents(ctx)
 	}

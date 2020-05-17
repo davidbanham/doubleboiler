@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/models"
 	m "doubleboiler/models"
@@ -87,7 +86,7 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		org.New(
 			r.FormValue("name"),
 			r.FormValue("country"),
-			[]m.OrganisationUser{},
+			[]string{},
 			r.FormValue("currency"),
 		)
 
@@ -96,10 +95,10 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := copySampleOrgData(r.Context(), org); err != nil {
-			errRes(w, r, 500, "Error creating sample data", err)
-			return
-		}
+		//if err := copySampleOrgData(r.Context(), org); err != nil {
+		//	errRes(w, r, 500, "Error creating sample data", err)
+		//	return
+		//}
 
 		ou := m.OrganisationUser{}
 		ou.New(user.ID, org.ID, models.Roles{"admin": true})
@@ -142,11 +141,12 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type organisationPageData struct {
-	Context      context.Context
-	Organisation m.Organisation
-	ActiveOrg    m.Organisation
-	URI          string
-	ProductName  string
+	Context           context.Context
+	Organisation      m.Organisation
+	OrganisationUsers m.OrganisationUsers
+	ActiveOrg         m.Organisation
+	URI               string
+	ProductName       string
 }
 
 func organisationHandler(w http.ResponseWriter, r *http.Request) {
@@ -156,19 +156,27 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !can(r.Context(), targetOrg, "admin") {
 		errRes(w, r, http.StatusForbidden, "Only admins may view organisation settings", nil)
+		return
 	}
 
 	if err := targetOrg.FindByID(r.Context(), vars["id"]); err != nil {
-		errRes(w, r, http.StatusNotFound, "Organisation not found", nil)
+		errRes(w, r, http.StatusNotFound, "Organisation not found", err)
+		return
+	}
+
+	orgUsers := models.OrganisationUsers{}
+	if err := orgUsers.FindAll(r.Context(), models.ByOrg, targetOrg.ID); err != nil {
+		errRes(w, r, http.StatusInternalServerError, "Organisation users not found", err)
 		return
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "organisation.html", organisationPageData{
-		Organisation: targetOrg,
-		ActiveOrg:    targetOrg,
-		ProductName:  config.NAME,
-		Context:      r.Context(),
-		URI:          config.URI,
+		Organisation:      targetOrg,
+		OrganisationUsers: orgUsers,
+		ActiveOrg:         targetOrg,
+		ProductName:       config.NAME,
+		Context:           r.Context(),
+		URI:               config.URI,
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
@@ -176,9 +184,12 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func copySampleOrgData(ctx context.Context, target models.Organisation) error {
+	if config.SAMPLEORG_ID == "none" {
+		return nil
+	}
 	sampleOrg := models.Organisation{}
 	if err := sampleOrg.FindByID(ctx, config.SAMPLEORG_ID); err != nil {
-		if err == sql.ErrNoRows {
+		if err == models.ErrNotFound {
 			return nil
 		}
 		return err

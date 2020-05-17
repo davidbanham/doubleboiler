@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
 	"doubleboiler/models"
@@ -388,16 +387,6 @@ func errRes(w http.ResponseWriter, r *http.Request, code int, message string, er
 		}
 	}
 
-	tx := r.Context().Value("tx")
-	switch v := tx.(type) {
-	case *sql.Tx:
-		rollbackErr := v.Rollback()
-		if rollbackErr != nil {
-			log.Printf("ERROR Error rolling back tx: %+v", rollbackErr)
-		}
-	default:
-		//fmt.Printf("DEBUG no transaction on error\n")
-	}
 	sendErr()
 }
 

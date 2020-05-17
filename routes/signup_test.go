@@ -40,7 +40,7 @@ func TestSignupFlow(t *testing.T) {
 	assert.Equal(t, 302, rr.Code)
 
 	u := m.User{}
-	u.FindByColumn(ctx, "email", email)
+	u.FindByColumn(ctx, "Email", email)
 	assert.False(t, u.Verified)
 
 	orgs := m.Organisations{}
@@ -84,7 +84,7 @@ func TestSignupFlowDuplicateEmail(t *testing.T) {
 
 	assert.Equal(t, http.StatusFound, rr.Code)
 	org := models.Organisation{}
-	assert.Nil(t, org.FindByColumn(ctx, "name", form.Get("orgname")))
+	assert.Nil(t, org.FindByColumn(ctx, "Name", form.Get("orgname")))
 
 	closeTx(t, ctx)
 }

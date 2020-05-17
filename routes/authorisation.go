@@ -78,6 +78,14 @@ func authFreeMiddleware(h http.Handler) http.Handler {
 }
 
 func can(ctx context.Context, target models.Organisation, role string) bool {
+	unconvUser := ctx.Value("user")
+	if unconvUser != nil {
+		user := unconvUser.(models.User)
+		if user.Admin {
+			return true
+		}
+	}
+
 	unconv := ctx.Value("organisation_users")
 	if unconv == nil {
 		return false

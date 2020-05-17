@@ -15,7 +15,6 @@
       <form action="/users?next=welcome" method="post">
         <div class="col s6 offset-s3">
           <input type="hidden" name="id" value="{{.User.ID}}"></input>
-          <input type="hidden" name="revision" value="{{.User.Revision}}"></input>
           <input type="hidden" name="token" value="{{.Token}}"></input>
           <input type="hidden" name="expiry" value="{{.Expiry}}"></input>
           <input type="hidden" name="email" value="{{.User.Email}}"></input>

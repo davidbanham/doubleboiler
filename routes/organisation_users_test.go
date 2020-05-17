@@ -21,7 +21,7 @@ func TestOrganisationUserCreateHandler(t *testing.T) {
 	org.New(
 		bandname(),
 		"Australia",
-		[]m.OrganisationUser{},
+		[]string{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
@@ -56,7 +56,7 @@ func organisationUserFixture(ctx context.Context, t *testing.T) (i m.Organisatio
 	org.New(
 		bandname(),
 		"Australia",
-		[]m.OrganisationUser{},
+		[]string{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
@@ -145,7 +145,7 @@ func TestOrganisationUserCreateHandlerAddExistingUser(t *testing.T) {
 	assert.Nil(t, user.Save(ctx))
 
 	org := m.Organisation{}
-	org.New(bandname(), "Australia", []m.OrganisationUser{}, "aud")
+	org.New(bandname(), "Australia", []string{}, "aud")
 	assert.Nil(t, org.Save(ctx))
 
 	form := url.Values{
@@ -201,7 +201,7 @@ func TestOrganisationUserCreateHandlerAddNewUserByEmail(t *testing.T) {
 	org.New(
 		bandname(),
 		"Australia",
-		[]m.OrganisationUser{},
+		[]string{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
@@ -253,7 +253,7 @@ func TestOrganisationUserCreateHandlerAddNewUserByEmail(t *testing.T) {
 	assert.Contains(t, r2.Body.String(), email, "User email not found")
 
 	createdUser := m.User{}
-	err = createdUser.FindByColumn(ctx, "email", email)
+	err = createdUser.FindByColumn(ctx, "Email", email)
 	assert.Nil(t, err)
 
 	assert.False(t, createdUser.Verified)

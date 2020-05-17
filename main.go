@@ -103,13 +103,8 @@ var healthHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err := config.Db.Ping()
-	if err != nil {
-		fmt.Printf("ERROR db connection error: %+v \n", err)
-		w.WriteHeader(500)
-		w.Write([]byte("db connection error"))
-		return
-	}
+	// TODO DB health check
+
 	w.Write([]byte("ok"))
 })
 
