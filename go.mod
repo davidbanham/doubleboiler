@@ -14,9 +14,9 @@ require (
 	github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0 // indirect
-	github.com/fsnotify/fsnotify v1.4.7 // indirect
+	github.com/golang-migrate/migrate/v4 v4.11.0
 	github.com/gorilla/handlers v1.4.2
-	github.com/gorilla/mux v1.7.3
+	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/websocket v1.4.1
 	github.com/lib/pq v1.3.0
