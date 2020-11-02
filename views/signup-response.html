@@ -1,18 +1,5 @@
 {{ template "header" . }}
-<div class="section">
-  <div class="container">
-    <h3 class="header center">Thanks for signing up!</h3>
-  </div>
-</div>
-<div class="section">
-  <div class="container">
-    <div class="row">
-      <div class="col s6 offset-s3">
-        <p>
-        We just need to verify your email address. Check your inbox for an email from us, click on the verification link, and you'll be ready to go!
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
+
+{{ template "success" dict "Header" "Thanks for signing up!" "Text" "We just need to verify your email address. Check your inbox for an email from us, click on the verification link, and you'll be ready to go!" }}
+
 {{ template "footer" . }}

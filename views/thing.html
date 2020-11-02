@@ -1,31 +1,28 @@
 {{ template "header" . }}
-<div class="section">
-  <div class="container">
-    <h3 class="header center">{{.Thing.Name}}</h3>
-  </div>
-</div>
 
-<div class="section">
-  <div class="container">
-    <div class="row">
-      <div class="col s12 m10">
-        <form action="/things/{{.Thing.ID}}" method="post">
+{{ template "breadcrumbs" dict "Crumbs" (crumbs "Things" "/things" .Thing.Name "#") }}
 
-          <div class="input-field col s12">
-            <label for="name">Name</label>
-            <input type="text" value="{{.Thing.Name}}" name="name"></input>
-          </div>
-
+<div class="relative bg-white">
+  <div class="relative max-w-7xl mx-auto lg:grid lg:grid-cols-5">
+    <div class="bg-white py-16 px-4 sm:px-6 lg:col-span-3 lg:py-24 lg:px-8 xl:pl-12">
+      <div class="max-w-lg mx-auto lg:max-w-none">
+        <form action="/things/{{.Thing.ID}}" method="post" class="grid grid-cols-1 gap-y-6">
           <input type="hidden" name="id" value="{{.Thing.ID}}"></input>
           <input type="hidden" name="revision" value="{{.Thing.Revision}}"></input>
           <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
-          <input type="hidden" name="organisationID" value="{{.Thing.OrganisationID}}"></input>
-          <div class="input-field col s12">
-            <button class="btn waves-effect" type="submit">Submit</button>
+          <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
+          <div class="col-span-6">
+            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+            <input value="{{.Thing.Name}}" id="name" name="name" type="text" autocomplete="name" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Name">
           </div>
-        </form>
+          <div>
+            <button type="submit" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Submit
+            </button>
+          </div>
       </div>
     </div>
   </div>
 </div>
+
 {{ template "footer" . }}

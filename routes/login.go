@@ -34,9 +34,7 @@ func serveLogin(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("flow") == "signup" {
 		flash := Flash{
 			Type: Success,
-			Lines: []string{
-				"Password set successfully. Now please log in.",
-			},
+			Text: "Password set successfully. Now please log in.",
 		}
 		r = r.WithContext(flash.Add(r.Context()))
 	}

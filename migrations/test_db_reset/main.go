@@ -1,7 +1,7 @@
 package main
 
 import (
-	"eventhorizon/migrations/util"
+	"doubleboiler/migrations/util"
 	"log"
 	"os"
 

@@ -31,7 +31,7 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := checkTokenExpiry(expiry)
 	if err != nil {
-		errRes(w, r, 403, "Your invite token is invalid. Please contact your admin manager or Doubleboiler directly to arrange a new invite. "+err.Error(), err)
+		errRes(w, r, 403, "Your invite token is invalid. "+err.Error(), err)
 		return
 	}
 

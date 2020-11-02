@@ -39,26 +39,11 @@ func orgMiddleware(h http.Handler) http.Handler {
 		con := context.WithValue(r.Context(), "organisations", organisations)
 		con = context.WithValue(con, "organisation_users", organisationUsers)
 
-		setOrgCookie := true
-
 		if unconv != nil {
-			targetOrg := r.URL.Query().Get("organisationid")
-			if targetOrg == "" {
-				cookieOrg := orgFromCookie(r)
-				if cookieOrg != "" {
-					setOrgCookie = false
-					targetOrg = cookieOrg
-				} else {
-					if len(organisations) > 0 {
-						targetOrg = organisations[0].ID
-					}
-				}
-			}
-			con = context.WithValue(con, "target_org", targetOrg)
-
-			if setOrgCookie {
+			qsOrg := r.URL.Query().Get("organisationid")
+			if qsOrg != "" {
 				encoded, err := secureCookie.Encode("doubleboiler-targetorg", map[string]string{
-					"TargetOrg": targetOrg,
+					"TargetOrg": qsOrg,
 				})
 				if err != nil {
 					errRes(w, r, 500, "Error encoding cookie", nil)
@@ -72,7 +57,23 @@ func orgMiddleware(h http.Handler) http.Handler {
 					HttpOnly: true,
 				}
 				http.SetCookie(w, &cookie)
+
+				q := r.URL.Query()
+				q.Del("organisationid")
+				r.URL.RawQuery = q.Encode()
+				http.Redirect(w, r, r.URL.String(), http.StatusFound)
+				return
 			}
+
+			targetOrg := orgFromCookie(r)
+
+			if targetOrg == "" {
+				if len(organisations) > 0 {
+					targetOrg = organisations[0].ID
+				}
+			}
+
+			con = context.WithValue(con, "target_org", targetOrg)
 
 			qs := r.URL.Query()
 			qs.Set("organisationid", targetOrg)

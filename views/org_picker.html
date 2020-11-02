@@ -1,18 +1,20 @@
 {{ define "orgpicker" }}
 {{ if (orgsFromContext .Context) }}
-<div class="col s12">
-  <label for="organisationID">Organisation</label>
-  <select class="choices-picker" id="organisationID" name="organisationID" onchange="{{template "value_to_qs" "organisationid"}}">
+{{ $uniqClass := uniq }}
+<div class="mx-1">
+  <select class="choices-picker {{$uniqClass}}" id="organisationID" name="organisationID" onchange="{{template "value_to_qs" "organisationid"}}">
     {{ range (orgsFromContext .Context) }}
     <option
       value="{{.ID}}"
-      {{ if eq $.ActiveOrg.ID .ID}} selected {{ end }}
+      {{ if eq (activeOrgFromContext $.Context).ID .ID}} selected {{ end }}
       >{{.Name}}</option>
     {{ end }}
   </select>
   <script>
-    const elem = document.getElementById('organisationID');
-    new Choices(elem, {});
+    (function(){
+      const elem = document.getElementsByClassName({{$uniqClass}})[0];
+      new Choices(elem, {});
+    })()
   </script>
 </div>
 {{end}}

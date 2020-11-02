@@ -1,31 +1,25 @@
 {{ template "header" . }}
-<div class="section">
-  <div class="container">
-    <h3 class="header center">Organisations</h3>
-  </div>
+
+{{ template "page_head" dict "Title" "Organisations" }}
+
+<div class="px-4 bg-white shadow overflow-hidden sm:rounded-md">
+	<ul class="divide-y divide-gray-200">
+    {{ range .Organisations }}
+		<li>
+      <a href="/organisations/{{.ID}}" class="block hover:bg-gray-50">
+				<div class="px-4 py-4 sm:px-6">
+					<div class="flex items-center justify-between">
+						<p class="text-sm font-medium text-indigo-600 truncate">
+							{{.Name}}
+						</p>
+					</div>
+        </div>
+			</a>
+		</li>
+    {{ end }}
+	</ul>
 </div>
 
-<div class="section">
-  <div class="container">
-    <div class="row">
-      <div class="col s12">
-        <ul class="collection">
-          {{range .Organisations}}
-          <li class="collection-item avatar">
-            <a href="/organisations/{{.ID}}">
-              <i class="material-icons circle">business</i>
-              <span class="title">{{.Name}}</span>
-            </a>
-            <span class="secondary-content">
-              <a href="/organisations/{{.ID}}">
-                <i class="material-icons">play_circle_filled</i>
-              </a>
-            </span>
-          </li>
-          {{end}}
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
+{{ template "create_button" dict "Path" "/create-organisation" "Text" "Create Organisation" }}
+
 {{ template "footer" . }}

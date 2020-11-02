@@ -1,24 +1,20 @@
 {{ template "header" . }}
-<div class="section">
-  <div class="container">
-    <h3 class="header center">Users</h3>
-  </div>
+
+{{ template "page_head" dict "Title" "Users" }}
+
+<div class="px-4 bg-white shadow overflow-hidden sm:rounded-md">
+	<ul class="divide-y divide-gray-200">
+    {{ range .Users }}
+    <li>
+      <a class="py-4 flex" href="/users/{{.ID}}">
+        <img class="h-10 w-10 rounded-full" src="https://www.gravatar.com/avatar/{{hash .Email}}.jpg?s=70" alt="{{.Email}} avatar">
+        <div class="ml-3">
+          <p class="text-sm font-medium text-gray-900">{{.Email}}</p>
+        </div>
+      </a>
+    </li>
+    {{ end }}
+	</ul>
 </div>
 
-<div class="section">
-  <div class="container">
-    <div class="row">
-      <ul class="collection">
-      {{range .Users}}
-        <li class="collection-item avatar">
-          <img src="https://www.gravatar.com/avatar/{{.Email | hash}}.jpg?s=70" class="circle" alt="{{.Email}} avatar">
-          <a href="/users/{{.ID}}">
-            <span class="title">{{.Email}}</span>
-          </a>
-        </li>
-      {{end}}
-      </ul>
-    </div>
-  </div>
-</div>
 {{ template "footer" . }}

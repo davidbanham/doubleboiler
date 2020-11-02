@@ -1,30 +1,23 @@
 {{ template "header" . }}
-<div class="section">
-  <div class="container">
-    <h1 class="header center">Create Thing</h1>
-  </div>
-</div>
 
-<div class="section">
-  <div class="container">
-    <div class="row">
-      {{ template "orgpicker" . }}
-    </div>
-    <div class="row">
-      <div class="col s12">
-        <form action="/things" method="post">
-          <div class="input-field col s12">
-            <input type="text" name="name"></input>
-            <label for="name">Name</label>
-          </div>
+{{ template "page_head" dict "Title" "Create Thing" }}
 
-          <input type="hidden" name="organisationID" value="{{$.ActiveOrg.ID}}">
+<div class="relative bg-white">
+  <div class="relative max-w-7xl mx-auto lg:grid lg:grid-cols-5">
+    <div class="bg-white py-16 px-4 sm:px-6 lg:col-span-3 lg:py-24 lg:px-8 xl:pl-12">
+      <div class="max-w-lg mx-auto lg:max-w-none">
+        <form action="/things" method="post" class="grid grid-cols-1 gap-y-6">
           <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
-
-          <div class="input-field col s12">
-            <button class="btn waves-effect" type="submit">Submit</button>
+          <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
+          <div>
+            <label for="name" class="sr-only">Name</label>
+            <input id="name" name="name" type="name" autocomplete="name" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Name">
           </div>
-        </form>
+          <div>
+            <button type="submit" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Submit
+            </button>
+          </div>
       </div>
     </div>
   </div>

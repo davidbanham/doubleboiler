@@ -4,10 +4,6 @@ import "time"
 
 type Change struct {
 	Date  time.Time
-	Items []Item
-}
-
-type Item struct {
 	Title string
 	Body  string
 }

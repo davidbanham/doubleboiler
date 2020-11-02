@@ -1,12 +1,13 @@
 package routes
 
 import (
-	"context"
-	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
+	"doubleboiler/heroicons"
 	"doubleboiler/models"
 	"doubleboiler/util"
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"html/template"
@@ -197,8 +198,14 @@ func init() {
 		"userEmail": func(ctx context.Context) string {
 			return ctx.Value("user").(models.User).Email
 		},
+		"user": func(ctx context.Context) models.User {
+			return ctx.Value("user").(models.User)
+		},
 		"orgsFromContext": func(ctx context.Context) models.Organisations {
 			return orgsFromContext(ctx)
+		},
+		"activeOrgFromContext": func(ctx context.Context) models.Organisation {
+			return activeOrgFromContext(ctx)
 		},
 		"csrf": func(ctx context.Context) string {
 			unconv := ctx.Value("user")
@@ -291,6 +298,19 @@ func init() {
 			}
 			return dict, nil
 		},
+		"crumbs": func(values ...string) ([]Crumb, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			crumbs := []Crumb{}
+			for i := 0; i < len(values); i += 2 {
+				crumbs = append(crumbs, Crumb{
+					Title: values[i],
+					Path:  values[i+1],
+				})
+			}
+			return crumbs, nil
+		},
 		"flashes": func(ctx context.Context) []Flash {
 			if ctx == nil {
 				return []Flash{}
@@ -312,6 +332,12 @@ func init() {
 		},
 		"urlescape": func(input string) string {
 			return url.QueryEscape(input)
+		},
+		"heroIcon": func(name string) string {
+			return heroicons.Icons[name]
+		},
+		"uniq": func() string {
+			return uuid.NewV4().String()
 		},
 	}
 
@@ -351,6 +377,11 @@ func checkFormInput(required []string, form url.Values, w http.ResponseWriter, r
 type errorPageData struct {
 	Message string
 	Context context.Context
+}
+
+type Crumb struct {
+	Title string
+	Path  string
 }
 
 func errRes(w http.ResponseWriter, r *http.Request, code int, message string, err error) {

@@ -99,7 +99,7 @@ func TestOrganisationHandler(t *testing.T) {
 
 	fixture := organisationFixture(ctx, t)
 
-	req, err := http.NewRequest("GET", "/organisations/"+fixture.ID+"?organisationid="+fixture.ID, nil)
+	req, err := http.NewRequest("GET", "/organisations/"+fixture.ID, nil)
 
 	assert.Nil(t, err)
 

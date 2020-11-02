@@ -40,10 +40,13 @@ type orgCreationPageData struct {
 }
 
 func organisationCreationFormHandler(w http.ResponseWriter, r *http.Request) {
-	Tmpl.ExecuteTemplate(w, "create-organisation.html", orgCreationPageData{
+	if err := Tmpl.ExecuteTemplate(w, "create-organisation.html", orgCreationPageData{
 		Context: r.Context(),
 		User:    r.Context().Value("user").(m.User),
-	})
+	}); err != nil {
+		errRes(w, r, 500, "Templating error", err)
+		return
+	}
 }
 
 func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +123,7 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/organisations/"+org.ID+"?organisationid="+org.ID, 302)
+	http.Redirect(w, r, "/organisations/"+org.ID, 302)
 }
 
 type organisationsPageData struct {
@@ -144,7 +147,6 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 type organisationPageData struct {
 	Context      context.Context
 	Organisation m.Organisation
-	ActiveOrg    m.Organisation
 	URI          string
 	ProductName  string
 }
@@ -156,6 +158,7 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !can(r.Context(), targetOrg, "admin") {
 		errRes(w, r, http.StatusForbidden, "Only admins may view organisation settings", nil)
+		return
 	}
 
 	if err := targetOrg.FindByID(r.Context(), vars["id"]); err != nil {
@@ -165,7 +168,6 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := Tmpl.ExecuteTemplate(w, "organisation.html", organisationPageData{
 		Organisation: targetOrg,
-		ActiveOrg:    targetOrg,
 		ProductName:  config.NAME,
 		Context:      r.Context(),
 		URI:          config.URI,

@@ -1,152 +1,65 @@
 {{ define "header" }}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
-  <meta name="author" content="notbad software">
-  <meta name="description" content="When you need it done yesterday">
-  <meta property="og:image" content="https://doubleboiler.app/img/ski_lodge.png">
-  <meta property="og:description" content="When you need it done yesterday">
-  <meta property="og:title" content="Doubleboiler">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+    <meta name="author" content="notbad software">
+    <meta name="description" content="When you need it done yesterday">
+    <meta property="og:image" content="https://doubleboiler.app/img/ski_lodge.png">
+    <meta property="og:description" content="When you need it done yesterday">
+    <meta property="og:title" content="Doubleboiler">
 
-  <title>Doubleboiler</title>
+    <title>Doubleboiler</title>
 
-  <!-- CSS  -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-  <!-- Compiled and minified CSS -->
-  <link rel="stylesheet" href="/css/materialize.min.css?cachebust=31368887">
-  <link rel="stylesheet" href="/css/custom.css?cachebust=6f859f4f">
+    <!-- CSS  -->
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
 
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-  <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="theme-color" content="#000000">
 
-  <!--
-  <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
-  -->
-  <!--  Scripts-->
-  <script src="/js/jquery-2.1.1.min.js"></script>
-  <script src="/js/moment.min.js"></script>
-  <script src="/js/shims.js"></script>
-  <!-- Compiled and minified JavaScript -->
-  <script src="/js/materialize.min.js"></script>
+    <!--  Scripts-->
+    <script src="/js/shims.js"></script>
 
-  <script src="/js/picker.js"></script>
-  <script src="/js/picker.date.js"></script>
-  <script src="/js/picker.time.js"></script>
-  <link rel="stylesheet" href="/css/default.css">
-  <link rel="stylesheet" href="/css/default.date.css">
-  <link rel="stylesheet" href="/css/default.time.css">
+    <!-- Choices -->
+    <link rel="stylesheet" href="/css/choices.min.css">
+    <script src="/js/choices.min.js"></script>
 
-  <!-- Choices -->
-  <link rel="stylesheet" href="/css/choices.min.css">
-  <script src="/js/choices.min.js"></script>
-</head>
-<body class="">
-  {{if chrome .Context}}
-  {{if loggedIn .Context}}
-  <ul id="user-dropdown" class="dropdown-content">
-    <li><a href="/user-settings">User Settings</a></li>
-    <li><a href="/logout">Log Out</a></li>
-  </ul>
-  <ul id="more-dropdown" class="dropdown-content">
-    {{ template "nav_menu" . }}
-  </ul>
-  {{end}}
-  <nav role="navigation">
-    <div id="logo-container" class="logo">
-      <div class="nav-wrapper container">
-        <a href="{{logoLink .Context}}" class="svglink">
-          <object data="/img/logo_text.min.svg" type="image/svg+xml"></object>
-        </a>
-        <ul class="right hide-on-med-and-down">
-          {{if loggedIn .Context}}
-          <li><a href="/things">Things</a></li>
-          <li><a href="/organisations">Organisations</a></li>
-          <li><a class="dropdown-button" href="#!" data-activates="more-dropdown">More</a></li>
-          <li><a class="dropdown-button" href="#!" data-activates="user-dropdown">{{userEmail .Context}}</a></li>
-          {{else}}
-          <li><a href="/login">Log In</a></li>
-          {{end}}
-      </ul>
-
-      <ul id="nav-mobile" class="side-nav">
-        {{if loggedIn .Context}}
-        <li class="blue center">{{userEmail .Context}}</li>
-        {{ template "nav_menu" . }}
-        <li>----</li>
-        <li><a href="/logout">Log Out</a></li>
-        {{else}}
-        <li><a href="/login">Log In</a></li>
-        {{end}}
-      </ul>
-      <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+  </head>
+  {{ template "flashbox" . }}
+  <div class="h-screen flex overflow-hidden bg-gray-100">
+    {{ if loggedIn .Context }}
+    {{ template "menu" . }}
+    <div class="flex flex-col w-0 flex-1 overflow-hidden">
+      <div class="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+        <button class="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:bg-gray-100 focus:text-gray-600 md:hidden" aria-label="Open sidebar" onclick="document.getElementById('sidebar').hidden = false">
+          <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+          </svg>
+        </button>
+        <div class="flex-1 px-4 flex justify-between">
+          <div class="flex-1 flex">
+            {{ template "searchbox" . }}
+          </div>
+          <div class="ml-4 flex items-center md:ml-6">
+            {{ template "notificationbell" . }}
+            {{ template "profile-menu" . }}
+          </div>
+        </div>
       </div>
-    </div>
-  </nav>
-{{ end }}
-
-{{ if flashes .Context }}
-<div id="flashbox">
-  {{range flashes .Context}}
-  <div class="
-  {{ if eq .Type 2 }}
-  green
-  {{ else if eq .Type 3}}
-  {{ else }}
-  orange
-  {{ end }}
-  ">
-    {{ range .Lines }}
-    <h5 class="center">{{.}}</h5>
-    {{ end }}
-    <div class="center">
-      {{ range .Actions }}
-      <a class="btn waves-effect" href="{{.Url}}">{{.Text}}</a>
+      {{ else }}
+      <div class="flex flex-col w-0 flex-1 overflow-hidden">
+        <div class="relative z-10 flex-shrink-0 flex h-16 bg-gray-900 shadow">
+          <a href="{{logoLink .Context}}">
+            <img class="h-8 w-auto mx-1 my-1" src="/img/logo_text_white.min.svg" alt="DoubleBoiler">
+          </a>
+        </div>
       {{ end }}
-    </div>
-  </div>
-  {{ end }}
-</div>
-<script>
-  $( document ).ready(function() {
-    var flashes = document.querySelector('#flashbox');
-    console.log('flashes', flashes);
-    var nodes  = document.querySelectorAll('nav');
-    console.log('nodes', nodes);
-    var last = nodes[nodes.length- 1];
-    last.parentNode.insertBefore(flashes, last.nextSibling);
-  });
-</script>
 
-{{ end }}
-<script>
-function debounce(func, wait, immediate) {
-  var timeout;
-
-  return function executedFunction() {
-    var context = this;
-    var args = arguments;
-
-    var later = function() {
-      timeout = null;
-      if (!immediate) func.apply(context, args);
-    };
-
-    var callNow = immediate && !timeout;
-
-    clearTimeout(timeout);
-
-    timeout = setTimeout(later, wait);
-
-    if (callNow) func.apply(context, args);
-  };
-};
-</script>
-
+    <main class="flex-1 relative overflow-y-auto focus:outline-none" tabindex="0">
 {{ end }}

@@ -1,39 +1,41 @@
 {{ template "header" . }}
-<div class="section">
-  <div class="container">
-    <h3 class="header center">Thanks!</h3>
+
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <p class="mt-2 text-center text-sm text-gray-600 max-w">
+    Just set a password for your new account and you're good to go!
+    </p>
   </div>
-</div>
-<div class="section">
-  <div class="container">
-    <div class="row">
-      <div class="center col s12 m6 offset-m3">
-        <p>
-        Just set a password for your new account and you're good to go!
-        </p>
-      </div>
-      <form action="/users?next=welcome" method="post">
-        <div class="col s6 offset-s3">
-          <input type="hidden" name="id" value="{{.User.ID}}"></input>
-          <input type="hidden" name="revision" value="{{.User.Revision}}"></input>
-          <input type="hidden" name="token" value="{{.Token}}"></input>
-          <input type="hidden" name="expiry" value="{{.Expiry}}"></input>
-          <input type="hidden" name="email" value="{{.User.Email}}"></input>
-          <label for="password">Password</label>
-          <input type="password" name="password"></input>
-          <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
-        </div>
 
-        <div class="col s6 offset-s3">
-          <input type="checkbox" name="terms" id="terms" value="agreed" required />
-          <label for="terms">I agree to the Doubleboiler <a href="/eula.pdf">Terms and Conditions</a></label>
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <form action="/users/{{.User.ID}}?next=welcome" method="post" class="space-y-6">
+        <input type="hidden" name="id" value="{{.User.ID}}"></input>
+        <input type="hidden" name="revision" value="{{.User.Revision}}"></input>
+        <input type="hidden" name="token" value="{{.Token}}"></input>
+        <input type="hidden" name="expiry" value="{{.Expiry}}"></input>
+        <input type="hidden" name="email" value="{{.User.Email}}"></input>
+        <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input id="password" name="password" type="password" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Password">
         </div>
-
-        <div class="col s6 offset-s3">
-          <button class="btn waves-effect" type="submit">Submit</button>
+        <div>
+          <div class="flex items-center">
+            <input id="terms" type="checkbox" value="agreed" name="terms" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label for="terms" class="ml-2 block text-sm text-gray-900">
+              I agree to the Doubleboiler <a href="/eula.pdf">Terms and Conditions</a>
+            </label>
+          </div>
+        </div>
+        <div>
+          <button type="submit" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Submit
+          </button>
         </div>
       </form>
     </div>
   </div>
 </div>
+
 {{ template "footer" . }}

@@ -1,21 +1,41 @@
 {{ template "header" . }}
 
-<div class="section">
-  <div class="container">
-    {{range .Changes}}
-    <div class="row">
-      <h4>{{humanDate .Date}}</h4>
-      <ul>
-      {{range .Items}}
-      <h5>{{.Title}}</h5>
-      {{ range breakLines .Body }}
-      <p>{{.}}</p>
-      {{ end }}
-      {{end}}
-      </ul>
-    </div>
-    {{end}}
-  </div>
+{{ template "page_head" dict "Title" "Changelog" }}
+
+<div class="bg-white shadow overflow-hidden sm:rounded-md">
+	<ul class="divide-y divide-gray-200">
+	{{ range .Changes }}
+		<li>
+			<a href="#" class="block hover:bg-gray-50">
+				<div class="px-4 py-4 sm:px-6">
+					<div class="flex items-center justify-between">
+						<p class="text-sm font-medium text-indigo-600 truncate">
+							{{.Title}}
+						</p>
+					</div>
+					<div class="mt-2 sm:flex sm:justify-between">
+						<div class="sm:flex">
+							<p class="flex items-center text-sm text-gray-500">
+								{{ range breakLines .Body }}
+								<p>{{.}}</p>
+								{{ end }}
+							</p>
+						</div>
+						<div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+							<!-- Heroicon name: calendar -->
+							<svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+								<path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+							</svg>
+							<p>
+								<time datetime="{{dateonly .Date}}">{{humanDate .Date}}</time>
+							</p>
+						</div>
+					</div>
+				</div>
+			</a>
+		</li>
+	{{ end }}
+	</ul>
 </div>
 
 {{ template "footer" . }}

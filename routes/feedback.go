@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/config"
 	m "doubleboiler/models"
+	"context"
 	"fmt"
 	"net/http"
 
@@ -12,7 +12,6 @@ import (
 
 type helpPageData struct {
 	Organisations m.Organisations
-	ActiveOrg     m.Organisation
 	Email         string
 	Context       context.Context
 	User          m.User
@@ -55,23 +54,8 @@ func serveHelp(w http.ResponseWriter, r *http.Request) {
 		relatedOrganisations = ptr.(m.Organisations)
 	}
 
-	activeOrg := m.Organisation{}
-	if len(relatedOrganisations) > 0 {
-		targetOrg := r.URL.Query().Get("organisationid")
-		if targetOrg == "" {
-			redirToDefaultOrg(w, r)
-			return
-		}
-		for _, org := range relatedOrganisations {
-			if targetOrg == org.ID {
-				activeOrg = org
-			}
-		}
-	}
-
 	if err := Tmpl.ExecuteTemplate(w, "help.html", helpPageData{
 		Organisations: relatedOrganisations,
-		ActiveOrg:     activeOrg,
 		Email:         config.SUPPORT_EMAIL,
 		Context:       r.Context(),
 		User:          user,
@@ -105,23 +89,8 @@ func serveTrialModeUpgrade(w http.ResponseWriter, r *http.Request) {
 		relatedOrganisations = ptr.(m.Organisations)
 	}
 
-	activeOrg := m.Organisation{}
-	if len(relatedOrganisations) > 0 {
-		targetOrg := r.URL.Query().Get("organisationid")
-		if targetOrg == "" {
-			redirToDefaultOrg(w, r)
-			return
-		}
-		for _, org := range relatedOrganisations {
-			if targetOrg == org.ID {
-				activeOrg = org
-			}
-		}
-	}
-
 	if err := Tmpl.ExecuteTemplate(w, "trial_mode_upgrade.html", helpPageData{
 		Organisations: relatedOrganisations,
-		ActiveOrg:     activeOrg,
 		Email:         config.SYSTEM_EMAIL,
 		Context:       r.Context(),
 		User:          user,

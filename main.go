@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 
+	_ "doubleboiler/workers"
+
 	certCache "github.com/davidbanham/certcache"
 	"golang.org/x/crypto/acme/autocert"
 )

@@ -3,7 +3,7 @@ package routes
 import "context"
 
 type Flash struct {
-	Lines   []string
+	Text    string
 	Actions []FlashAction
 	Type    FlashLevel
 }

@@ -1,11 +1,11 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/config"
 	"doubleboiler/models"
 	m "doubleboiler/models"
 	"doubleboiler/util"
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -78,7 +78,6 @@ func userImpersonater(w http.ResponseWriter, r *http.Request) {
 
 	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
 		Organisations: relatedOrganisations,
-		ActiveOrg:     m.Organisation{},
 		Context:       r.Context(),
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
@@ -308,11 +307,14 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		orgs[org.ID] = org
 	}
 
-	Tmpl.ExecuteTemplate(w, "user.html", userPageData{
-		TargetUser: u,
-		OrgsByID:   orgs,
-		Context:    r.Context(),
-	})
+	if err := Tmpl.ExecuteTemplate(w, "user.html", userPageData{
+		User:     u,
+		OrgsByID: orgs,
+		Context:  r.Context(),
+	}); err != nil {
+		errRes(w, r, 500, "Problem with template", err)
+		return
+	}
 }
 
 func userSettingsRedir(w http.ResponseWriter, r *http.Request) {
@@ -321,9 +323,9 @@ func userSettingsRedir(w http.ResponseWriter, r *http.Request) {
 }
 
 type userPageData struct {
-	Context    context.Context
-	TargetUser m.User
-	OrgsByID   map[string]m.Organisation
+	Context  context.Context
+	User     m.User
+	OrgsByID map[string]m.Organisation
 }
 
 func createOrgFromSignup(ctx context.Context, u m.User, orgname, orgcountry, orgcurrency string) (error, m.Organisation) {

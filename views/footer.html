@@ -1,32 +1,25 @@
 {{ define "footer" }}
-{{if chrome .Context}}
-{{ if loggedIn .Context}}
-<div class="fixed-action-btn noprint">
-  <a href="/help" title="Help!" class="btn-floating btn-large red">
-    <i class="large material-icons">live_help</i>
-  </a>
+      </main>
+    </div>
+  </div>
 </div>
-{{ end }}
 
-<footer class="page-footer">
-  <div class="footer-copyright">
-    <div class="container">
-      Doubleboiler is (made by) <a class="text-lighten-3" href="https://notbad.software">notbad software</a>
-      <br>
+<!-- This example requires Tailwind CSS v2.0+ -->
+<footer class="bg-white">
+  <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
+    <div class="mt-8 md:mt-0 md:order-1">
+      <p class="text-base text-gray-400">
+        Doubleboiler is (made by) <a class="text-lighten-3" href="https://notbad.software">notbad software</a>
+      </p>
+      <p class="text-base text-gray-400">
       <a class="text-lighten-3" href="/eula.pdf">Terms and Conditions</a>
-      <br>
+      </p>
+      <p class="text-base text-gray-400">
       <a class="text-lighten-3" href="/privacy_collection_statement.pdf">Privacy Collection Statement</a>
+      </p>
     </div>
   </div>
 </footer>
-
-<script>
-  $(document).ready(function() {
-    $('select:not(.picker select):not(.choices-picker)').material_select();
-    $(".button-collapse").sideNav();
-    $(".dropdown-button").dropdown();
-  });
-</script>
 
 {{ if isLocal }}
 <script type="text/javascript">
@@ -52,5 +45,4 @@
 
 </body>
 </html>
-{{ end }}
 {{ end }}

@@ -20,6 +20,7 @@ var Db *sql.DB
 
 var PORT string
 var SECRET string
+var WEBHOOK_SECRET string
 var HASH_KEY string
 var BLOCK_KEY string
 var DOMAIN string
@@ -65,6 +66,7 @@ func init() {
 		"SYSTEM_EMAIL":           "",
 		"SUPPORT_EMAIL":          "",
 		"SECRET":                 "",
+		"WEBHOOK_SECRET":         "",
 		"AUTOCERT":               "false",
 		"TLS":                    "true",
 		"RENDER_ERRORS":          "false",
@@ -95,7 +97,7 @@ func init() {
 		num, err := strconv.Atoi(os.Getenv("MAX_OPEN_SQL_CONNS"))
 		log.Printf("INFO setting maximum DB connections for the pool to %d", num)
 		if err != nil {
-			log.Printf("ERROR parsing max open conns string: %w", err)
+			log.Printf("ERROR parsing max open conns string: %s", err)
 		}
 		Db.SetMaxOpenConns(num)
 	}
@@ -130,6 +132,7 @@ func init() {
 	SAMPLEORG_ID = os.Getenv("SAMPLEORG_ID")
 
 	SECRET = os.Getenv("SECRET")
+	WEBHOOK_SECRET = os.Getenv("WEBHOOK_SECRET")
 
 	NAME = os.Getenv("NAME")
 	SYSTEM_EMAIL = fmt.Sprintf(`"%s" <%s>`, NAME, os.Getenv("SYSTEM_EMAIL"))

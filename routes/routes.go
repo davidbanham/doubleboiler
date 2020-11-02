@@ -106,17 +106,13 @@ func serveFeatureMarketingPage(w http.ResponseWriter, r *http.Request) {
 }
 
 type welcomePageData struct {
-	ActiveOrg     models.Organisation
 	Organisations models.Organisations
 	Context       context.Context
 }
 
 func serveWelcome(w http.ResponseWriter, r *http.Request) {
-	targetOrg := activeOrgFromContext(r.Context())
-
 	err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
-		ActiveOrg: targetOrg,
-		Context:   r.Context(),
+		Context: r.Context(),
 	})
 	if err != nil {
 		errRes(w, r, 500, "Problem with template", err)

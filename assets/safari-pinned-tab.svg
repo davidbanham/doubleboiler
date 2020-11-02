@@ -1,63 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   data-name="Layer 1"
-   viewBox="0 0 90 90"
-   x="0px"
-   y="0px"
-   version="1.1"
-   id="svg6"
-   sodipodi:docname="logo.svg"
-   inkscape:version="0.92.2 2405546, 2018-03-11">
-  <metadata
-     id="metadata12">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <defs
-     id="defs10" />
-  <sodipodi:namedview
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1"
-     objecttolerance="10"
-     gridtolerance="10"
-     guidetolerance="10"
-     inkscape:pageopacity="0"
-     inkscape:pageshadow="2"
-     inkscape:window-width="3146"
-     inkscape:window-height="2134"
-     id="namedview8"
-     showgrid="false"
-     inkscape:zoom="2.6222222"
-     inkscape:cx="45.762712"
-     inkscape:cy="45"
-     inkscape:window-x="0"
-     inkscape:window-y="24"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="svg6" />
-  <title
-     id="title2">Doubleboiler</title>
-  <g
-     aria-label="C"
-     transform="translate(0, 12.5)"
-     style="font-weight:bold;font-size:35px;font-family:Oswald;text-anchor:middle;fill:#000000"
-     id="text4">
-    <path
-       d="m 55.595703,43.598633 q -1.811523,0.939941 -3.776855,1.418457 -1.965332,0.478515 -4.101563,0.478515 -6.374512,0 -10.100098,-3.554687 -3.725585,-3.571777 -3.725585,-9.672852 0,-6.118164 3.725585,-9.672851 3.725586,-3.571778 10.100098,-3.571778 2.136231,0 4.101563,0.478516 1.965332,0.478516 3.776855,1.418457 v 5.280762 q -1.828613,-1.247559 -3.605957,-1.828613 -1.777344,-0.581055 -3.742676,-0.581055 -3.520508,0 -5.537109,2.255859 -2.016602,2.25586 -2.016602,6.220703 0,3.947754 2.016602,6.203614 2.016601,2.255859 5.537109,2.255859 1.965332,0 3.742676,-0.581055 1.777344,-0.581054 3.605957,-1.828613 z"
-       style="font-weight:bold;font-size:35px;font-family:Oswald;text-anchor:middle;fill:#000000"
-       id="path14" />
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 90 90" x="0px" y="0px">
+  <title>Doubleboiler</title>
+  <text transform="translate(0, 12.5)" text-anchor="middle" x="45" y="45" fill="black" font-size="35" font-weight="bold" font-family="Oswald">
+  D
+  </text>
 </svg>

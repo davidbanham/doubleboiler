@@ -1,39 +1,32 @@
 {{ template "header" . }}
-
-<div class="section">
-  <div class="container">
-    <div class="row">
-      {{ template "orgpicker" . }}
-    </div>
-    <div class="row">
-      <div class="col s12 m4 offset-m4">
-        <a href="/things?organisationid={{.ActiveOrg.ID}}">
-          <div class="center promo">
-            <i class="material-icons">queue</i>
-            <p class="promo-caption">Things</p>
-          </div>
-        </a>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col s12 m4">
-        <a href="/organisations/{{.ActiveOrg.ID}}?organisationid={{.ActiveOrg.ID}}">
-          <div class="center promo">
-            <i class="material-icons">settings</i>
-            <p class="promo-caption">Organisation Settings</p>
-          </div>
-        </a>
-      </div>
-      <div class="col s12 m4 offset-m4">
-        <a href="/changelog">
-          <div class="center promo">
-            <i class="material-icons">build</i>
-            <p class="promo-caption">Changelog</p>
-          </div>
-        </a>
-      </div>
-    </div>
+<div class="py-12 bg-white">
+  <div class="max-w-xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+    <dl class="space-y-10 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
+      {{ $orgPath := (print "/organisations/" (activeOrgFromContext .Context).ID) }}
+      {{ template "welcome_item" dict "Path" "/things" "Title" "Things" "Description" "Check some things out" "Icon" "globe-alt" }}
+      {{ template "welcome_item" dict "Path" $orgPath "Title" "Organisation Settings" "Description" "Customise your organisation" "Icon" "globe-alt" }}
+      {{ template "welcome_item" dict "Path" "/changelog" "Title" "Changelog" "Description" "See what's new" "Icon" "globe-alt" }}
+    </dl>
   </div>
 </div>
 
 {{ template "footer" . }}
+
+{{ define "welcome_item" }}
+<div>
+  <a href="{{.Path}}">
+    <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+      <!-- Heroicon name: globe-alt -->
+      {{ noescape (heroIcon .Icon) }}
+    </div>
+    <div class="mt-5">
+      <dt class="text-lg leading-6 font-medium text-gray-900">
+      {{.Title}}
+      </dt>
+      <dd class="mt-2 text-base text-gray-500">
+      {{.Description}}
+      </dd>
+    </div>
+  </a>
+</div>
+{{ end }}

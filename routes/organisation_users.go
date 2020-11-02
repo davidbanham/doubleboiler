@@ -98,7 +98,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/organisations/"+ou.OrganisationID+"?organisationid="+ou.OrganisationID, 302)
+	http.Redirect(w, r, "/organisations/"+ou.OrganisationID, 302)
 }
 
 func organisationUserDeletionHandler(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +118,7 @@ func organisationUserDeletionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/organisations/"+ou.OrganisationID+"?organisationid="+ou.OrganisationID, 302)
+	http.Redirect(w, r, "/organisations/"+ou.OrganisationID, 302)
 }
 
 func sendOrgAdditionEmail(user m.User, org m.Organisation) (err error) {

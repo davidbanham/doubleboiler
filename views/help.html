@@ -1,34 +1,55 @@
 {{ template "header" . }}
-<div class="section">
-  <div class="container">
-    <h3 class="header center">Help</h3>
-  </div>
-</div>
-<div class="section">
-  <div class="container">
-    <div class="row">
-      {{ template "orgpicker" . }}
-      <div class="col m6 offset-m3">
-        <p>Need help?</p>
-        <p>Use this form to reach your organisation's nominated admin contact.</p>
-        <p><a href="mailto:{{.Email}}">{{.Email}}</a></p>
+
+{{ template "page_head" dict "Title" "Help" }}
+
+<div class="relative bg-white">
+  <div class="relative max-w-7xl mx-auto lg:grid lg:grid-cols-5">
+    <div class="bg-gray-50 py-16 px-4 sm:px-6 lg:col-span-2 lg:px-8 lg:py-24 xl:pr-12">
+      <div class="max-w-lg mx-auto">
+        <p class="mt-3 text-lg leading-6">Need a hand?</p>
+        <p class="mt-3 text-lg leading-6">Use this form to reach your organisation's nominated admin contact.</p>
+        <dl class="mt-8 text-base text-gray-500">
+          <div class="mt-3">
+            <dt class="sr-only">Email</dt>
+            <dd class="flex">
+              <!-- Heroicon name: mail -->
+              <svg class="flex-shrink-0 h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span class="ml-3">
+                <a href="mailto:{{.Email}}">{{.Email}}</a>
+              </span>
+            </dd>
+          </div>
+        </dl>
       </div>
     </div>
-    <div class="row">
-      <div class="col m6 offset-m3">
-        <form action="/contact" method="post">
+    <div class="bg-white py-16 px-4 sm:px-6 lg:col-span-3 lg:py-24 lg:px-8 xl:pl-12">
+      <div class="max-w-lg mx-auto lg:max-w-none">
+        <form action="/contact" method="post" class="grid grid-cols-1 gap-y-6">
           <input type="hidden" name="target" value="{{.Email}}"></input>
-          <input type="email" name="email" value="{{.User.Email}}"></input>
-          <label for="phone">Phone Number</label>
-          <input type="tel" name="phone" placeholder="(optional)"></input>
-          <label for="body">What's up?</label>
-          <textarea style="height: 350px" name="body" placeholder="Tell us what's going on, we'll help out."></textarea>
           <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
-          <button class="btn btn-large waves-effect" type="submit">Submit</button>
+          <div>
+            <label for="email" class="sr-only">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" value="{{.User.Email}}" placeholder="Email">
+          </div>
+          <div>
+            <label for="phone" class="sr-only">Phone</label>
+            <input type="text" name="phone" id="phone" autocomplete="tel" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" placeholder="Phone">
+          </div>
+          <div>
+            <label for="body" class="sr-only">What's up?</label>
+            <textarea id="body" name="body" rows="4" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" placeholder="Tell us what's going on, we'll help out."></textarea>
+          </div>
+          <div>
+            <button type="submit" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Submit
+            </button>
+          </div>
         </form>
-        <br>
       </div>
     </div>
   </div>
 </div>
+
 {{ template "footer" . }}

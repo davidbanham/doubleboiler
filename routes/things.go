@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/models"
 	m "doubleboiler/models"
+	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -32,8 +32,7 @@ func init() {
 }
 
 type thingCreationPageData struct {
-	Context   context.Context
-	ActiveOrg m.Organisation
+	Context context.Context
 }
 
 func thingCreationFormHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,8 +43,7 @@ func thingCreationFormHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "create-thing.html", thingCreationPageData{
-		Context:   r.Context(),
-		ActiveOrg: orgFromContext(r.Context(), targetOrg.ID),
+		Context: r.Context(),
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
@@ -99,9 +97,8 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type thingPageData struct {
-	Thing     m.Thing
-	Context   context.Context
-	ActiveOrg m.Organisation
+	Thing   m.Thing
+	Context context.Context
 }
 
 func thingHandler(w http.ResponseWriter, r *http.Request) {
@@ -121,9 +118,8 @@ func thingHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "thing.html", thingPageData{
-		Context:   r.Context(),
-		ActiveOrg: org,
-		Thing:     p,
+		Context: r.Context(),
+		Thing:   p,
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
@@ -131,9 +127,8 @@ func thingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type thingsPageData struct {
-	Things    models.Things
-	Context   context.Context
-	ActiveOrg m.Organisation
+	Things  models.Things
+	Context context.Context
 }
 
 func thingsHandler(w http.ResponseWriter, r *http.Request) {
@@ -158,9 +153,8 @@ func thingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "things.html", thingsPageData{
-		Things:    things,
-		Context:   r.Context(),
-		ActiveOrg: targetOrg,
+		Things:  things,
+		Context: r.Context(),
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
