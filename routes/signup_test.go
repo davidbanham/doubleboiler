@@ -44,7 +44,7 @@ func TestSignupFlow(t *testing.T) {
 	assert.False(t, u.Verified)
 
 	orgs := m.Organisations{}
-	orgs.FindAll(ctx, m.OrganisationsContainingUser{}, u.ID)
+	orgs.FindAll(ctx, m.OrganisationsContainingUser{ID: u.ID})
 	orgfound := false
 	for _, o := range orgs.Data {
 		if o.Name == orgname {

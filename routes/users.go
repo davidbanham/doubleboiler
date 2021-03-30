@@ -145,7 +145,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			if u.HasEmail() {
 				if !u.Verified {
 					orgs := models.Organisations{}
-					if err := orgs.FindAll(r.Context(), models.OrganisationsContainingUser{}, u.ID); err != nil {
+					if err := orgs.FindAll(r.Context(), models.OrganisationsContainingUser{ID: u.ID}); err != nil {
 						errRes(w, r, 500, "Error looking up organisations", err)
 						return
 					}
@@ -271,7 +271,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u := m.Users{}
-	err := u.FindAll(r.Context(), m.All{}, "")
+	err := u.FindAll(r.Context(), m.All{})
 	if err != nil {
 		errRes(w, r, 500, "error fetching users", err)
 		return

@@ -128,7 +128,7 @@ type Users struct {
 	Query Query
 }
 
-func (users *Users) FindAll(ctx context.Context, q Query, qa ...string) error {
+func (users *Users) FindAll(ctx context.Context, q Query) error {
 	users.Query = q
 
 	db := ctx.Value("tx").(Querier)
@@ -136,13 +136,13 @@ func (users *Users) FindAll(ctx context.Context, q Query, qa ...string) error {
 	var rows *sql.Rows
 	var err error
 
-	switch q.(type) {
+	switch v := q.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
 		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users")
 	case ByOrg:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE id IN (SELECT user_id FROM members WHERE organisation_id = $1)", qa[0])
+		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE id IN (SELECT user_id FROM members WHERE organisation_id = $1)", v.ID)
 	}
 
 	if err != nil {

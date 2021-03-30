@@ -22,16 +22,18 @@ func orgMiddleware(h http.Handler) http.Handler {
 			user := unconv.(models.User)
 
 			var query models.Query
-			query = models.OrganisationsContainingUser{}
+			query = models.OrganisationsContainingUser{
+				ID: user.ID,
+			}
 			if user.Admin {
 				query = models.All{}
 			}
-			if err := organisations.FindAll(r.Context(), query, user.ID); err != nil {
+			if err := organisations.FindAll(r.Context(), query); err != nil {
 				errRes(w, r, 500, "error looking up organisations", err)
 				return
 			}
 
-			if err := organisationUsers.FindAll(r.Context(), models.ByUser{}, user.ID); err != nil {
+			if err := organisationUsers.FindAll(r.Context(), models.ByUser{ID: user.ID}); err != nil {
 				errRes(w, r, 500, "error looking up organisation users", err)
 				return
 			}

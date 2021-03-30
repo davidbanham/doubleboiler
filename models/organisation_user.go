@@ -78,16 +78,20 @@ func (c OrganisationUser) Delete(ctx context.Context) error {
 	return err
 }
 
-type OrganisationUsers []OrganisationUser
+type OrganisationUsers struct {
+	Data  []OrganisationUser
+	Query Query
+}
 
-func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query, qa ...string) error {
+func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query) error {
+	organisationusers.Query = q
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch q.(type) {
+	switch v := q.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
@@ -116,7 +120,7 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 	FROM organisations_users
 	INNER JOIN users
 	ON organisations_users.user_id = users.id
-	WHERE users.id = $1`, qa[0])
+	WHERE users.id = $1`, v.ID)
 		defer rows.Close()
 		if err != nil {
 			return err
@@ -129,7 +133,7 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 			return err
 		}
 
-		(*organisationusers) = append((*organisationusers), ou)
+		(*organisationusers).Data = append((*organisationusers).Data, ou)
 	}
 
 	return nil

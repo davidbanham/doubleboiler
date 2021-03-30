@@ -146,7 +146,7 @@ func thingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	things := m.Things{}
 
-	err := things.FindAll(r.Context(), m.ByOrg{}, targetOrg.ID)
+	err := things.FindAll(r.Context(), m.ByOrg{ID: targetOrg.ID})
 	if err != nil {
 		errRes(w, r, 500, "error fetching things", err)
 		return

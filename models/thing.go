@@ -58,7 +58,7 @@ type Things struct {
 	Query Query
 }
 
-func (things *Things) FindAll(ctx context.Context, q Query, qa ...string) error {
+func (things *Things) FindAll(ctx context.Context, q Query) error {
 	things.Query = q
 
 	db := ctx.Value("tx").(Querier)
@@ -66,13 +66,13 @@ func (things *Things) FindAll(ctx context.Context, q Query, qa ...string) error 
 	var rows *sql.Rows
 	var err error
 
-	switch q.(type) {
+	switch v := q.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id, revision, name, organisation_id
-		FROM things WHERE organisation_id = $1`, qa[0])
+		FROM things WHERE organisation_id = $1`, v.ID)
 	case All:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id, revision, name, organisation_id

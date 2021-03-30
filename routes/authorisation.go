@@ -84,7 +84,7 @@ func can(ctx context.Context, target models.Organisation, role string) bool {
 	}
 	orgUsers := unconv.(models.OrganisationUsers)
 
-	for _, ou := range orgUsers {
+	for _, ou := range orgUsers.Data {
 		if ou.OrganisationID == target.ID && ou.Roles[role] {
 			return true
 		}

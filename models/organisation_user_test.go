@@ -62,8 +62,10 @@ func organisationUsersFix() modelCollectionFixture {
 	return modelCollectionFixture{
 		deps: []model{&innerUser, &innerOrg, &innerUser2, &innerOrg2},
 		collection: &OrganisationUsers{
-			organisationUserFixture(innerUser.ID, innerOrg.ID),
-			organisationUserFixture(innerUser2.ID, innerOrg2.ID),
+			Data: []OrganisationUser{
+				organisationUserFixture(innerUser.ID, innerOrg.ID),
+				organisationUserFixture(innerUser2.ID, innerOrg2.ID),
+			},
 		},
 	}
 }
@@ -71,8 +73,8 @@ func organisationUsersFix() modelCollectionFixture {
 func (c *OrganisationUsers) Iter() <-chan model {
 	ch := make(chan model)
 	go func() {
-		for i := 0; i < len((*c)); i++ {
-			ch <- &(*c)[i]
+		for i := 0; i < len((*c).Data); i++ {
+			ch <- &(*c).Data[i]
 		}
 		close(ch)
 	}()

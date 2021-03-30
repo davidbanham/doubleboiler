@@ -123,7 +123,7 @@ func TestFindAll(t *testing.T) {
 		}
 
 		found := m.blank()
-		err := found.FindAll(ctx, All{}, "")
+		err := found.FindAll(ctx, All{})
 		assert.Nil(t, err)
 
 		matched := 0
@@ -149,7 +149,7 @@ type model interface {
 }
 
 type models interface {
-	FindAll(context.Context, Query, ...string) error
+	FindAll(context.Context, Query) error
 	Iter() <-chan model
 	tablename() string
 	blank() models

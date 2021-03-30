@@ -105,7 +105,7 @@ type Organisations struct {
 	Query Query
 }
 
-func (organisations *Organisations) FindAll(ctx context.Context, q Query, qa ...string) error {
+func (organisations *Organisations) FindAll(ctx context.Context, q Query) error {
 	organisations.Query = q
 
 	db := ctx.Value("tx").(Querier)
@@ -113,7 +113,7 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query, qa ...
 	var rows *sql.Rows
 	var err error
 
-	switch q.(type) {
+	switch v := q.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
@@ -128,7 +128,7 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query, qa ...
 		JOIN organisations_users
 		ON organisations_users.organisation_id = organisations.id
 		WHERE organisations_users.user_id = $1
-		`, qa[0])
+		`, v.ID)
 		if err != nil {
 			return err
 		}
