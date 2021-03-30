@@ -1,6 +1,0 @@
-cp ~/from_ash/src/boilerplate/models/thing.go ./models
-cp ~/from_ash/src/boilerplate/routes/things.go ./routes
-cp ~/from_ash/src/boilerplate/views/thing.html ./views
-cp ~/from_ash/src/boilerplate/models/thing_test.go ./models
-cp ~/from_ash/src/boilerplate/routes/things_test.go ./routes
-cp ~/from_ash/src/boilerplate/views/things.html ./views
