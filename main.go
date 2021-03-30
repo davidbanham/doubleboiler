@@ -5,13 +5,12 @@ import (
 	"crypto/tls"
 	"doubleboiler/config"
 	"doubleboiler/routes"
+	"doubleboiler/workers"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
-
-	_ "doubleboiler/workers"
 
 	certCache "github.com/davidbanham/certcache"
 	"golang.org/x/crypto/acme/autocert"
@@ -21,6 +20,11 @@ func main() {
 	addr := ":" + config.PORT
 
 	app := routes.Init()
+
+	if config.START_WORKERS {
+		fmt.Println("INFO Starting workers")
+		workers.Init()
+	}
 
 	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if config.MAINTENANCE_MODE {

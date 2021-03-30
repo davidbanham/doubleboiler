@@ -40,6 +40,7 @@ var MAINTENANCE_MODE bool
 var KEWPIE_BACKEND string
 var GOOGLE_PROJECT_ID string
 var SAMPLEORG_ID string
+var START_WORKERS bool
 
 var SEND_EMAIL_QUEUE_NAME string
 
@@ -77,6 +78,7 @@ func init() {
 		"KEWPIE_BACKEND":        "",
 		"GOOGLE_PROJECT_ID":     "",
 		"SAMPLEORG_ID":          "3f815ebd-2eb7-4dae-be2d-460c726438e2",
+		"START_WORKERS":         "",
 	})
 
 	PORT = os.Getenv("PORT")
@@ -167,6 +169,8 @@ func init() {
 	TLS = os.Getenv("TLS") == "true"
 	RENDER_ERRORS = os.Getenv("RENDER_ERRORS") == "true"
 	REPORT_ERRORS = os.Getenv("REPORT_ERRORS") == "true"
+
+	START_WORKERS = os.Getenv("START_WORKERS") == "true"
 
 	MAINTENANCE_MODE = os.Getenv("MAINTENANCE_MODE") == "true"
 
