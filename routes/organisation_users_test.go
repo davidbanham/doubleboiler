@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 	"doubleboiler/models"
-	m "doubleboiler/models"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -17,11 +16,11 @@ func TestOrganisationUserCreateHandler(t *testing.T) {
 	t.Parallel()
 	ctx := getCtx(t)
 
-	org := m.Organisation{}
+	org := models.Organisation{}
 	org.New(
 		bandname(),
 		"Australia",
-		[]m.OrganisationUser{},
+		[]models.OrganisationUser{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
@@ -51,17 +50,17 @@ func TestOrganisationUserCreateHandler(t *testing.T) {
 	closeTx(t, ctx)
 }
 
-func organisationUserFixture(ctx context.Context, t *testing.T) (i m.OrganisationUser) {
-	org := m.Organisation{}
+func organisationUserFixture(ctx context.Context, t *testing.T) (i models.OrganisationUser) {
+	org := models.Organisation{}
 	org.New(
 		bandname(),
 		"Australia",
-		[]m.OrganisationUser{},
+		[]models.OrganisationUser{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
 
-	user := m.User{}
+	user := models.User{}
 	user.New(
 		bandEmail(),
 		bandname(),
@@ -92,7 +91,7 @@ func TestOrganisationUserDeletion(t *testing.T) {
 	ctx = contextifyOrgAdmin(ctx, org)
 	req = req.WithContext(ctx)
 
-	u := m.User{}
+	u := models.User{}
 	u.New(
 		bandEmail(),
 		bandname(),
@@ -140,12 +139,12 @@ func TestOrganisationUserCreateHandlerAddExistingUser(t *testing.T) {
 	t.Parallel()
 	ctx := getCtx(t)
 
-	user := m.User{}
+	user := models.User{}
 	user.New(bandEmail(), bandname())
 	assert.Nil(t, user.Save(ctx))
 
-	org := m.Organisation{}
-	org.New(bandname(), "Australia", []m.OrganisationUser{}, "aud")
+	org := models.Organisation{}
+	org.New(bandname(), "Australia", []models.OrganisationUser{}, "aud")
 	assert.Nil(t, org.Save(ctx))
 
 	form := url.Values{
@@ -197,11 +196,11 @@ func TestOrganisationUserCreateHandlerAddNewUserByEmail(t *testing.T) {
 
 	email := bandEmail()
 
-	org := m.Organisation{}
+	org := models.Organisation{}
 	org.New(
 		bandname(),
 		"Australia",
-		[]m.OrganisationUser{},
+		[]models.OrganisationUser{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
@@ -252,7 +251,7 @@ func TestOrganisationUserCreateHandlerAddNewUserByEmail(t *testing.T) {
 	assert.Equal(t, http.StatusOK, r2.Code)
 	assert.Contains(t, r2.Body.String(), email, "User email not found")
 
-	createdUser := m.User{}
+	createdUser := models.User{}
 	err = createdUser.FindByColumn(ctx, "email", email)
 	assert.Nil(t, err)
 

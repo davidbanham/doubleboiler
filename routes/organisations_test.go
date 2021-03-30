@@ -3,7 +3,7 @@ package routes
 import (
 	"context"
 	"doubleboiler/config"
-	m "doubleboiler/models"
+	"doubleboiler/models"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -17,7 +17,7 @@ func TestOrganisationCreateOrUpdateHandler(t *testing.T) {
 	t.Parallel()
 	ctx := getCtx(t)
 
-	user := m.User{}
+	user := models.User{}
 	user.New(bandEmail(), bandname())
 	user.Save(ctx)
 
@@ -32,7 +32,7 @@ func TestOrganisationCreateOrUpdateHandler(t *testing.T) {
 		Form:   form,
 	}
 
-	u := m.User{}
+	u := models.User{}
 	u.New(bandEmail(), bandname())
 	u.Admin = true
 	assert.Nil(t, u.Save(ctx))
@@ -53,11 +53,11 @@ func TestOrganisationCreateOrUpdateHandlerUpdate(t *testing.T) {
 	t.Parallel()
 	ctx := getCtx(t)
 
-	org := m.Organisation{}
+	org := models.Organisation{}
 	org.New(
 		bandname(),
 		"Australia",
-		[]m.OrganisationUser{},
+		[]models.OrganisationUser{},
 		"aud",
 	)
 	org.Save(ctx)
@@ -73,7 +73,7 @@ func TestOrganisationCreateOrUpdateHandlerUpdate(t *testing.T) {
 		Form:   form,
 	}
 
-	u := m.User{}
+	u := models.User{}
 	u.New(bandEmail(), bandname())
 	assert.Nil(t, u.Save(ctx))
 
@@ -103,7 +103,7 @@ func TestOrganisationHandler(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	u := m.User{}
+	u := models.User{}
 	u.New(
 		bandEmail(),
 		bandname(),
@@ -172,7 +172,7 @@ func TestOrganisationsInvalidInputChecking(t *testing.T) {
 	}
 	req = req.WithContext(ctx)
 
-	u := m.User{}
+	u := models.User{}
 	u.New(bandEmail(), bandname())
 
 	ctx = context.WithValue(ctx, "user", u)
@@ -200,11 +200,11 @@ func TestCopySampleOrgData(t *testing.T) {
 	assert.Nil(t, copySampleOrgData(ctx, newOrg))
 }
 
-func organisationFixture(ctx context.Context, t *testing.T) (i m.Organisation) {
+func organisationFixture(ctx context.Context, t *testing.T) (i models.Organisation) {
 	i.New(
 		bandname(),
 		"Australia",
-		[]m.OrganisationUser{},
+		[]models.OrganisationUser{},
 		"aud",
 	)
 	err := i.Save(ctx)

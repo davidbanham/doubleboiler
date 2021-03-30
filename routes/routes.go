@@ -4,7 +4,6 @@ import (
 	"context"
 	"doubleboiler/config"
 	"doubleboiler/models"
-	m "doubleboiler/models"
 	"log"
 	"net/http"
 	"os"
@@ -203,7 +202,7 @@ func targetOrgIDFromContext(ctx context.Context) string {
 
 func activeOrgFromContext(ctx context.Context) models.Organisation {
 	if ctx == nil {
-		return m.Organisation{}
+		return models.Organisation{}
 	}
 
 	targetOrg := targetOrgIDFromContext(ctx)
@@ -216,21 +215,21 @@ func activeOrgFromContext(ctx context.Context) models.Organisation {
 		}
 	}
 
-	return m.Organisation{}
+	return models.Organisation{}
 }
 
 func orgsFromContext(ctx context.Context) models.Organisations {
 	if ctx == nil {
-		return m.Organisations{}
+		return models.Organisations{}
 	}
 
 	unconv := ctx.Value("organisations")
 
 	if unconv == nil {
-		return m.Organisations{}
+		return models.Organisations{}
 	}
 
-	orgs := unconv.(m.Organisations)
+	orgs := unconv.(models.Organisations)
 
 	return orgs
 }

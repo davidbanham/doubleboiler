@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/models"
-	m "doubleboiler/models"
 	"fmt"
 	"testing"
 
@@ -31,7 +30,7 @@ func getCtx(t *testing.T) context.Context {
 }
 
 func contextifyOrgAdmin(ctx context.Context, org models.Organisation) context.Context {
-	ctx = context.WithValue(ctx, "organisation_users", m.OrganisationUsers{
+	ctx = context.WithValue(ctx, "organisation_users", models.OrganisationUsers{
 		Data: []models.OrganisationUser{
 			models.OrganisationUser{
 				OrganisationID: org.ID, Roles: models.Roles{
@@ -40,7 +39,7 @@ func contextifyOrgAdmin(ctx context.Context, org models.Organisation) context.Co
 			},
 		},
 	})
-	ctx = context.WithValue(ctx, "organisations", m.Organisations{
+	ctx = context.WithValue(ctx, "organisations", models.Organisations{
 		Data: []models.Organisation{
 			org,
 		},

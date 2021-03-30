@@ -2,7 +2,6 @@ package routes
 
 import (
 	"doubleboiler/models"
-	m "doubleboiler/models"
 	"doubleboiler/util"
 	"fmt"
 	"net/http"
@@ -39,12 +38,12 @@ func TestSignupFlow(t *testing.T) {
 
 	assert.Equal(t, 302, rr.Code)
 
-	u := m.User{}
+	u := models.User{}
 	u.FindByColumn(ctx, "email", email)
 	assert.False(t, u.Verified)
 
-	orgs := m.Organisations{}
-	orgs.FindAll(ctx, m.OrganisationsContainingUser{ID: u.ID})
+	orgs := models.Organisations{}
+	orgs.FindAll(ctx, models.OrganisationsContainingUser{ID: u.ID})
 	orgfound := false
 	for _, o := range orgs.Data {
 		if o.Name == orgname {
@@ -111,7 +110,7 @@ func TestVerificationHandlerValid(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "Just set a password")
 	assert.Contains(t, rr.Body.String(), "Submit")
 
-	u := m.User{}
+	u := models.User{}
 	u.FindByID(ctx, fix.ID)
 	assert.False(t, u.Verified)
 
@@ -159,7 +158,7 @@ func TestVerificationHandlerInvalidToken(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Invalid token")
 
-	u := m.User{}
+	u := models.User{}
 	u.FindByID(ctx, u.ID)
 	assert.False(t, u.Verified)
 
@@ -186,7 +185,7 @@ func TestVerificationHandlerExpiredToken(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Token is expired")
 
-	u := m.User{}
+	u := models.User{}
 	u.FindByID(ctx, u.ID)
 	assert.False(t, u.Verified)
 
@@ -213,7 +212,7 @@ func TestVerificationHandlerInvalidExpiry(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Invalid expiry string")
 
-	u := m.User{}
+	u := models.User{}
 	u.FindByID(ctx, u.ID)
 	assert.False(t, u.Verified)
 

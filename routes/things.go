@@ -3,7 +3,6 @@ package routes
 import (
 	"context"
 	"doubleboiler/models"
-	m "doubleboiler/models"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -68,7 +67,7 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var thing m.Thing
+	var thing models.Thing
 
 	// Thing already exists. This is an update.
 	if r.FormValue("id") != "" {
@@ -97,13 +96,13 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type thingPageData struct {
-	Thing   m.Thing
+	Thing   models.Thing
 	Context context.Context
 }
 
 func thingHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	p := m.Thing{}
+	p := models.Thing{}
 	err := p.FindByID(r.Context(), vars["id"])
 	if err != nil {
 		errRes(w, r, 500, "A database error has occurred", err)
@@ -144,9 +143,9 @@ func thingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	things := m.Things{}
+	things := models.Things{}
 
-	err := things.FindAll(r.Context(), m.ByOrg{ID: targetOrg.ID})
+	err := things.FindAll(r.Context(), models.ByOrg{ID: targetOrg.ID})
 	if err != nil {
 		errRes(w, r, 500, "error fetching things", err)
 		return

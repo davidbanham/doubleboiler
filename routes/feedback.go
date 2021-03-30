@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"doubleboiler/config"
-	m "doubleboiler/models"
 	"context"
+	"doubleboiler/config"
+	"doubleboiler/models"
 	"fmt"
 	"net/http"
 
@@ -11,10 +11,10 @@ import (
 )
 
 type helpPageData struct {
-	Organisations m.Organisations
+	Organisations models.Organisations
 	Email         string
 	Context       context.Context
-	User          m.User
+	User          models.User
 }
 
 type contactPagedata struct {
@@ -41,17 +41,17 @@ func init() {
 }
 
 func serveHelp(w http.ResponseWriter, r *http.Request) {
-	user := m.User{}
+	user := models.User{}
 
 	con := r.Context().Value("user")
 	if con != nil {
-		user = con.(m.User)
+		user = con.(models.User)
 	}
 
-	relatedOrganisations := m.Organisations{}
+	relatedOrganisations := models.Organisations{}
 	ptr := r.Context().Value("organisations")
 	if ptr != nil {
-		relatedOrganisations = ptr.(m.Organisations)
+		relatedOrganisations = ptr.(models.Organisations)
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "help.html", helpPageData{
@@ -76,17 +76,17 @@ func serveSalesEnquiry(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveTrialModeUpgrade(w http.ResponseWriter, r *http.Request) {
-	user := m.User{}
+	user := models.User{}
 
 	con := r.Context().Value("user")
 	if con != nil {
-		user = con.(m.User)
+		user = con.(models.User)
 	}
 
-	relatedOrganisations := m.Organisations{}
+	relatedOrganisations := models.Organisations{}
 	ptr := r.Context().Value("organisations")
 	if ptr != nil {
-		relatedOrganisations = ptr.(m.Organisations)
+		relatedOrganisations = ptr.(models.Organisations)
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "trial_mode_upgrade.html", helpPageData{

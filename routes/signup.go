@@ -2,7 +2,7 @@ package routes
 
 import (
 	"context"
-	m "doubleboiler/models"
+	"doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
 	"net/http"
@@ -35,7 +35,7 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := m.User{}
+	user := models.User{}
 	user.FindByID(r.Context(), uid)
 
 	if user.Verified {
@@ -82,7 +82,7 @@ func serveSignupSuccessful(w http.ResponseWriter, r *http.Request) {
 }
 
 type verifyPageData struct {
-	User    m.User
+	User    models.User
 	Token   string
 	Expiry  string
 	Context context.Context

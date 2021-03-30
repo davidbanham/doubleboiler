@@ -4,7 +4,6 @@ import (
 	"context"
 	"doubleboiler/config"
 	"doubleboiler/models"
-	m "doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
 	"net/http"
@@ -42,14 +41,14 @@ func init() {
 }
 
 func userImpersonater(w http.ResponseWriter, r *http.Request) {
-	loggedInUser := r.Context().Value("user").(m.User)
+	loggedInUser := r.Context().Value("user").(models.User)
 	if !loggedInUser.Admin {
 		errRes(w, r, 403, "You are not an admin", nil)
 		return
 	}
 
 	vars := mux.Vars(r)
-	u := m.User{}
+	u := models.User{}
 	if err := u.FindByID(r.Context(), vars["id"]); err != nil {
 		errRes(w, r, 500, "error fetching user", err)
 		return
@@ -74,7 +73,7 @@ func userImpersonater(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &cookie)
 
-	relatedOrganisations := r.Context().Value("organisations").(m.Organisations)
+	relatedOrganisations := r.Context().Value("organisations").(models.Organisations)
 
 	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
 		Organisations: relatedOrganisations,
@@ -99,7 +98,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	flow := ""
 
-	u := m.User{}
+	u := models.User{}
 	if r.FormValue("id") != "" {
 		if err := u.FindByID(r.Context(), r.FormValue("id")); err != nil {
 			errRes(w, r, 400, "Specified ID does not exist", err)
@@ -170,7 +169,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			if r.FormValue("token") != "" {
 				flow = "signup"
 			}
-			hash, err := m.HashPassword(r.FormValue("password"))
+			hash, err := models.HashPassword(r.FormValue("password"))
 			if err != nil {
 				errRes(w, r, 500, "Error creating password hash.", err)
 				return
@@ -186,7 +185,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	savePermitted := newUser
 	untypedUser := r.Context().Value("user")
 	if untypedUser != nil {
-		loggedInUser := untypedUser.(m.User)
+		loggedInUser := untypedUser.(models.User)
 		if loggedInUser.Admin || u.ID == loggedInUser.ID {
 			savePermitted = true
 		}
@@ -221,7 +220,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	orgname := r.FormValue("orgname")
 	orgcountry := r.FormValue("orgcountry")
 	orgcurrency := r.FormValue("currency")
-	createdOrg := m.Organisation{}
+	createdOrg := models.Organisation{}
 	if orgname != "" {
 		var err error
 		err, createdOrg = createOrgFromSignup(r.Context(), u, orgname, orgcountry, orgcurrency)
@@ -259,19 +258,19 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type usersPageData struct {
-	Users   m.Users
+	Users   models.Users
 	Context context.Context
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(m.User)
+	user := r.Context().Value("user").(models.User)
 	if !user.Admin {
 		errRes(w, r, http.StatusForbidden, "Only application admins may list users", nil)
 		return
 	}
 
-	u := m.Users{}
-	err := u.FindAll(r.Context(), m.All{})
+	u := models.Users{}
+	err := u.FindAll(r.Context(), models.All{})
 	if err != nil {
 		errRes(w, r, 500, "error fetching users", err)
 		return
@@ -289,20 +288,20 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	user := r.Context().Value("user").(m.User)
+	user := r.Context().Value("user").(models.User)
 	if user.ID != vars["id"] && !user.Admin {
 		errRes(w, r, http.StatusForbidden, "You are not authorized to view this user", nil)
 		return
 	}
 
-	u := m.User{}
+	u := models.User{}
 	err := u.FindByID(r.Context(), vars["id"])
 	if err != nil {
 		errRes(w, r, 500, "error fetching user", err)
 		return
 	}
 
-	orgs := map[string]m.Organisation{}
+	orgs := map[string]models.Organisation{}
 	for _, org := range orgsFromContext(r.Context()).Data {
 		orgs[org.ID] = org
 	}
@@ -318,25 +317,25 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func userSettingsRedir(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(m.User)
+	user := r.Context().Value("user").(models.User)
 	http.Redirect(w, r, "/users/"+user.ID, 302)
 }
 
 type userPageData struct {
 	Context  context.Context
-	User     m.User
-	OrgsByID map[string]m.Organisation
+	User     models.User
+	OrgsByID map[string]models.Organisation
 }
 
-func createOrgFromSignup(ctx context.Context, u m.User, orgname, orgcountry, orgcurrency string) (error, m.Organisation) {
-	orgUser := m.OrganisationUser{}
+func createOrgFromSignup(ctx context.Context, u models.User, orgname, orgcountry, orgcurrency string) (error, models.Organisation) {
+	orgUser := models.OrganisationUser{}
 	orgUser.New(u.ID, "", models.Roles{"admin": true})
 
-	org := m.Organisation{}
+	org := models.Organisation{}
 	org.New(
 		orgname,
 		orgcountry,
-		[]m.OrganisationUser{
+		[]models.OrganisationUser{
 			orgUser,
 		},
 		orgcurrency,

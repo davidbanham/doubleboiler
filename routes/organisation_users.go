@@ -5,7 +5,6 @@ import (
 	"doubleboiler/config"
 	"doubleboiler/copy"
 	"doubleboiler/models"
-	m "doubleboiler/models"
 	"doubleboiler/util"
 	"fmt"
 	"log"
@@ -59,7 +58,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := strings.ToLower(r.FormValue("email"))
-	user := m.User{}
+	user := models.User{}
 	err := user.FindByColumn(r.Context(), "email", strings.ToLower(email))
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -86,7 +85,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	ou := m.OrganisationUser{}
+	ou := models.OrganisationUser{}
 	ou.New(
 		user.ID,
 		org.ID,
@@ -103,7 +102,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 func organisationUserDeletionHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	ou := m.OrganisationUser{}
+	ou := models.OrganisationUser{}
 	ou.FindByID(r.Context(), vars["id"])
 
 	org := orgFromContext(r.Context(), ou.OrganisationID)
@@ -121,7 +120,7 @@ func organisationUserDeletionHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/organisations/"+ou.OrganisationID, 302)
 }
 
-func sendOrgAdditionEmail(user m.User, org m.Organisation) (err error) {
+func sendOrgAdditionEmail(user models.User, org models.Organisation) (err error) {
 	emailHTML, emailText := copy.OrgAdditionEmail(org.Name)
 
 	err = notifications.SendEmail(notifications.Email{
@@ -139,7 +138,7 @@ func sendOrgAdditionEmail(user m.User, org m.Organisation) (err error) {
 	return
 }
 
-func sendOrgInviteEmail(user m.User, org m.Organisation) (err error) {
+func sendOrgInviteEmail(user models.User, org models.Organisation) (err error) {
 	expiry := util.CalcExpiry(30)
 	token := util.CalcToken(user.Email, expiry)
 	escaped := url.QueryEscape(token)

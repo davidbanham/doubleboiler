@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/models"
-	m "doubleboiler/models"
 	"net/http"
 	"strings"
 
@@ -36,13 +35,13 @@ func init() {
 
 type orgCreationPageData struct {
 	Context context.Context
-	User    m.User
+	User    models.User
 }
 
 func organisationCreationFormHandler(w http.ResponseWriter, r *http.Request) {
 	if err := Tmpl.ExecuteTemplate(w, "create-organisation.html", orgCreationPageData{
 		Context: r.Context(),
-		User:    r.Context().Value("user").(m.User),
+		User:    r.Context().Value("user").(models.User),
 	}); err != nil {
 		errRes(w, r, 500, "Templating error", err)
 		return
@@ -51,7 +50,7 @@ func organisationCreationFormHandler(w http.ResponseWriter, r *http.Request) {
 
 func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	user := r.Context().Value("user").(m.User)
+	user := r.Context().Value("user").(models.User)
 
 	required := []string{
 		"name",
@@ -72,7 +71,7 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	r.Form["read_only_fields"] = deblank(r.Form["read_only_fields"])
 	r.Form["private_fields"] = deblank(r.Form["private_fields"])
 
-	var org m.Organisation
+	var org models.Organisation
 
 	// Org already exists. This is an update.
 	if r.FormValue("id") != "" {
@@ -86,11 +85,11 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		org.Country = r.FormValue("country")
 	} else {
 		// Org doesn't exist. Let's create it.
-		org = m.Organisation{}
+		org = models.Organisation{}
 		org.New(
 			r.FormValue("name"),
 			r.FormValue("country"),
-			[]m.OrganisationUser{},
+			[]models.OrganisationUser{},
 			r.FormValue("currency"),
 		)
 
@@ -104,7 +103,7 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		ou := m.OrganisationUser{}
+		ou := models.OrganisationUser{}
 		ou.New(user.ID, org.ID, models.Roles{"admin": true})
 		if err := ou.Save(r.Context()); err != nil {
 			errRes(w, r, 500, "A database error has occurred", err)
@@ -127,7 +126,7 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type organisationsPageData struct {
-	Organisations m.Organisations
+	Organisations models.Organisations
 	Context       context.Context
 }
 
@@ -146,7 +145,7 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 
 type organisationPageData struct {
 	Context      context.Context
-	Organisation m.Organisation
+	Organisation models.Organisation
 	URI          string
 	ProductName  string
 }

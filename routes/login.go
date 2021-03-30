@@ -2,7 +2,7 @@ package routes
 
 import (
 	"context"
-	m "doubleboiler/models"
+	"doubleboiler/models"
 	"log"
 	"net/http"
 	"strings"
@@ -67,15 +67,15 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inputEmail := strings.ToLower(r.FormValue("email"))
-	u := m.User{}
-	err := u.FindByColumn(r.Context(), "email", inputEmail)
+	user := models.User{}
+	err := user.FindByColumn(r.Context(), "email", inputEmail)
 	if err != nil {
 		log.Println("ERROR finding user for login", err)
 		errRes(w, r, 401, "Email not found", err)
 		return
 	}
 
-	passwordFailed := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(r.Form["password"][0]))
+	passwordFailed := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(r.Form["password"][0]))
 	if passwordFailed != nil {
 		errRes(w, r, 403, "Incorrect password", nil)
 		return
@@ -83,7 +83,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	expiration := time.Now().Add(30 * 24 * time.Hour)
 	encoded, err := secureCookie.Encode("doubleboiler-user", map[string]string{
-		"ID": u.ID,
+		"ID": user.ID,
 	})
 	if err != nil {
 		errRes(w, r, 500, "Error encoding cookie", nil)

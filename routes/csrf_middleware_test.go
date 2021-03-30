@@ -1,7 +1,7 @@
 package routes
 
 import (
-	m "doubleboiler/models"
+	"doubleboiler/models"
 	"doubleboiler/util"
 	"net/http"
 	"net/http/httptest"
@@ -21,7 +21,7 @@ func TestCSRFMiddleware(t *testing.T) {
 	var rr *httptest.ResponseRecorder
 	var err error
 	var req *http.Request
-	var userFix m.User
+	var userFix models.User
 
 	// It should deny a POST without a valid csrf token
 	rr = httptest.NewRecorder()

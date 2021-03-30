@@ -4,7 +4,7 @@ import (
 	"context"
 	"doubleboiler/config"
 	"doubleboiler/copy"
-	m "doubleboiler/models"
+	"doubleboiler/models"
 	"doubleboiler/util"
 	"fmt"
 	"net/http"
@@ -27,7 +27,7 @@ func init() {
 func passwordResetHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
-	u := m.User{}
+	u := models.User{}
 	err := u.FindByColumn(r.Context(), "email", strings.ToLower(r.FormValue("email")))
 	if err != nil {
 		errRes(w, r, 500, "Error looking up user", err)
@@ -67,7 +67,7 @@ func serveResetPassword(w http.ResponseWriter, r *http.Request) {
 		uid := qs.Get("uid")
 		expiry := qs.Get("expiry")
 
-		user := m.User{}
+		user := models.User{}
 		if err := user.FindByID(r.Context(), uid); err != nil {
 			errRes(w, r, 404, "User not found", err)
 			return
@@ -91,7 +91,7 @@ func serveResetPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 type setNewPasswordPageData struct {
-	User    m.User
+	User    models.User
 	Token   string
 	Expiry  string
 	Context context.Context
