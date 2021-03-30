@@ -16,15 +16,15 @@ type Organisation struct {
 	Revision string
 }
 
-func (o *Organisation) New(name, country string, users []OrganisationUser, currency string) {
-	o.ID = uuid.NewV4().String()
-	o.Users = users
-	o.Name = name
-	o.Country = country
-	o.Revision = uuid.NewV4().String()
+func (org *Organisation) New(name, country string, users []OrganisationUser, currency string) {
+	org.ID = uuid.NewV4().String()
+	org.Users = users
+	org.Name = name
+	org.Country = country
+	org.Revision = uuid.NewV4().String()
 }
 
-func (o *Organisation) Save(ctx context.Context) error {
+func (org *Organisation) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
 	row := db.QueryRowContext(ctx, `INSERT INTO organisations (
@@ -37,18 +37,18 @@ func (o *Organisation) Save(ctx context.Context) error {
 		name,
 		country
 	) = ($3, $4, $5) RETURNING revision`,
-		o.ID,
-		o.Revision,
+		org.ID,
+		org.Revision,
 		uuid.NewV4().String(),
-		o.Name,
-		o.Country,
+		org.Name,
+		org.Country,
 	)
 
-	err := row.Scan(&o.Revision)
+	err := row.Scan(&org.Revision)
 	return err
 }
 
-func (o *Organisation) FindByColumn(ctx context.Context, col, val string) error {
+func (org *Organisation) FindByColumn(ctx context.Context, col, val string) error {
 	db := ctx.Value("tx").(Querier)
 
 	err := db.QueryRowContext(ctx, `SELECT
@@ -57,17 +57,17 @@ func (o *Organisation) FindByColumn(ctx context.Context, col, val string) error 
 	name,
 	country
 	FROM organisations WHERE `+col+` = $1`, val).Scan(
-		&o.ID,
-		&o.Revision,
-		&o.Name,
-		&o.Country,
+		&org.ID,
+		&org.Revision,
+		&org.Name,
+		&org.Country,
 	)
 
 	if err != nil {
 		return err
 	}
 
-	o.Users = []OrganisationUser{}
+	org.Users = []OrganisationUser{}
 
 	rows, err := db.QueryContext(ctx, `SELECT
 	organisations_users.id,
@@ -78,26 +78,26 @@ func (o *Organisation) FindByColumn(ctx context.Context, col, val string) error 
 	FROM organisations_users
 	INNER JOIN users
 	ON organisations_users.user_id = users.id
-	WHERE organisations_users.organisation_id = $1`, o.ID)
+	WHERE organisations_users.organisation_id = $1`, org.ID)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		u := OrganisationUser{}
-		err = rows.Scan(&u.ID, &u.Revision, &u.UserID, &u.OrganisationID, &u.Email)
+		orguser := OrganisationUser{}
+		err = rows.Scan(&orguser.ID, &orguser.Revision, &orguser.UserID, &orguser.OrganisationID, &orguser.Email)
 		if err != nil {
 			return err
 		}
-		o.Users = append(o.Users, u)
+		org.Users = append(org.Users, orguser)
 	}
 
 	return err
 }
 
-func (o *Organisation) FindByID(ctx context.Context, id string) error {
-	return o.FindByColumn(ctx, "id", id)
+func (org *Organisation) FindByID(ctx context.Context, id string) error {
+	return org.FindByColumn(ctx, "id", id)
 }
 
 type Organisations struct {
@@ -136,13 +136,13 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 	}
 
 	for rows.Next() {
-		o := Organisation{}
-		err = rows.Scan(&o.ID, &o.Revision, &o.Name, &o.Country)
+		org := Organisation{}
+		err = rows.Scan(&org.ID, &org.Revision, &org.Name, &org.Country)
 		if err != nil {
 			return err
 		}
 
-		(*organisations).Data = append((*organisations).Data, o)
+		(*organisations).Data = append((*organisations).Data, org)
 	}
 
 	return err

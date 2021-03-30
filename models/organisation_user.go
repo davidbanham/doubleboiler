@@ -22,17 +22,17 @@ type OrganisationUser struct {
 
 type Roles map[string]bool
 
-func (r Roles) Value() (driver.Value, error) {
-	return json.Marshal(r)
+func (roles Roles) Value() (driver.Value, error) {
+	return json.Marshal(roles)
 }
 
-func (r *Roles) Scan(value interface{}) error {
+func (roles *Roles) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("type assertion to []byte failed")
 	}
 
-	return json.Unmarshal(b, &r)
+	return json.Unmarshal(b, &roles)
 }
 
 func (c *OrganisationUser) New(userID, organisationID string, roles Roles) {

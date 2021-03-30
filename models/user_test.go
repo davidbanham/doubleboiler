@@ -12,9 +12,9 @@ func init() {
 	modelCollectionsUnderTest = append(modelCollectionsUnderTest, usersFix())
 }
 
-func userFixture() (u User) {
+func userFixture() (user User) {
 	email := fmt.Sprintf("%s@example.com", randString())
-	u.New(email, randString())
+	user.New(email, randString())
 	return
 }
 

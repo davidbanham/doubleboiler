@@ -26,26 +26,26 @@ type User struct {
 	Revision              string
 }
 
-func (u *User) New(email, rawpassword string) {
+func (user *User) New(email, rawpassword string) {
 	hash, _ := HashPassword(rawpassword)
-	u.ID = uuid.NewV4().String()
-	u.Email = strings.ToLower(email)
-	u.Password = string(hash)
-	u.Verified = false
-	u.Revision = uuid.NewV4().String()
+	user.ID = uuid.NewV4().String()
+	user.Email = strings.ToLower(email)
+	user.Password = string(hash)
+	user.Verified = false
+	user.Revision = uuid.NewV4().String()
 }
 
-func (u *User) Save(ctx context.Context) error {
+func (user *User) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, "INSERT INTO users (id, revision, email, password, verified, verification_email_sent) VALUES ($1, $2, $4, $5, $6, $7) ON CONFLICT (revision) DO UPDATE SET (revision, email, password, verified, verification_email_sent) = ($3, $4, $5, $6, $7) RETURNING revision", u.ID, u.Revision, uuid.NewV4().String(), strings.ToLower(u.Email), u.Password, u.Verified, u.VerificationEmailSent)
-	err := row.Scan(&u.Revision)
+	row := db.QueryRowContext(ctx, "INSERT INTO users (id, revision, email, password, verified, verification_email_sent) VALUES ($1, $2, $4, $5, $6, $7) ON CONFLICT (revision) DO UPDATE SET (revision, email, password, verified, verification_email_sent) = ($3, $4, $5, $6, $7) RETURNING revision", user.ID, user.Revision, uuid.NewV4().String(), strings.ToLower(user.Email), user.Password, user.Verified, user.VerificationEmailSent)
+	err := row.Scan(&user.Revision)
 	if err != nil {
 		return err
 	}
 
 	task := kewpie.Task{}
-	err = task.Marshal(u)
+	err = task.Marshal(user)
 	if err != nil {
 		return err
 	}
@@ -53,14 +53,14 @@ func (u *User) Save(ctx context.Context) error {
 	return nil
 }
 
-func (u *User) FindByID(ctx context.Context, id string) error {
-	return u.FindByColumn(ctx, "id", id)
+func (user *User) FindByID(ctx context.Context, id string) error {
+	return user.FindByColumn(ctx, "id", id)
 }
 
-func (u *User) FindByColumn(ctx context.Context, col, val string) error {
+func (user *User) FindByColumn(ctx context.Context, col, val string) error {
 	db := ctx.Value("tx").(Querier)
 
-	err := db.QueryRowContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE "+col+" = $1", val).Scan(&u.ID, &u.Revision, &u.Email, &u.Password, &u.Admin, &u.Verified, &u.VerificationEmailSent)
+	err := db.QueryRowContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE "+col+" = $1", val).Scan(&user.ID, &user.Revision, &user.Email, &user.Password, &user.Admin, &user.Verified, &user.VerificationEmailSent)
 	if err != nil {
 		return err
 	}
@@ -68,15 +68,15 @@ func (u *User) FindByColumn(ctx context.Context, col, val string) error {
 	return nil
 }
 
-func (u *User) SendVerificationEmail(ctx context.Context, org Organisation) error {
-	if !u.HasEmail() {
+func (user *User) SendVerificationEmail(ctx context.Context, org Organisation) error {
+	if !user.HasEmail() {
 		return nil
 	}
 
 	expiry := util.CalcExpiry(365)
-	token := util.CalcToken(u.Email, expiry)
+	token := util.CalcToken(user.Email, expiry)
 	escaped := url.QueryEscape(token)
-	verificationUrl := fmt.Sprintf("%s/verify?expiry=%s&uid=%s&token=%s", config.URI, expiry, u.ID, escaped)
+	verificationUrl := fmt.Sprintf("%s/verify?expiry=%s&uid=%s&token=%s", config.URI, expiry, user.ID, escaped)
 	emailHTML, emailText := copy.VerificationEmail(verificationUrl, org.Name)
 
 	subject := []string{}
@@ -90,7 +90,7 @@ func (u *User) SendVerificationEmail(ctx context.Context, org Organisation) erro
 	fromAddress := fmt.Sprintf("%s <%s>", org.Name, config.SYSTEM_EMAIL_ONLY)
 
 	mail := notifications.Email{
-		To:      u.Email,
+		To:      user.Email,
 		From:    fromAddress,
 		ReplyTo: config.SYSTEM_EMAIL,
 		Text:    emailText,
@@ -108,15 +108,15 @@ func (u *User) SendVerificationEmail(ctx context.Context, org Organisation) erro
 	}
 
 	db := ctx.Value("tx").(Querier)
-	_, err := db.ExecContext(ctx, "UPDATE users SET verification_email_sent = true WHERE id = $1", u.ID)
+	_, err := db.ExecContext(ctx, "UPDATE users SET verification_email_sent = true WHERE id = $1", user.ID)
 	if err == nil {
-		u.VerificationEmailSent = true
+		user.VerificationEmailSent = true
 	}
 	return err
 }
 
-func (u User) HasEmail() bool {
-	if u.Email == "" {
+func (user User) HasEmail() bool {
+	if user.Email == "" {
 		return false
 	}
 
@@ -151,13 +151,13 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 	defer rows.Close()
 
 	for rows.Next() {
-		u := User{}
+		user := User{}
 
-		err = rows.Scan(&u.ID, &u.Revision, &u.Email, &u.Password, &u.Admin, &u.Verified, &u.VerificationEmailSent)
+		err = rows.Scan(&user.ID, &user.Revision, &user.Email, &user.Password, &user.Admin, &user.Verified, &user.VerificationEmailSent)
 		if err != nil {
 			return err
 		}
-		(*users).Data = append((*users).Data, u)
+		(*users).Data = append((*users).Data, user)
 	}
 	return err
 }
