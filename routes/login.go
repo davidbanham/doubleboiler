@@ -2,8 +2,8 @@ package routes
 
 import (
 	"context"
+	"doubleboiler/logger"
 	"doubleboiler/models"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -69,7 +69,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	inputEmail := strings.ToLower(r.FormValue("email"))
 	user := models.User{}
 	if err := user.FindByColumn(r.Context(), "email", inputEmail); err != nil {
-		log.Println("ERROR finding user for login", err)
+		logger.Log(r.Context(), logger.Error, "finding user for login", err)
 		errRes(w, r, 401, "Email not found", err)
 		return
 	}

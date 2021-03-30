@@ -2,8 +2,9 @@ package routes
 
 import (
 	"context"
+	"doubleboiler/logger"
 	"doubleboiler/models"
-	"log"
+	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -29,7 +30,7 @@ func userMiddleware(h http.Handler) http.Handler {
 				HttpOnly: true,
 			}
 			http.SetCookie(w, &deadCookie)
-			log.Println("ERROR decoding user ID from cookie", c.Value, cookieValue)
+			logger.Log(r.Context(), logger.Error, "decoding user ID from cookie", c.Value, cookieValue)
 			http.Redirect(w, r, "/login", 302)
 			return
 		}
@@ -41,7 +42,7 @@ func userMiddleware(h http.Handler) http.Handler {
 		}
 
 		if !assetPath.MatchString(r.URL.Path) {
-			log.Printf("INFO User seen: %s, %s, %s, %s\n", user.ID, user.Email, r.Method, r.URL.Path)
+			logger.Log(r.Context(), logger.Info, fmt.Sprintf("User seen: %s, %s, %s, %s\n", user.ID, user.Email, r.Method, r.URL.Path))
 		}
 
 		con := context.WithValue(r.Context(), "user", user)

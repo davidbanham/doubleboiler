@@ -3,8 +3,8 @@ package send_email
 import (
 	"context"
 	"doubleboiler/config"
+	"doubleboiler/logger"
 	"fmt"
-	"log"
 	"strings"
 
 	kewpie "github.com/davidbanham/kewpie_go/v3"
@@ -14,7 +14,7 @@ import (
 func Init() {
 	go func() {
 		if err := config.QUEUE.Subscribe(context.Background(), config.SEND_EMAIL_QUEUE_NAME, Handler{}); err != nil {
-			log.Println("ERROR Queue error", config.SEND_EMAIL_QUEUE_NAME, err)
+			logger.Log(context.Background(), logger.Error, "Queue error", config.SEND_EMAIL_QUEUE_NAME, err)
 		}
 	}()
 }

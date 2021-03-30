@@ -2,8 +2,8 @@ package routes
 
 import (
 	"doubleboiler/config"
+	"doubleboiler/logger"
 	"errors"
-	"log"
 	"net/http"
 	"runtime/debug"
 )
@@ -23,7 +23,7 @@ func recoverWrap(h http.Handler) http.Handler {
 					err = errors.New("Unknown error")
 				}
 				debug.PrintStack()
-				log.Println("ERROR UNHANDLED PANIC", err)
+				logger.Log(r.Context(), logger.Error, "UNHANDLED PANIC", err)
 				errText := ""
 				if config.RENDER_ERRORS {
 					errText = err.Error()

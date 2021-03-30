@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"doubleboiler/logger"
 	"doubleboiler/models"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -18,7 +18,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		username = fmt.Sprintf("%s - %s", u.Email, u.ID)
 	}
 
-	log.Printf("INFO Destroying cookie for %s", username)
+	logger.Log(r.Context(), logger.Info, fmt.Sprintf("Destroying cookie for %s", username))
 
 	userCookie := http.Cookie{
 		Path:     "/",

@@ -3,8 +3,8 @@ package routes
 import (
 	"context"
 	"doubleboiler/config"
+	"doubleboiler/logger"
 	"doubleboiler/models"
-	"log"
 	"net/http"
 	"os"
 
@@ -111,7 +111,7 @@ var upgrader = websocket.Upgrader{}
 func serveChangeWatcher(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Print("upgrade:", err)
+		logger.Log(r.Context(), logger.Debug, "upgrade:", err)
 		return
 	}
 	defer c.Close()

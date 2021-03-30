@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"doubleboiler/logger"
 	"doubleboiler/migrations/util"
 	"log"
 	"os"
@@ -23,14 +25,14 @@ func main() {
 
 	if err := m.Up(); err != nil {
 		if err == migrate.ErrNoChange {
-			log.Println("INFO database is up to date")
+			logger.Log(context.Background(), logger.Info, "database is up to date")
 			os.Exit(0)
 		} else {
 			log.Fatal(err)
 		}
 	}
 
-	log.Println("WARN database migrated")
+	logger.Log(context.Background(), logger.Warning, "database migrated")
 
 	util.PrintVersion(m)
 }

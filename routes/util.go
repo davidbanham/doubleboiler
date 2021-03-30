@@ -6,12 +6,12 @@ import (
 	"doubleboiler/config"
 	"doubleboiler/copy"
 	"doubleboiler/heroicons"
+	"doubleboiler/logger"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -400,10 +400,10 @@ func errRes(w http.ResponseWriter, r *http.Request, code int, message string, er
 			config.ReportError(reportableErr)
 		}
 
-		log.Printf("WARN Sending Error Response: %+v, %+v, %+v, %+v", code, message, r.URL.String(), err)
+		logger.Log(r.Context(), logger.Warning, "Sending Error Response: %+v, %+v, %+v, %+v", code, message, r.URL.String(), err)
 		if code == 500 {
-			log.Println("ERROR", err)
-			log.Println(string(debug.Stack()))
+			logger.Log(r.Context(), logger.Error, err)
+			logger.Log(r.Context(), logger.Debug, string(debug.Stack()))
 		}
 
 		w.WriteHeader(code)
@@ -427,7 +427,7 @@ func errRes(w http.ResponseWriter, r *http.Request, code int, message string, er
 	case *sql.Tx:
 		rollbackErr := v.Rollback()
 		if rollbackErr != nil {
-			log.Printf("ERROR Error rolling back tx: %+v", rollbackErr)
+			logger.Log(r.Context(), logger.Error, fmt.Sprintf("Error rolling back tx: %+v", rollbackErr))
 		}
 	default:
 		//fmt.Printf("DEBUG no transaction on error\n")

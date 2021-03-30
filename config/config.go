@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"database/sql"
+	"doubleboiler/logger"
 	"fmt"
 	"log"
 	"os"
@@ -98,9 +99,9 @@ func init() {
 
 	if os.Getenv("MAX_OPEN_SQL_CONNS") != "" {
 		num, err := strconv.Atoi(os.Getenv("MAX_OPEN_SQL_CONNS"))
-		log.Printf("INFO setting maximum DB connections for the pool to %d", num)
+		logger.Log(context.Background(), logger.Info, fmt.Sprintf("setting maximum DB connections for the pool to %d", num))
 		if err != nil {
-			log.Printf("ERROR parsing max open conns string: %s", err)
+			logger.Log(context.Background(), logger.Error, fmt.Sprintf("parsing max open conns string: %s", err))
 		}
 		Db.SetMaxOpenConns(num)
 	}
@@ -181,7 +182,7 @@ func init() {
 	ErrorReporter, err = errorreporting.NewClient(ctx, GOOGLE_PROJECT_ID, errorreporting.Config{
 		ServiceName: "doubleboiler",
 		OnError: func(err error) {
-			log.Printf("ERROR Could not log error: %v", err)
+			logger.Log(context.Background(), logger.Error, fmt.Sprintf("Could not log error: %v", err))
 		},
 	})
 	if err != nil {
@@ -192,10 +193,10 @@ func init() {
 func ReportError(err error) {
 	if REPORT_ERRORS {
 		if err == nil {
-			log.Println("ERROR ReportError called with a nil error")
+			logger.Log(context.Background(), logger.Error, "ReportError called with a nil error")
 			return
 		}
-		log.Println("ERROR", err.Error())
+		logger.Log(context.Background(), logger.Error, err.Error())
 		if ErrorReporter != nil {
 			ErrorReporter.Report(errorreporting.Entry{
 				Error: err,

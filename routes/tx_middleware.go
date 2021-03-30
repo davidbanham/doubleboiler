@@ -1,10 +1,11 @@
 package routes
 
 import (
-	"doubleboiler/config"
 	"context"
 	"database/sql"
-	"log"
+	"doubleboiler/config"
+	"doubleboiler/logger"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -46,7 +47,7 @@ func txMiddleware(h http.Handler) http.Handler {
 
 			if err := tx.Commit(); err != nil {
 				if err != sql.ErrTxDone {
-					log.Printf("ERROR committing transaction: %+v", err)
+					logger.Log(r.Context(), logger.Error, fmt.Sprintf("committing transaction: %+v", err))
 				}
 			}
 		}

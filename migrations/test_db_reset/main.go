@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"doubleboiler/logger"
 	"doubleboiler/migrations/util"
 	"log"
 	"os"
@@ -27,7 +29,7 @@ func main() {
 
 	if err := m.Down(); err != nil {
 		if err == migrate.ErrNoChange {
-			log.Println("INFO database is at version 0")
+			logger.Log(context.Background(), logger.Info, "database is at version 0")
 		} else {
 			log.Fatal("ERROR migrating down", err)
 		}

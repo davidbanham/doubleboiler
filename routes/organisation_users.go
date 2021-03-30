@@ -1,13 +1,14 @@
 package routes
 
 import (
+	"context"
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
+	"doubleboiler/logger"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -68,7 +69,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 			email,
 			uuid.NewV4().String(),
 		)
-		if err = sendOrgInviteEmail(user, org); err != nil {
+		if err = sendOrgInviteEmail(r.Context(), user, org); err != nil {
 			errRes(w, r, 500, "Error inviting user", err)
 			return
 		}
@@ -77,7 +78,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if err == nil {
-		if err := sendOrgAdditionEmail(user, org); err != nil {
+		if err := sendOrgAdditionEmail(r.Context(), user, org); err != nil {
 			errRes(w, r, 500, "Error notifying user about new org", err)
 			return
 		}
@@ -117,7 +118,7 @@ func organisationUserDeletionHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/organisations/"+ou.OrganisationID, 302)
 }
 
-func sendOrgAdditionEmail(user models.User, org models.Organisation) error {
+func sendOrgAdditionEmail(ctx context.Context, user models.User, org models.Organisation) error {
 	emailHTML, emailText := copy.OrgAdditionEmail(org.Name)
 
 	if err := notifications.SendEmail(notifications.Email{
@@ -128,13 +129,13 @@ func sendOrgAdditionEmail(user models.User, org models.Organisation) error {
 		HTML:    emailHTML,
 		Subject: fmt.Sprintf("%s - New %s organisation", org.Name, config.NAME),
 	}); err != nil {
-		log.Println("ERROR sending verification email", err)
+		logger.Log(ctx, logger.Error, "sending verification email", err)
 		return err
 	}
 	return nil
 }
 
-func sendOrgInviteEmail(user models.User, org models.Organisation) error {
+func sendOrgInviteEmail(ctx context.Context, user models.User, org models.Organisation) error {
 	expiry := util.CalcExpiry(30)
 	token := util.CalcToken(user.Email, expiry)
 	escaped := url.QueryEscape(token)
@@ -150,7 +151,7 @@ func sendOrgInviteEmail(user models.User, org models.Organisation) error {
 		HTML:    emailHTML,
 		Subject: fmt.Sprintf("%s - Confirm your %s account", org.Name, config.NAME),
 	}); err != nil {
-		log.Println("ERROR sending verification email", err)
+		logger.Log(ctx, logger.Error, "sending verification email", err)
 		return err
 	}
 	return nil

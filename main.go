@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"doubleboiler/config"
+	"doubleboiler/logger"
 	"doubleboiler/routes"
 	"doubleboiler/workers"
 	"fmt"
@@ -59,9 +60,8 @@ func main() {
 				HostPolicy: func(_ context.Context, host string) error {
 					if strings.Contains(host, config.DOMAIN) {
 						return nil
-					} else {
-						return fmt.Errorf("Domain not valid")
 					}
+					return fmt.Errorf("Domain not valid")
 				},
 			}
 
@@ -84,20 +84,20 @@ func main() {
 				TLSConfig: &tls.Config{GetCertificate: certMgr.GetCertificate},
 			}
 
-			log.Printf("INFO Listening on 443 with TLS")
+			logger.Log(context.Background(), logger.Info, "Listening on 443 with TLS")
 			go func() {
 				log.Fatalf("ERROR %+v", s2.ListenAndServeTLS("", ""))
 			}()
 
-			log.Printf("INFO Listening on: %s", addr)
+			logger.Log(context.Background(), logger.Info, fmt.Sprintf("Listening on: %s", addr))
 			log.Fatalf("ERROR %+v", s.ListenAndServe())
 		} else {
-			log.Println("INFO Starting self signed server on", os.Getenv("PORT"))
+			logger.Log(context.Background(), logger.Info, "Starting self signed server on", os.Getenv("PORT"))
 
 			log.Fatalf("ERROR %+v", s.ListenAndServeTLS("./local_dev/server.crt", "./local_dev/server.key"))
 		}
 	} else {
-		log.Println("INFO Starting plain http server on", os.Getenv("PORT"))
+		logger.Log(context.Background(), logger.Info, "Starting plain http server on", os.Getenv("PORT"))
 
 		log.Fatalf("ERROR %+v", s.ListenAndServe())
 	}
@@ -111,7 +111,7 @@ var healthHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 
 	err := config.Db.Ping()
 	if err != nil {
-		fmt.Printf("ERROR db connection error: %+v \n", err)
+		logger.Log(context.Background(), logger.Error, fmt.Sprintf("db connection error: %+v \n", err))
 		w.WriteHeader(500)
 		w.Write([]byte("db connection error"))
 		return
