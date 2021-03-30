@@ -145,8 +145,7 @@ func thingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	things := models.Things{}
 
-	err := things.FindAll(r.Context(), models.ByOrg{ID: targetOrg.ID})
-	if err != nil {
+	if err := things.FindAll(r.Context(), models.ByOrg{ID: targetOrg.ID}); err != nil {
 		errRes(w, r, 500, "error fetching things", err)
 		return
 	}

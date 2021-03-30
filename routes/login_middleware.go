@@ -17,23 +17,21 @@ func loginMiddleware(h http.Handler) http.Handler {
 					return
 				}
 				if r.FormValue("token") != "" {
-					u := models.User{}
-					err := u.FindByID(r.Context(), r.FormValue("id"))
-					if err != nil {
+					user := models.User{}
+					if err := user.FindByID(r.Context(), r.FormValue("id")); err != nil {
 						errRes(w, r, 403, "Invalid user", err)
 						return
 					}
 					expiry := r.FormValue("expiry")
-					err = checkTokenExpiry(expiry)
-					if err != nil {
+					if err := checkTokenExpiry(expiry); err != nil {
 						redirToLogin(w, r)
 						return
 					}
-					expectedToken := util.CalcToken(u.Email, expiry)
+					expectedToken := util.CalcToken(user.Email, expiry)
 					if r.FormValue("token") == expectedToken {
 						expiration := time.Now().Add(30 * 24 * time.Hour)
 						encoded, err := secureCookie.Encode("user", map[string]string{
-							"ID": u.ID,
+							"ID": user.ID,
 						})
 						if err != nil {
 							errRes(w, r, 500, "Error encoding cookie", nil)

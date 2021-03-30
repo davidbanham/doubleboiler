@@ -48,15 +48,15 @@ func userImpersonater(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	u := models.User{}
-	if err := u.FindByID(r.Context(), vars["id"]); err != nil {
+	user := models.User{}
+	if err := user.FindByID(r.Context(), vars["id"]); err != nil {
 		errRes(w, r, 500, "error fetching user", err)
 		return
 	}
 
 	expiration := time.Now().Add(30 * 24 * time.Hour)
 	encoded, err := secureCookie.Encode("doubleboiler-user", map[string]string{
-		"ID": u.ID,
+		"ID": user.ID,
 	})
 	if err != nil {
 		errRes(w, r, 500, "Error encoding cookie", nil)
@@ -98,20 +98,20 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	flow := ""
 
-	u := models.User{}
+	user := models.User{}
 	if r.FormValue("id") != "" {
-		if err := u.FindByID(r.Context(), r.FormValue("id")); err != nil {
+		if err := user.FindByID(r.Context(), r.FormValue("id")); err != nil {
 			errRes(w, r, 400, "Specified ID does not exist", err)
 			return
 		}
 	} else {
-		u.FindByColumn(r.Context(), "email", r.FormValue("email"))
+		user.FindByColumn(r.Context(), "email", r.FormValue("email"))
 		// Ignore errors since we might be just trying to create this user
 	}
 
 	newUser := false
 
-	if u.ID == "" {
+	if user.ID == "" {
 		newUser = true
 		if r.FormValue("terms") != "agreed" {
 			errRes(w, r, 400, "You must agree to the terms and conditions", nil)
@@ -122,40 +122,40 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			rawpassword = uuid.NewV4().String()
 		}
 
-		u.New(
+		user.New(
 			r.FormValue("email"),
 			rawpassword,
 		)
 	} else {
 		targetID := r.FormValue("id")
-		if u.ID != "" {
-			targetID = u.ID
+		if user.ID != "" {
+			targetID = user.ID
 		}
 
-		u.FindByID(r.Context(), targetID)
-		if r.FormValue("email") != u.Email {
+		user.FindByID(r.Context(), targetID)
+		if r.FormValue("email") != user.Email {
 
 			task := kewpie.Task{}
-			if err := task.Marshal(u); err != nil {
+			if err := task.Marshal(user); err != nil {
 				errRes(w, r, 500, "Error queueing stripe member record update", err)
 				return
 			}
 
-			if u.HasEmail() {
-				if !u.Verified {
+			if user.HasEmail() {
+				if !user.Verified {
 					orgs := models.Organisations{}
-					if err := orgs.FindAll(r.Context(), models.OrganisationsContainingUser{ID: u.ID}); err != nil {
+					if err := orgs.FindAll(r.Context(), models.OrganisationsContainingUser{ID: user.ID}); err != nil {
 						errRes(w, r, 500, "Error looking up organisations", err)
 						return
 					}
 					for _, org := range orgs.Data {
-						if err := u.SendVerificationEmail(r.Context(), org); err != nil {
+						if err := user.SendVerificationEmail(r.Context(), org); err != nil {
 							errRes(w, r, 500, "Error queueing verification email", err)
 							return
 						}
 					}
 				} else {
-					if err := sendEmailChangedNotification(r.Context(), r.FormValue("email"), u.Email); err != nil {
+					if err := sendEmailChangedNotification(r.Context(), r.FormValue("email"), user.Email); err != nil {
 						errRes(w, r, 500, "Error queueing notification", err)
 						return
 					}
@@ -163,7 +163,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if r.FormValue("email") != "noop" {
-			u.Email = r.FormValue("email")
+			user.Email = r.FormValue("email")
 		}
 		if r.FormValue("password") != "" {
 			if r.FormValue("token") != "" {
@@ -174,11 +174,11 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 				errRes(w, r, 500, "Error creating password hash.", err)
 				return
 			}
-			u.Password = hash
+			user.Password = hash
 		}
 
-		if !u.Verified {
-			u.Verified = true
+		if !user.Verified {
+			user.Verified = true
 		}
 	}
 
@@ -186,7 +186,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	untypedUser := r.Context().Value("user")
 	if untypedUser != nil {
 		loggedInUser := untypedUser.(models.User)
-		if loggedInUser.Admin || u.ID == loggedInUser.ID {
+		if loggedInUser.Admin || user.ID == loggedInUser.ID {
 			savePermitted = true
 		}
 	}
@@ -198,7 +198,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		expectedToken := util.CalcToken(u.Email, expiry)
+		expectedToken := util.CalcToken(user.Email, expiry)
 		if r.FormValue("token") == expectedToken {
 			savePermitted = true
 		}
@@ -206,9 +206,9 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if savePermitted {
-		if err := u.Save(r.Context()); err != nil {
+		if err := user.Save(r.Context()); err != nil {
 			if err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"` {
-				config.ReportError(errors.New("Duplicate email hit: " + u.Email))
+				config.ReportError(errors.New("Duplicate email hit: " + user.Email))
 				errRes(w, r, 409, "That email address already exists in our system.", err)
 				return
 			}
@@ -223,7 +223,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	createdOrg := models.Organisation{}
 	if orgname != "" {
 		var err error
-		err, createdOrg = createOrgFromSignup(r.Context(), u, orgname, orgcountry, orgcurrency)
+		err, createdOrg = createOrgFromSignup(r.Context(), user, orgname, orgcountry, orgcurrency)
 		if err != nil {
 			if err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"` {
 				errRes(w, r, 409, "That email address already exists in our system.", err)
@@ -234,19 +234,19 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if !u.Verified {
-		if err := u.SendVerificationEmail(r.Context(), createdOrg); err != nil {
+	if !user.Verified {
+		if err := user.SendVerificationEmail(r.Context(), createdOrg); err != nil {
 			errRes(w, r, 500, "Error sending verification email", err)
 			return
 		}
 	}
 
-	next := "/users/" + u.ID
+	next := "/users/" + user.ID
 	if r.FormValue("next") != "" {
 		next = r.FormValue("next")
 	}
 
-	if u.Verified && orgname != "" {
+	if user.Verified && orgname != "" {
 		next = "/organisations"
 	}
 
@@ -263,21 +263,20 @@ type usersPageData struct {
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(models.User)
-	if !user.Admin {
+	loggedInUser := r.Context().Value("user").(models.User)
+	if !loggedInUser.Admin {
 		errRes(w, r, http.StatusForbidden, "Only application admins may list users", nil)
 		return
 	}
 
-	u := models.Users{}
-	err := u.FindAll(r.Context(), models.All{})
-	if err != nil {
+	user := models.Users{}
+	if err := user.FindAll(r.Context(), models.All{}); err != nil {
 		errRes(w, r, 500, "error fetching users", err)
 		return
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "users.html", usersPageData{
-		Users:   u,
+		Users:   user,
 		Context: r.Context(),
 	}); err != nil {
 		errRes(w, r, 500, "Templating error", err)
@@ -288,15 +287,14 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	user := r.Context().Value("user").(models.User)
-	if user.ID != vars["id"] && !user.Admin {
+	loggedInUser := r.Context().Value("user").(models.User)
+	if loggedInUser.ID != vars["id"] && !loggedInUser.Admin {
 		errRes(w, r, http.StatusForbidden, "You are not authorized to view this user", nil)
 		return
 	}
 
-	u := models.User{}
-	err := u.FindByID(r.Context(), vars["id"])
-	if err != nil {
+	user := models.User{}
+	if err := user.FindByID(r.Context(), vars["id"]); err != nil {
 		errRes(w, r, 500, "error fetching user", err)
 		return
 	}
@@ -307,7 +305,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "user.html", userPageData{
-		User:     u,
+		User:     user,
 		OrgsByID: orgs,
 		Context:  r.Context(),
 	}); err != nil {
@@ -327,9 +325,9 @@ type userPageData struct {
 	OrgsByID map[string]models.Organisation
 }
 
-func createOrgFromSignup(ctx context.Context, u models.User, orgname, orgcountry, orgcurrency string) (error, models.Organisation) {
+func createOrgFromSignup(ctx context.Context, user models.User, orgname, orgcountry, orgcurrency string) (error, models.Organisation) {
 	orgUser := models.OrganisationUser{}
-	orgUser.New(u.ID, "", models.Roles{"admin": true})
+	orgUser.New(user.ID, "", models.Roles{"admin": true})
 
 	org := models.Organisation{}
 	org.New(

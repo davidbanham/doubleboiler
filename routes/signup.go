@@ -29,8 +29,7 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	token := qs.Get("token")
 	expiry := qs.Get("expiry")
 
-	err := checkTokenExpiry(expiry)
-	if err != nil {
+	if err := checkTokenExpiry(expiry); err != nil {
 		errRes(w, r, 403, "Your invite token is invalid. "+err.Error(), err)
 		return
 	}

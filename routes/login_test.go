@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"doubleboiler/models"
 	"context"
+	"doubleboiler/models"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -59,7 +59,6 @@ func userFixture(ctx context.Context, t *testing.T) (models.User, string) {
 		bandname(),
 		rawpass,
 	)
-	err := u.Save(ctx)
-	assert.Nil(t, err)
+	assert.Nil(t, u.Save(ctx))
 	return u, rawpass
 }

@@ -252,8 +252,7 @@ func TestOrganisationUserCreateHandlerAddNewUserByEmail(t *testing.T) {
 	assert.Contains(t, r2.Body.String(), email, "User email not found")
 
 	createdUser := models.User{}
-	err = createdUser.FindByColumn(ctx, "email", email)
-	assert.Nil(t, err)
+	assert.Nil(t, createdUser.FindByColumn(ctx, "email", email))
 
 	assert.False(t, createdUser.Verified)
 

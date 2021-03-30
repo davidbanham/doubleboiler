@@ -59,8 +59,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	email := strings.ToLower(r.FormValue("email"))
 	user := models.User{}
-	err := user.FindByColumn(r.Context(), "email", strings.ToLower(email))
-	if err != nil {
+	if err := user.FindByColumn(r.Context(), "email", strings.ToLower(email)); err != nil {
 		if err != sql.ErrNoRows {
 			errRes(w, r, 500, "Error looking up user", err)
 			return
@@ -78,8 +77,7 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if err == nil {
-		err = sendOrgAdditionEmail(user, org)
-		if err != nil {
+		if err := sendOrgAdditionEmail(user, org); err != nil {
 			errRes(w, r, 500, "Error notifying user about new org", err)
 			return
 		}
@@ -111,8 +109,7 @@ func organisationUserDeletionHandler(w http.ResponseWriter, r *http.Request) {
 		errRes(w, r, http.StatusForbidden, "You are not an admin of that organisation", nil)
 	}
 
-	err := ou.Delete(r.Context())
-	if err != nil {
+	if err := ou.Delete(r.Context()); err != nil {
 		errRes(w, r, 500, "error removing user from organisation", err)
 		return
 	}
@@ -120,25 +117,24 @@ func organisationUserDeletionHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/organisations/"+ou.OrganisationID, 302)
 }
 
-func sendOrgAdditionEmail(user models.User, org models.Organisation) (err error) {
+func sendOrgAdditionEmail(user models.User, org models.Organisation) error {
 	emailHTML, emailText := copy.OrgAdditionEmail(org.Name)
 
-	err = notifications.SendEmail(notifications.Email{
+	if err := notifications.SendEmail(notifications.Email{
 		To:      user.Email,
 		From:    config.SYSTEM_EMAIL,
 		ReplyTo: config.SUPPORT_EMAIL,
 		Text:    emailText,
 		HTML:    emailHTML,
 		Subject: fmt.Sprintf("%s - New %s organisation", org.Name, config.NAME),
-	})
-	if err != nil {
+	}); err != nil {
 		log.Println("ERROR sending verification email", err)
-		return
+		return err
 	}
-	return
+	return nil
 }
 
-func sendOrgInviteEmail(user models.User, org models.Organisation) (err error) {
+func sendOrgInviteEmail(user models.User, org models.Organisation) error {
 	expiry := util.CalcExpiry(30)
 	token := util.CalcToken(user.Email, expiry)
 	escaped := url.QueryEscape(token)
@@ -146,17 +142,16 @@ func sendOrgInviteEmail(user models.User, org models.Organisation) (err error) {
 
 	emailHTML, emailText := copy.OrgInviteEmail(org.Name, verificationUrl)
 
-	err = notifications.SendEmail(notifications.Email{
+	if err := notifications.SendEmail(notifications.Email{
 		To:      user.Email,
 		From:    config.SYSTEM_EMAIL,
 		ReplyTo: config.SUPPORT_EMAIL,
 		Text:    emailText,
 		HTML:    emailHTML,
 		Subject: fmt.Sprintf("%s - Confirm your %s account", org.Name, config.NAME),
-	})
-	if err != nil {
+	}); err != nil {
 		log.Println("ERROR sending verification email", err)
-		return
+		return err
 	}
-	return
+	return nil
 }

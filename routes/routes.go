@@ -73,20 +73,18 @@ func servePrivacy(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
-	err := Tmpl.ExecuteTemplate(w, "index.html", marketingPageData{
+	if err := Tmpl.ExecuteTemplate(w, "index.html", marketingPageData{
 		Context: r.Context(),
-	})
-	if err != nil {
+	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
 	}
 }
 
 func servePricing(w http.ResponseWriter, r *http.Request) {
-	err := Tmpl.ExecuteTemplate(w, "pricing.html", marketingPageData{
+	if err := Tmpl.ExecuteTemplate(w, "pricing.html", marketingPageData{
 		Context: r.Context(),
-	})
-	if err != nil {
+	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
 	}
@@ -95,10 +93,9 @@ func servePricing(w http.ResponseWriter, r *http.Request) {
 func serveFeatureMarketingPage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	err := Tmpl.ExecuteTemplate(w, "feature_"+vars["name"]+".html", marketingPageData{
+	if err := Tmpl.ExecuteTemplate(w, "feature_"+vars["name"]+".html", marketingPageData{
 		Context: r.Context(),
-	})
-	if err != nil {
+	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
 	}
@@ -110,10 +107,9 @@ type welcomePageData struct {
 }
 
 func serveWelcome(w http.ResponseWriter, r *http.Request) {
-	err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
+	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
 		Context: r.Context(),
-	})
-	if err != nil {
+	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
 	}

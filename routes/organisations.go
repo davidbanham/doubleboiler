@@ -75,8 +75,7 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Org already exists. This is an update.
 	if r.FormValue("id") != "" {
-		err := org.FindByID(r.Context(), r.FormValue("id"))
-		if err != nil {
+		if err := org.FindByID(r.Context(), r.FormValue("id")); err != nil {
 			errRes(w, r, 500, "Error looking up organisation", err)
 			return
 		}
