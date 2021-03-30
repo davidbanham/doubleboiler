@@ -1,8 +1,6 @@
 package models
 
 import (
-	"context"
-	"database/sql"
 	"database/sql/driver"
 	"doubleboiler/config"
 	"encoding/json"
@@ -24,24 +22,8 @@ func init() {
 	}
 }
 
-type Query int
-
-const (
-	All Query = 1 + iota
-	OrganisationsContainingUser
-	ByOrg
-	ByCol
-	ByUser
-)
-
 var ErrRelationships = fmt.Errorf("This entity has active relationships")
 var ErrOrgLive = fmt.Errorf("This action is not permitted once an organisation is live")
-
-type Querier interface {
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
-}
 
 func Parallelize(functions ...func() error) (errors []error) {
 	var waitGroup sync.WaitGroup

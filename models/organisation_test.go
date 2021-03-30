@@ -39,8 +39,10 @@ func organisationsFix() modelCollectionFixture {
 	return modelCollectionFixture{
 		deps: []model{},
 		collection: &Organisations{
-			organisationFixture(),
-			organisationFixture(),
+			Data: []Organisation{
+				organisationFixture(),
+				organisationFixture(),
+			},
 		},
 	}
 }
@@ -55,8 +57,8 @@ func organisationFix() []model {
 func (c *Organisations) Iter() <-chan model {
 	ch := make(chan model)
 	go func() {
-		for i := 0; i < len((*c)); i++ {
-			ch <- &(*c)[i]
+		for i := 0; i < len((*c).Data); i++ {
+			ch <- &(*c).Data[i]
 		}
 		close(ch)
 	}()

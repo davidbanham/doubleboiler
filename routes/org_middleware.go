@@ -21,16 +21,17 @@ func orgMiddleware(h http.Handler) http.Handler {
 		if unconv != nil {
 			user := unconv.(models.User)
 
-			query := models.OrganisationsContainingUser
+			var query models.Query
+			query = models.OrganisationsContainingUser{}
 			if user.Admin {
-				query = models.All
+				query = models.All{}
 			}
 			if err := organisations.FindAll(r.Context(), query, user.ID); err != nil {
 				errRes(w, r, 500, "error looking up organisations", err)
 				return
 			}
 
-			if err := organisationUsers.FindAll(r.Context(), models.ByUser, user.ID); err != nil {
+			if err := organisationUsers.FindAll(r.Context(), models.ByUser{}, user.ID); err != nil {
 				errRes(w, r, 500, "error looking up organisation users", err)
 				return
 			}
@@ -68,8 +69,8 @@ func orgMiddleware(h http.Handler) http.Handler {
 			targetOrg := orgFromCookie(r)
 
 			if targetOrg == "" {
-				if len(organisations) > 0 {
-					targetOrg = organisations[0].ID
+				if len(organisations.Data) > 0 {
+					targetOrg = organisations.Data[0].ID
 				}
 			}
 

@@ -4,7 +4,7 @@
 
 <div class="px-4 bg-white shadow overflow-hidden sm:rounded-md">
 	<ul class="divide-y divide-gray-200">
-    {{ range .Organisations }}
+    {{ range .Organisations.Data }}
 		<li>
       <a href="/organisations/{{.ID}}" class="block hover:bg-gray-50">
 				<div class="px-4 py-4 sm:px-6">

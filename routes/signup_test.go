@@ -44,9 +44,9 @@ func TestSignupFlow(t *testing.T) {
 	assert.False(t, u.Verified)
 
 	orgs := m.Organisations{}
-	orgs.FindAll(ctx, m.OrganisationsContainingUser, u.ID)
+	orgs.FindAll(ctx, m.OrganisationsContainingUser{}, u.ID)
 	orgfound := false
-	for _, o := range orgs {
+	for _, o := range orgs.Data {
 		if o.Name == orgname {
 			orgfound = true
 		}
@@ -108,7 +108,7 @@ func TestVerificationHandlerValid(t *testing.T) {
 	verifyHandler(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	assert.Contains(t, rr.Body.String(), "Thanks!")
+	assert.Contains(t, rr.Body.String(), "Just set a password")
 	assert.Contains(t, rr.Body.String(), "Submit")
 
 	u := m.User{}

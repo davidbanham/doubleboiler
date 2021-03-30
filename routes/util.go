@@ -1,13 +1,13 @@
 package routes
 
 import (
+	"context"
+	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
 	"doubleboiler/heroicons"
 	"doubleboiler/models"
 	"doubleboiler/util"
-	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"html/template"
@@ -339,6 +339,9 @@ func init() {
 		"uniq": func() string {
 			return uuid.NewV4().String()
 		},
+		"queryString": func(vals url.Values) template.URL {
+			return "?" + template.URL(vals.Encode())
+		},
 	}
 
 	Tmpl = template.Must(template.New("main").Funcs(templateFuncMap).ParseGlob(getPath() + "/*"))
@@ -445,12 +448,12 @@ func shortDur(d time.Duration) string {
 
 func redirToDefaultOrg(w http.ResponseWriter, r *http.Request) {
 	orgs := orgsFromContext(r.Context())
-	if len(orgs) < 1 {
+	if len(orgs.Data) < 1 {
 		http.Redirect(w, r, "/create-organisation", http.StatusFound)
 		return
 	} else {
 		query := r.URL.Query()
-		query.Set("organisationid", orgs[0].ID)
+		query.Set("organisationid", orgs.Data[0].ID)
 		r.URL.RawQuery = query.Encode()
 	}
 

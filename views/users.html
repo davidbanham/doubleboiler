@@ -4,7 +4,7 @@
 
 <div class="px-4 bg-white shadow overflow-hidden sm:rounded-md">
 	<ul class="divide-y divide-gray-200">
-    {{ range .Users }}
+    {{ range .Users.Data }}
     <li>
       <a class="py-4 flex" href="/users/{{.ID}}">
         <img class="h-10 w-10 rounded-full" src="https://www.gravatar.com/avatar/{{hash .Email}}.jpg?s=70" alt="{{.Email}} avatar">

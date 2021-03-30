@@ -87,7 +87,7 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 	var rows *sql.Rows
 	var err error
 
-	switch q {
+	switch q.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:

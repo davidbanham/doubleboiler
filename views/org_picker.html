@@ -1,9 +1,9 @@
 {{ define "orgpicker" }}
-{{ if (orgsFromContext .Context) }}
+{{ if (orgsFromContext .Context).Data }}
 {{ $uniqClass := uniq }}
 <div class="mx-1">
   <select class="choices-picker {{$uniqClass}}" id="organisationID" name="organisationID" onchange="{{template "value_to_qs" "organisationid"}}">
-    {{ range (orgsFromContext .Context) }}
+    {{ range (orgsFromContext .Context).Data }}
     <option
       value="{{.ID}}"
       {{ if eq (activeOrgFromContext $.Context).ID .ID}} selected {{ end }}

@@ -100,15 +100,20 @@ func (o *Organisation) FindByID(ctx context.Context, id string) error {
 	return o.FindByColumn(ctx, "id", id)
 }
 
-type Organisations []Organisation
+type Organisations struct {
+	Data  []Organisation
+	Query Query
+}
 
 func (organisations *Organisations) FindAll(ctx context.Context, q Query, qa ...string) error {
+	organisations.Query = q
+
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch q {
+	switch q.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
@@ -137,7 +142,7 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query, qa ...
 			return err
 		}
 
-		(*organisations) = append((*organisations), o)
+		(*organisations).Data = append((*organisations).Data, o)
 	}
 
 	return err

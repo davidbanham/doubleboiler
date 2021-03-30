@@ -38,7 +38,11 @@ func contextifyOrgAdmin(ctx context.Context, org models.Organisation) context.Co
 			},
 		},
 	})
-	ctx = context.WithValue(ctx, "organisations", m.Organisations{org})
+	ctx = context.WithValue(ctx, "organisations", m.Organisations{
+		Data: []models.Organisation{
+			org,
+		},
+	})
 	ctx = context.WithValue(ctx, "target_org", org.ID)
 	return ctx
 }

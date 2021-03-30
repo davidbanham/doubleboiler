@@ -1,0 +1,13 @@
+{{ define "pagination" }}
+{{ if (not (eq .Query.Limit 0)) }}
+<div class="row center">
+  <ul class="pagination">
+    <li class="waves-effect {{if (eq .Query.Page.Number 1)}}disabled{{end}}"><a href="{{queryString .Query.PrevPage}}"><i class="material-icons">chevron_left</i></a></li>
+    {{ range .Query.Pages }}
+    <li class="{{ if (eq $.Query.Page.Number .) }}active{{end}} waves-effect"><a href="{{queryString ($.Query.GivenPage .).Values}}">{{.}}</a></li>
+    {{ end }}
+    <li class="waves-effect {{ if not (ge (len .Data) .Query.Limit) }} disabled {{end}}"><a href="{{queryString .Query.NextPage}}"><i class="material-icons">chevron_right</i></a></li>
+  </ul>
+</div>
+{{ end }}
+{{ end }}

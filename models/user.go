@@ -123,15 +123,20 @@ func (u User) HasEmail() bool {
 	return true
 }
 
-type Users []User
+type Users struct {
+	Data  []User
+	Query Query
+}
 
 func (users *Users) FindAll(ctx context.Context, q Query, qa ...string) error {
+	users.Query = q
+
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch q {
+	switch q.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
@@ -152,7 +157,7 @@ func (users *Users) FindAll(ctx context.Context, q Query, qa ...string) error {
 		if err != nil {
 			return err
 		}
-		(*users) = append((*users), u)
+		(*users).Data = append((*users).Data, u)
 	}
 	return err
 }

@@ -53,15 +53,20 @@ func (thing *Thing) FindByColumn(ctx context.Context, col, val string) error {
 	)
 }
 
-type Things []Thing
+type Things struct {
+	Data  []Thing
+	Query Query
+}
 
 func (things *Things) FindAll(ctx context.Context, q Query, qa ...string) error {
+	things.Query = q
+
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch q {
+	switch q.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByOrg:
@@ -86,7 +91,7 @@ func (things *Things) FindAll(ctx context.Context, q Query, qa ...string) error 
 		if err != nil {
 			return err
 		}
-		(*things) = append((*things), thing)
+		(*things).Data = append((*things).Data, thing)
 	}
 	return err
 }

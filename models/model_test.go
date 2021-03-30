@@ -123,7 +123,7 @@ func TestFindAll(t *testing.T) {
 		}
 
 		found := m.blank()
-		err := found.FindAll(ctx, All, "")
+		err := found.FindAll(ctx, All{}, "")
 		assert.Nil(t, err)
 
 		matched := 0

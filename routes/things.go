@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"context"
 	"doubleboiler/models"
 	m "doubleboiler/models"
-	"context"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -146,7 +146,7 @@ func thingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	things := m.Things{}
 
-	err := things.FindAll(r.Context(), m.ByOrg, targetOrg.ID)
+	err := things.FindAll(r.Context(), m.ByOrg{}, targetOrg.ID)
 	if err != nil {
 		errRes(w, r, 500, "error fetching things", err)
 		return

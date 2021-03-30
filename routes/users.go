@@ -1,11 +1,11 @@
 package routes
 
 import (
+	"context"
 	"doubleboiler/config"
 	"doubleboiler/models"
 	m "doubleboiler/models"
 	"doubleboiler/util"
-	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -145,11 +145,11 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			if u.HasEmail() {
 				if !u.Verified {
 					orgs := models.Organisations{}
-					if err := orgs.FindAll(r.Context(), models.OrganisationsContainingUser, u.ID); err != nil {
+					if err := orgs.FindAll(r.Context(), models.OrganisationsContainingUser{}, u.ID); err != nil {
 						errRes(w, r, 500, "Error looking up organisations", err)
 						return
 					}
-					for _, org := range orgs {
+					for _, org := range orgs.Data {
 						if err := u.SendVerificationEmail(r.Context(), org); err != nil {
 							errRes(w, r, 500, "Error queueing verification email", err)
 							return
@@ -271,7 +271,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u := m.Users{}
-	err := u.FindAll(r.Context(), m.All, "")
+	err := u.FindAll(r.Context(), m.All{}, "")
 	if err != nil {
 		errRes(w, r, 500, "error fetching users", err)
 		return
@@ -303,7 +303,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orgs := map[string]m.Organisation{}
-	for _, org := range orgsFromContext(r.Context()) {
+	for _, org := range orgsFromContext(r.Context()).Data {
 		orgs[org.ID] = org
 	}
 

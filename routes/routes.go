@@ -179,7 +179,7 @@ func orgFromContext(ctx context.Context, orgId string) models.Organisation {
 
 	organisations := unconv.(models.Organisations)
 
-	for _, org := range organisations {
+	for _, org := range organisations.Data {
 		if org.ID == orgId {
 			return org
 		}
@@ -210,7 +210,7 @@ func activeOrgFromContext(ctx context.Context) models.Organisation {
 
 	orgs := orgsFromContext(ctx)
 
-	for _, org := range orgs {
+	for _, org := range orgs.Data {
 		if org.ID == targetOrg {
 			return org
 		}

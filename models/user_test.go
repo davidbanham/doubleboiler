@@ -41,8 +41,10 @@ func usersFix() modelCollectionFixture {
 	return modelCollectionFixture{
 		deps: []model{},
 		collection: &Users{
-			userFixture(),
-			userFixture(),
+			Data: []User{
+				userFixture(),
+				userFixture(),
+			},
 		},
 	}
 }
@@ -57,8 +59,8 @@ func userFix() []model {
 func (c *Users) Iter() <-chan model {
 	ch := make(chan model)
 	go func() {
-		for i := 0; i < len((*c)); i++ {
-			ch <- &(*c)[i]
+		for i := 0; i < len((*c).Data); i++ {
+			ch <- &(*c).Data[i]
 		}
 		close(ch)
 	}()

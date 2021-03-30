@@ -40,8 +40,10 @@ func thingsFix() modelCollectionFixture {
 	return modelCollectionFixture{
 		deps: []model{&org},
 		collection: &Things{
-			thingFixture(org.ID),
-			thingFixture(org.ID),
+			Data: []Thing{
+				thingFixture(org.ID),
+				thingFixture(org.ID),
+			},
 		},
 	}
 }
@@ -58,8 +60,8 @@ func thingFix() []model {
 func (c *Things) Iter() <-chan model {
 	ch := make(chan model)
 	go func() {
-		for i := 0; i < len((*c)); i++ {
-			ch <- &(*c)[i]
+		for i := 0; i < len((*c).Data); i++ {
+			ch <- &(*c).Data[i]
 		}
 		close(ch)
 	}()
