@@ -8,24 +8,15 @@ import (
 	"net/http"
 	"os"
 
-	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	fsnotify "gopkg.in/fsnotify.v1"
 )
 
-var queue kewpie.Kewpie
-
 var r = mux.NewRouter()
 
 func Init() (h http.Handler) {
-	if err := queue.Connect(config.KEWPIE_BACKEND, []string{
-		config.SEND_EMAIL_QUEUE_NAME,
-	}, config.Db); err != nil {
-		log.Fatal("ERROR", err)
-	}
-
 	h = csrfMiddleware(r)
 	h = formParsingMiddleware(h)
 	h = orgMiddleware(h)

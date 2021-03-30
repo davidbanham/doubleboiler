@@ -2,25 +2,11 @@ package models
 
 import (
 	"database/sql/driver"
-	"doubleboiler/config"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
-
-	kewpie "github.com/davidbanham/kewpie_go/v3"
 )
-
-var queue kewpie.Kewpie
-
-func init() {
-	if err := queue.Connect(config.KEWPIE_BACKEND, []string{
-		config.SEND_EMAIL_QUEUE_NAME,
-	}, config.Db); err != nil {
-		log.Fatal("ERROR", err)
-	}
-}
 
 var ErrRelationships = fmt.Errorf("This entity has active relationships")
 var ErrOrgLive = fmt.Errorf("This action is not permitted once an organisation is live")

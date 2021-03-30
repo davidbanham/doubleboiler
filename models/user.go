@@ -103,7 +103,7 @@ func (user *User) SendVerificationEmail(ctx context.Context, org Organisation) e
 		return err
 	}
 
-	if err := queue.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
+	if err := config.QUEUE.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
 		return err
 	}
 

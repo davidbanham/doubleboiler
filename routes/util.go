@@ -530,7 +530,7 @@ func sendEmailChangedNotification(ctx context.Context, target, old string) error
 			return err
 		}
 
-		if err := queue.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
+		if err := config.QUEUE.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
 			return err
 		}
 	}

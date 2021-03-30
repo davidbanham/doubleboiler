@@ -1,7 +1,11 @@
 package routes
 
 import (
+	"context"
+	"doubleboiler/config"
+	"doubleboiler/workers"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -11,12 +15,15 @@ import (
 )
 
 func init() {
-	// NOTE by default we assume auth is handled by Cloud Run as per:
-	// https://cloud.google.com/run/docs/tutorials/pubsub#integrating-pubsub
-	// If you're not deploying to Cloud Run you must authenticate incoming messages yourself
-	r.Path("/webhooks/send-email").
-		Methods("POST").
-		HandlerFunc(sendEmail)
+	taskErrorHandler := func(ctx context.Context, httpErr kewpie.HTTPError) {
+		fmt.Println("ERROR", httpErr.Error.Error())
+	}
+
+	for queueName, handler := range workers.Handlers {
+		r.Path("/webhooks/tasks/" + queueName).
+			Methods("POST").
+			HandlerFunc(config.QUEUE.SubscribeHTTP(config.SECRET, handler, taskErrorHandler))
+	}
 }
 
 func sendEmail(w http.ResponseWriter, r *http.Request) {

@@ -12,6 +12,7 @@ import (
 
 	"cloud.google.com/go/errorreporting"
 	"cloud.google.com/go/storage"
+	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/davidbanham/required_env"
 	_ "github.com/lib/pq"
 )
@@ -37,7 +38,6 @@ var RENDER_ERRORS bool
 var REPORT_ERRORS bool
 var MAINTENANCE_MODE bool
 var KEWPIE_BACKEND string
-var GOOGLE_PUBSUB_AUDIENCE string
 var GOOGLE_PROJECT_ID string
 var SAMPLEORG_ID string
 
@@ -46,36 +46,37 @@ var SEND_EMAIL_QUEUE_NAME string
 var MAX_TIME, _ = time.Parse(time.RFC3339, "9999-05-05T15:04:05Z")
 var MIN_TIME = time.Unix(0, 0)
 
+var QUEUE kewpie.Kewpie
+
 var ErrorReporter *errorreporting.Client
 
 var Bucket *storage.BucketHandle
 
 func init() {
 	required_env.Ensure(map[string]string{
-		"PORT":                   "",
-		"DB_URI":                 "",
-		"HASH_KEY":               "",
-		"BLOCK_KEY":              "",
-		"AWS_ACCESS_KEY_ID":      "",
-		"AWS_SECRET_ACCESS_KEY":  "",
-		"STAGE":                  "",
-		"LOCAL":                  "false",
-		"DOMAIN":                 "", //example.com
-		"URI":                    "", //https://example.com:MAYBEPORT
-		"NAME":                   "Doubleboiler",
-		"SYSTEM_EMAIL":           "",
-		"SUPPORT_EMAIL":          "",
-		"SECRET":                 "",
-		"WEBHOOK_SECRET":         "",
-		"AUTOCERT":               "false",
-		"TLS":                    "true",
-		"RENDER_ERRORS":          "false",
-		"REPORT_ERRORS":          "true",
-		"MAINTENANCE_MODE":       "false",
-		"KEWPIE_BACKEND":         "",
-		"GOOGLE_PROJECT_ID":      "",
-		"SAMPLEORG_ID":           "3f815ebd-2eb7-4dae-be2d-460c726438e2",
-		"GOOGLE_PUBSUB_AUDIENCE": "",
+		"PORT":                  "",
+		"DB_URI":                "",
+		"HASH_KEY":              "",
+		"BLOCK_KEY":             "",
+		"AWS_ACCESS_KEY_ID":     "",
+		"AWS_SECRET_ACCESS_KEY": "",
+		"STAGE":                 "",
+		"LOCAL":                 "false",
+		"DOMAIN":                "", //example.com
+		"URI":                   "", //https://example.com:MAYBEPORT
+		"NAME":                  "Doubleboiler",
+		"SYSTEM_EMAIL":          "",
+		"SUPPORT_EMAIL":         "",
+		"SECRET":                "",
+		"WEBHOOK_SECRET":        "",
+		"AUTOCERT":              "false",
+		"TLS":                   "true",
+		"RENDER_ERRORS":         "false",
+		"REPORT_ERRORS":         "true",
+		"MAINTENANCE_MODE":      "false",
+		"KEWPIE_BACKEND":        "",
+		"GOOGLE_PROJECT_ID":     "",
+		"SAMPLEORG_ID":          "3f815ebd-2eb7-4dae-be2d-460c726438e2",
 	})
 
 	PORT = os.Getenv("PORT")
@@ -127,6 +128,29 @@ func init() {
 
 	SEND_EMAIL_QUEUE_NAME = fmt.Sprintf(queueNameTemplate, STAGE, "send_email")
 
+	allQueues := []string{
+		SEND_EMAIL_QUEUE_NAME,
+	}
+
+	QUEUE.AddPublishMiddleware(func(ctx context.Context, t *kewpie.Task, queueName string) error {
+		fmt.Println("DEBUG Publishing kewpie task", t)
+		return nil
+	})
+
+	QUEUE.AddPublishMiddleware(func(ctx context.Context, t *kewpie.Task, queueName string) error {
+		// Default handler URL
+		if t.Tags.Get("handler_url") == "" {
+			t.Tags.Set("handler_url", fmt.Sprintf("%s/webhooks/tasks/%s", URI, queueName))
+		}
+		return nil
+	})
+
+	KEWPIE_BACKEND = os.Getenv("KEWPIE_BACKEND")
+
+	if err := QUEUE.Connect(KEWPIE_BACKEND, allQueues, Db); err != nil {
+		log.Fatal("ERROR", err)
+	}
+
 	DOMAIN = os.Getenv("DOMAIN")
 	URI = os.Getenv("URI")
 	SAMPLEORG_ID = os.Getenv("SAMPLEORG_ID")
@@ -148,10 +172,7 @@ func init() {
 
 	LOCAL = os.Getenv("LOCAL") == "true"
 
-	KEWPIE_BACKEND = os.Getenv("KEWPIE_BACKEND")
-
 	GOOGLE_PROJECT_ID = os.Getenv("GOOGLE_PROJECT_ID")
-	GOOGLE_PUBSUB_AUDIENCE = os.Getenv("GOOGLE_PUBSUB_AUDIENCE")
 
 	ErrorReporter, err = errorreporting.NewClient(ctx, GOOGLE_PROJECT_ID, errorreporting.Config{
 		ServiceName: "doubleboiler",
