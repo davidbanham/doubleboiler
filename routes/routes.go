@@ -24,6 +24,7 @@ func Init() (h http.Handler) {
 	h = loginMiddleware(h)
 	h = userMiddleware(h)
 	h = txMiddleware(h)
+	h = traceMiddleware(h)
 	h = authFreeMiddleware(h)
 	h = recoverWrap(h)
 	h = handlers.LoggingHandler(os.Stdout, h)
