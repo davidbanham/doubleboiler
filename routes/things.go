@@ -145,7 +145,11 @@ func thingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	things := models.Things{}
 
-	if err := things.FindAll(r.Context(), models.ByOrg{ID: targetOrg.ID}); err != nil {
+	query := models.ByOrg{ID: targetOrg.ID}
+	query.DefaultPageSize = 50
+	query.Paginate(r.Form)
+
+	if err := things.FindAll(r.Context(), query); err != nil {
 		errRes(w, r, 500, "error fetching things", err)
 		return
 	}
