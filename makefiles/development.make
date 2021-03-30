@@ -2,7 +2,6 @@
 live_reload: export TEST_MOCKS_ON := false
 live_reload: export DB_URI := $(DEV_DB_URI)
 live_reload:
-	-xdg-open https://$(brand).localhost:3000
 	DB_URI=$(DEV_DB_URI) ENVIRONMENT=development ./local_dev/CompileDaemon -command="./doubleboiler" -include="*html" -include="*.js"
 
 .PHONY: rummage
