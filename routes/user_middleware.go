@@ -30,7 +30,7 @@ func userMiddleware(h http.Handler) http.Handler {
 				HttpOnly: true,
 			}
 			http.SetCookie(w, &deadCookie)
-			logger.Log(r.Context(), logger.Error, "decoding user ID from cookie", c.Value, cookieValue)
+			logger.Log(r.Context(), logger.Error, "decoding user ID from cookie", err, c.Value, cookieValue)
 			http.Redirect(w, r, "/login", 302)
 			return
 		}

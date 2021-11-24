@@ -74,7 +74,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	passwordFailed := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(r.Form["password"][0]))
+	passwordFailed := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(r.FormValue("password")))
 	if passwordFailed != nil {
 		errRes(w, r, 403, "Incorrect password", nil)
 		return

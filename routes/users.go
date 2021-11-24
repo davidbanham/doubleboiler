@@ -242,6 +242,11 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	next := "/users/" + user.ID
+
+	if flow == "signup" {
+		next = "/welcome"
+	}
+
 	if r.FormValue("next") != "" {
 		next = r.FormValue("next")
 	}

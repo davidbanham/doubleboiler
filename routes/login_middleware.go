@@ -9,7 +9,7 @@ import (
 
 func loginMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/users" {
+		if len(r.URL.Path) > 5 && r.URL.Path[0:6] == "/users" {
 			if r.Method == "POST" {
 				uid := r.FormValue("id")
 				if uid == "" {
@@ -30,7 +30,7 @@ func loginMiddleware(h http.Handler) http.Handler {
 					expectedToken := util.CalcToken(user.Email, expiry)
 					if r.FormValue("token") == expectedToken {
 						expiration := time.Now().Add(30 * 24 * time.Hour)
-						encoded, err := secureCookie.Encode("user", map[string]string{
+						encoded, err := secureCookie.Encode("doubleboiler-user", map[string]string{
 							"ID": user.ID,
 						})
 						if err != nil {
@@ -39,7 +39,7 @@ func loginMiddleware(h http.Handler) http.Handler {
 						}
 						cookie := http.Cookie{
 							Path:     "/",
-							Name:     "user",
+							Name:     "doubleboiler-user",
 							Value:    encoded,
 							Expires:  expiration,
 							Secure:   true,
