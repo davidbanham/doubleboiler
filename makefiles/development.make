@@ -1,7 +1,7 @@
 .PHONY: live_reload
 live_reload: export TEST_MOCKS_ON := false
 live_reload: export DB_URI := $(DEV_DB_URI)
-live_reload:
+live_reload: assets/css/main.css
 	DB_URI=$(DEV_DB_URI) ENVIRONMENT=development ./local_dev/CompileDaemon -command="./doubleboiler" -include="*html" -include="*.js"
 
 .PHONY: rummage

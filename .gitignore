@@ -3,3 +3,5 @@ google_credentials.json
 doubleboiler
 .migrate_installed
 .db_init
+node_modules
+./assets/css/main.css

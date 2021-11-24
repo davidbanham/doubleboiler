@@ -5,6 +5,7 @@ include ./makefiles/development.make
 include ./makefiles/go.make
 include ./makefiles/migrations.make
 include ./makefiles/standup.make
+include ./makefiles/tailwind.make
 
 name = app
 brand = doubleboiler
