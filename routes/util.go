@@ -400,7 +400,7 @@ func errRes(w http.ResponseWriter, r *http.Request, code int, message string, er
 			config.ReportError(reportableErr)
 		}
 
-		logger.Log(r.Context(), logger.Warning, "Sending Error Response: %+v, %+v, %+v, %+v", code, message, r.URL.String(), err)
+		logger.Log(r.Context(), logger.Warning, fmt.Sprintf("Sending Error Response: %+v, %+v, %+v, %+v", code, message, r.URL.String(), err))
 		if code == 500 {
 			logger.Log(r.Context(), logger.Error, err)
 			logger.Log(r.Context(), logger.Debug, string(debug.Stack()))
