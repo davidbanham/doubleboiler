@@ -71,8 +71,8 @@ github.com/davidbanham/english_conjoin v0.0.0-20190322044305-fef4c88385d1 h1:03N
 github.com/davidbanham/english_conjoin v0.0.0-20190322044305-fef4c88385d1/go.mod h1:kST+waGwakeEVXvvUmLeK0NgR9YQvS0Mj6J2SjTKKUY=
 github.com/davidbanham/human_duration v1.2.0 h1:V44AcXuUD59hqBghU9O8B/oOUh5EXBSPBruQsLWHbYI=
 github.com/davidbanham/human_duration v1.2.0/go.mod h1:BkH4YDdlV0jHVPzoze0oQNHZ70zLMJ4B/RQ04lVGEXI=
-github.com/davidbanham/kewpie_go/v3 v3.0.9 h1:LiNyemhDdcddbdX72GcljfDBc77fa51SOfE6rySf3CI=
-github.com/davidbanham/kewpie_go/v3 v3.0.9/go.mod h1:fkbMj40MGKsW7RdVfeG1TzXt7ycYCo3ZeQ77IfochUw=
+github.com/davidbanham/kewpie_go/v3 v3.2.2 h1:7EvnMZVuUz+W/NhAa7RdREt+Q9cSMaAdunUICXn+/OU=
+github.com/davidbanham/kewpie_go/v3 v3.2.2/go.mod h1:fkbMj40MGKsW7RdVfeG1TzXt7ycYCo3ZeQ77IfochUw=
 github.com/davidbanham/notifications v1.0.0 h1:SudtxVjVdxEz0cA4Pls1wpxyF5CtohBMWtQi2Z81g+U=
 github.com/davidbanham/notifications v1.0.0/go.mod h1:qbs7eHPQkb9VIterISSySX/b6ucW1+a86mXP2Uew7L4=
 github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244 h1:FgQ8KQ99RjcMqaTSqmdisj2quuDKlL1x62SoRtZQwqw=

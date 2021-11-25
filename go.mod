@@ -9,7 +9,7 @@ require (
 	github.com/davidbanham/certcache v0.0.0-20180228104134-93d5ff2ba3a1
 	github.com/davidbanham/english_conjoin v0.0.0-20190322044305-fef4c88385d1
 	github.com/davidbanham/human_duration v1.2.0
-	github.com/davidbanham/kewpie_go/v3 v3.0.9
+	github.com/davidbanham/kewpie_go/v3 v3.2.2
 	github.com/davidbanham/notifications v1.0.0
 	github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244
 	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0 // indirect
