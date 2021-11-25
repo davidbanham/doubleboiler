@@ -71,15 +71,13 @@ github.com/davidbanham/english_conjoin v0.0.0-20190322044305-fef4c88385d1 h1:03N
 github.com/davidbanham/english_conjoin v0.0.0-20190322044305-fef4c88385d1/go.mod h1:kST+waGwakeEVXvvUmLeK0NgR9YQvS0Mj6J2SjTKKUY=
 github.com/davidbanham/human_duration v1.2.0 h1:V44AcXuUD59hqBghU9O8B/oOUh5EXBSPBruQsLWHbYI=
 github.com/davidbanham/human_duration v1.2.0/go.mod h1:BkH4YDdlV0jHVPzoze0oQNHZ70zLMJ4B/RQ04lVGEXI=
-github.com/davidbanham/kewpie_go/v3 v3.2.2 h1:7EvnMZVuUz+W/NhAa7RdREt+Q9cSMaAdunUICXn+/OU=
-github.com/davidbanham/kewpie_go/v3 v3.2.2/go.mod h1:fkbMj40MGKsW7RdVfeG1TzXt7ycYCo3ZeQ77IfochUw=
+github.com/davidbanham/kewpie_go/v3 v3.2.3 h1:dKo3EnWvLlBw6DaNrEVSmm0iiR398LKK13TPULz8R74=
+github.com/davidbanham/kewpie_go/v3 v3.2.3/go.mod h1:F6TIS8EkCqMZNgVhZhN+cIODpbeZeZgPMA9BqX54a84=
 github.com/davidbanham/notifications v1.0.0 h1:SudtxVjVdxEz0cA4Pls1wpxyF5CtohBMWtQi2Z81g+U=
 github.com/davidbanham/notifications v1.0.0/go.mod h1:qbs7eHPQkb9VIterISSySX/b6ucW1+a86mXP2Uew7L4=
 github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244 h1:FgQ8KQ99RjcMqaTSqmdisj2quuDKlL1x62SoRtZQwqw=
 github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244/go.mod h1:zJVA+kv43obXkwVzNtnVJK9rIUvzRtV+rSe1qXyf4xk=
 github.com/denisenkom/go-mssqldb v0.0.0-20190515213511-eb9f6a1743f3/go.mod h1:zAg7JM8CkOJ43xKXIj7eRO9kmWm/TW578qo+oDO6tuM=
-github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 h1:CaO/zOnF8VvUfEbhRatPcwKVWamvbYd8tQGRWacE9kU=
-github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1/go.mod h1:+hnT3ywWDTAFrW5aE+u2Sa/wT555ZqwoCS+pk3p6ry4=
 github.com/dhui/dktest v0.3.2 h1:nZSDcnkpbotzT/nEHNsO+JCKY8i1Qoki1AYOpeLRb6M=
 github.com/dhui/dktest v0.3.2/go.mod h1:l1/ib23a/CmxAe7yixtrYPc8Iy90Zy2udyaHINM5p58=
 github.com/docker/distribution v2.7.0+incompatible/go.mod h1:J2gT2udsDAN96Uj4KfcMRqY0/ypR+oyYUYmja8H+y+w=
@@ -117,6 +115,8 @@ github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7a
 github.com/gogo/protobuf v1.2.0/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.3.1 h1:DqDEcV5aeaTmdFBePNpYsp3FlcVH/2ISVVM9Qf8PSls=
 github.com/gogo/protobuf v1.3.1/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXPKa29o=
+github.com/golang-jwt/jwt/v4 v4.1.0 h1:XUgk2Ex5veyVFVeLm0xhusUTQybEbexJXrvPNOKkSY0=
+github.com/golang-jwt/jwt/v4 v4.1.0/go.mod h1:/xlHOz8bRuivTWchD4jCa+NbatV+wEUSzwAxVc6locg=
 github.com/golang-migrate/migrate/v4 v4.11.0 h1:uqtd0ysK5WyBQ/T1K2uDIooJV0o2Obt6uPwP062DupQ=
 github.com/golang-migrate/migrate/v4 v4.11.0/go.mod h1:nqbpDbckcYjsCD5I8q5+NI9Tkk7SVcmaF40Ax1eAWhg=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b h1:VKtxabqXZkF25pY9ekfRL6a582T4P37/31XEstQ5p58=
