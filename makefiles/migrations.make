@@ -4,7 +4,8 @@ migrate:
 
 .PHONY: migrate_redo
 migrate_redo:
-	migrate -database $(DEV_DB_URI) -path ./migrations redo
+	migrate -database $(DEV_DB_URI) -path ./migrations down 1
+	migrate -database $(DEV_DB_URI) -path ./migrations up 1
 
 .PHONY: migrate_undo
 migrate_undo:
