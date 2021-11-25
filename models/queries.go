@@ -14,3 +14,8 @@ type ByUser struct {
 	ID string
 	queryBase
 }
+type ByPhrase struct {
+	Phrase string
+	OrgID  string
+	queryBase
+}

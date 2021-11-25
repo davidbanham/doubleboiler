@@ -72,18 +72,6 @@ func init() {
 		"diff": func(a, b int) int {
 			return a - b
 		},
-		"diffToColour": func(a int) string {
-			if a < 0 {
-				return "pulse red"
-			}
-			if a == 0 {
-				return "red"
-			}
-			if a < 6 {
-				return "orange"
-			}
-			return "green"
-		},
 		"breakMonths": func(nights []string) [][]string {
 			monthNights := [][]string{}
 			target := 0
@@ -400,6 +388,10 @@ func errRes(w http.ResponseWriter, r *http.Request, code int, message string, er
 			config.ReportError(reportableErr)
 		}
 
+		if clientSafe, addendum := isClientSafe(err); clientSafe {
+			message += " " + addendum
+		}
+
 		logger.Log(r.Context(), logger.Warning, fmt.Sprintf("Sending Error Response: %+v, %+v, %+v, %+v", code, message, r.URL.String(), err))
 		if code == 500 {
 			logger.Log(r.Context(), logger.Error, err)
@@ -549,4 +541,16 @@ func redirToLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/login?"+values.Encode(), 302)
 	return
+}
+
+func isClientSafe(err error) (bool, string) {
+	type clientSafe interface {
+		ClientSafeMessage() string
+	}
+	cse, ok := err.(clientSafe)
+	if ok {
+		return ok, cse.ClientSafeMessage()
+	} else {
+		return false, ""
+	}
 }

@@ -4,12 +4,24 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sync"
 )
 
-var ErrRelationships = fmt.Errorf("This entity has active relationships")
-var ErrOrgLive = fmt.Errorf("This action is not permitted once an organisation is live")
+type ClientSafeError struct {
+	Message string
+}
+
+func (err ClientSafeError) ClientSafeMessage() string {
+	return err.Message
+}
+
+func (err ClientSafeError) Error() string {
+	return err.Message
+}
+
+// For example
+var ErrRelationships = ClientSafeError{Message: "This entity has active relationships"}
+var ErrOrgLive = ClientSafeError{Message: "This action is not permitted once an organisation is live"}
 
 func Parallelize(functions ...func() error) (errors []error) {
 	var waitGroup sync.WaitGroup

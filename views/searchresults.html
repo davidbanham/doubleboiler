@@ -1,0 +1,41 @@
+{{ template "header" . }}
+
+{{ template "page_head" dict "Title" "Search Results" }}
+
+<div class="px-4 bg-white shadow overflow-hidden sm:rounded-md">
+  <ul class="divide-y divide-gray-200">
+    <li>
+      {{ template "searchbox" dict "Phrase" .Phrase }}
+    </li>
+    {{ if eq (len .Results.Data) 0 }}
+    <li>
+      <div class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-medium text-indigo-600 truncate">
+          Sorry, there are no results for that query.
+          </p>
+        </div>
+      </div>
+    </li>
+    {{ end }}
+    {{ range .Results.Data }}
+    <li>
+      <a href="/{{.Path}}/{{.ID}}" class="block hover:bg-gray-50">
+        <div class="px-4 py-4 sm:px-6">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-indigo-600 truncate">
+            {{.Label}}
+            </p>
+            <p class="text-sm font-medium text-indigo-600 truncate">
+            {{.EntityType}}
+            </p>
+          </div>
+        </div>
+      </a>
+    </li>
+    {{ end }}
+  </ul>
+  {{ template "pagination" .Results }}
+</div>
+
+{{ template "footer" . }}

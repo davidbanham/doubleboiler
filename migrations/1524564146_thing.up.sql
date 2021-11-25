@@ -12,4 +12,4 @@ ALTER TABLE things ADD COLUMN ts tsvector
     || to_tsvector('english', coalesce(description, ''))
   ) STORED;
 
-CREATE INDEX ts_idx ON things USING GIN (ts);
+CREATE INDEX things_ts_idx ON things USING GIN (ts);
