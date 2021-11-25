@@ -17,4 +17,4 @@ test_migrate:
 .PHONY: migration
 migname ?= $(shell bash -c 'read -p "Name: " name; echo $$name')
 migration:
-	migrate -database $(DEV_DB_URI) -path ./migrations create $(migname)
+	migrate -database $(DEV_DB_URI) create -dir ./migrations -ext sql $(migname)
