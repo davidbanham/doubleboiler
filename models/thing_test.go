@@ -12,7 +12,7 @@ func init() {
 }
 
 func thingFixture(organisationID string) (u Thing) {
-	u.New(randString(), organisationID)
+	u.New(randString(), randString(), organisationID)
 	return
 }
 

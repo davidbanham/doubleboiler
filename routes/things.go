@@ -53,6 +53,7 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	required := []string{
 		"name",
+		"description",
 		"organisationID",
 	}
 	okay := checkFormInput(required, r.Form, w, r)
@@ -78,11 +79,13 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		thing.Name = r.FormValue("name")
+		thing.Description = r.FormValue("description")
 	} else {
 		// Thing doesn't exist. Let's create it.
 
 		thing.New(
 			r.FormValue("name"),
+			r.FormValue("description"),
 			r.FormValue("organisationID"),
 		)
 	}

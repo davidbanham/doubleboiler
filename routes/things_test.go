@@ -22,6 +22,7 @@ func TestThingCreateHandler(t *testing.T) {
 
 	form := url.Values{
 		"name":           {bandname()},
+		"description":    {bandname()},
 		"organisationID": {org.ID},
 	}
 	req := &http.Request{
@@ -106,6 +107,7 @@ func TestThingsHandler(t *testing.T) {
 
 func thingFixture(ctx context.Context, t *testing.T, org models.Organisation) (p models.Thing) {
 	p.New(
+		bandname(),
 		bandname(),
 		org.ID,
 	)
