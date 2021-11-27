@@ -55,12 +55,6 @@ func TestThingHandler(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	u := models.User{}
-	u.New(
-		bandname(),
-		bandname(),
-	)
-
 	rr := httptest.NewRecorder()
 
 	r := mux.NewRouter()
@@ -105,13 +99,13 @@ func TestThingsHandler(t *testing.T) {
 	closeTx(t, ctx)
 }
 
-func thingFixture(ctx context.Context, t *testing.T, org models.Organisation) (p models.Thing) {
-	p.New(
+func thingFixture(ctx context.Context, t *testing.T, org models.Organisation) (thing models.Thing) {
+	thing.New(
 		bandname(),
 		bandname(),
 		org.ID,
 	)
-	err := p.Save(ctx)
+	err := thing.Save(ctx)
 	assert.Nil(t, err)
-	return p
+	return thing
 }

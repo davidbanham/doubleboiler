@@ -20,11 +20,11 @@ func (Thing) blank() model {
 	return &Thing{}
 }
 
-func (i Thing) id() string {
-	return i.ID
+func (thing Thing) id() string {
+	return thing.ID
 }
 
-func (i *Thing) nullDynamicValues() {
+func (thing *Thing) nullDynamicValues() {
 }
 
 func (Things) tablename() string {

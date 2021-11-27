@@ -257,14 +257,14 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.Users{}
-	if err := user.FindAll(r.Context(), models.All{}); err != nil {
+	users := models.Users{}
+	if err := users.FindAll(r.Context(), models.All{}); err != nil {
 		errRes(w, r, 500, "error fetching users", err)
 		return
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "users.html", usersPageData{
-		Users:   user,
+		Users:   users,
 		Context: r.Context(),
 	}); err != nil {
 		errRes(w, r, 500, "Templating error", err)
