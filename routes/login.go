@@ -98,12 +98,5 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	next := "/welcome"
-	if r.FormValue("next") != "" {
-		if r.FormValue("next") != "/login" {
-			next = r.FormValue("next")
-		}
-	}
-
-	http.Redirect(w, r, next, 302)
+	http.Redirect(w, r, nextFlow("/welcome", r.Form), 302)
 }

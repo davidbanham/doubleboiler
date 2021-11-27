@@ -96,8 +96,6 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	flow := ""
-
 	user := models.User{}
 	if r.FormValue("id") != "" {
 		if err := user.FindByID(r.Context(), r.FormValue("id")); err != nil {
@@ -166,9 +164,6 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			user.Email = r.FormValue("email")
 		}
 		if r.FormValue("password") != "" {
-			if r.FormValue("token") != "" {
-				flow = "signup"
-			}
 			hash, err := models.HashPassword(r.FormValue("password"))
 			if err != nil {
 				errRes(w, r, 500, "Error creating password hash.", err)
@@ -241,25 +236,13 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	next := "/users/" + user.ID
-
-	if flow == "signup" {
-		next = "/welcome"
-	}
-
-	if r.FormValue("next") != "" {
-		next = r.FormValue("next")
-	}
+	defaultNext := "/users/" + user.ID
 
 	if user.Verified && orgname != "" {
-		next = "/organisations"
+		defaultNext = "/organisations"
 	}
 
-	if flow != "" {
-		next += "?flow=" + flow
-	}
-
-	http.Redirect(w, r, next, 302)
+	http.Redirect(w, r, nextFlow(defaultNext, r.Form), 302)
 }
 
 type usersPageData struct {

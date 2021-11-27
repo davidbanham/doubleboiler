@@ -537,10 +537,32 @@ func dollarsToCents(in string) (int, error) {
 func redirToLogin(w http.ResponseWriter, r *http.Request) {
 	values := url.Values{
 		"next": []string{r.URL.String()},
-		"flow": []string{r.URL.Query().Get("flow")},
 	}
+
 	http.Redirect(w, r, "/login?"+values.Encode(), 302)
 	return
+}
+
+func nextFlow(defaultURL string, form url.Values) string {
+	ret, _ := url.Parse(defaultURL)
+	next := form.Get("next")
+	if next != "" {
+		parsed, _ := url.Parse(next)
+		if parsed.Path != "login" && parsed.Path != "/login" {
+			ret.Path = parsed.Path
+		}
+		for k, v := range parsed.Query() {
+			q := ret.Query()
+			q[k] = v
+			ret.RawQuery = q.Encode()
+		}
+	}
+	if form.Get("flow") != "" {
+		q := ret.Query()
+		q.Set("flow", form.Get("flow"))
+		ret.RawQuery = q.Encode()
+	}
+	return ret.String()
 }
 
 func isClientSafe(err error) (bool, string) {
