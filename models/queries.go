@@ -15,7 +15,8 @@ type ByUser struct {
 	queryBase
 }
 type ByPhrase struct {
-	Phrase string
-	OrgID  string
+	Phrase       string
+	OrgID        string
+	IncludeUsers bool
 	queryBase
 }

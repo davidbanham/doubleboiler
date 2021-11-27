@@ -1,7 +1,10 @@
 {{ template "header" . }}
 
+{{ if isAppAdmin .Context }}
 {{ template "breadcrumbs" dict "Crumbs" (crumbs "Users" "/users" .User.Email "#") }}
-
+{{ else }}
+{{ template "breadcrumbs" dict "Crumbs" (crumbs "Users" "#" .User.Email "#") }}
+{{ end }}
 
 <div class="relative bg-white">
   <div class="relative max-w-7xl mx-auto lg:grid lg:grid-cols-5">

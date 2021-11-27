@@ -204,12 +204,7 @@ func init() {
 			user := unconv.(models.User)
 			return util.CalcToken(user.ID, "")
 		},
-		"isAppAdmin": func(ctx context.Context) bool {
-			if !isLoggedIn(ctx) {
-				return false
-			}
-			return ctx.Value("user").(models.User).Admin
-		},
+		"isAppAdmin": isAppAdmin,
 		"chrome": func(ctx context.Context) bool {
 			if ctx == nil {
 				return true
@@ -575,4 +570,11 @@ func isClientSafe(err error) (bool, string) {
 	} else {
 		return false, ""
 	}
+}
+
+func isAppAdmin(ctx context.Context) bool {
+	if !isLoggedIn(ctx) {
+		return false
+	}
+	return ctx.Value("user").(models.User).Admin
 }

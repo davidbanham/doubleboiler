@@ -33,7 +33,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := models.SearchResults{}
 
-	query := models.ByPhrase{OrgID: targetOrg.ID, Phrase: r.FormValue("search_field")}
+	query := models.ByPhrase{OrgID: targetOrg.ID, Phrase: r.FormValue("search_field"), IncludeUsers: isAppAdmin(r.Context())}
 	query.DefaultPageSize = 50
 	query.Paginate(r.Form)
 

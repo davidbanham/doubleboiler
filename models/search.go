@@ -31,9 +31,29 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByPhrase:
-		rows, err = db.QueryContext(ctx, `SELECT
-		id, entity_type, label, uri_path, ts_rank_cd(ts, query) AS rank
-		FROM search_items, plainto_tsquery('english', $2) query WHERE organisation_id = $1 AND query @@ ts ORDER BY rank DESC`, v.OrgID, v.Phrase)
+		query := `SELECT
+					text 'Thing' AS entity_type, text 'things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
+			FROM
+					things, plainto_tsquery('english', $2) query WHERE organisation_id = $1 AND query @@ ts
+			UNION ALL
+			SELECT
+					text 'Organisation' AS entity_type, text 'organisations' AS uri_path, id AS id, name AS label, ts_rank_cd(ts, query) AS rank
+			FROM
+					organisations, plainto_tsquery('english', $2) query WHERE id = $1 AND query @@ ts`
+
+		if v.IncludeUsers {
+			query += `
+			UNION ALL
+			SELECT
+					text 'User' AS entity_type, text 'users' AS uri_path, id AS id, email AS label, 1 AS rank
+			FROM
+					users WHERE email = $2`
+		}
+
+		query += `
+			ORDER BY rank DESC`
+
+		rows, err = db.QueryContext(ctx, query, v.OrgID, v.Phrase)
 	}
 	if err != nil {
 		return err
@@ -43,7 +63,7 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 	for rows.Next() {
 		result := SearchResult{}
 		err = rows.Scan(
-			&result.ID, &result.EntityType, &result.Label, &result.Path, &result.Rank,
+			&result.EntityType, &result.Path, &result.ID, &result.Label, &result.Rank,
 		)
 		if err != nil {
 			return err

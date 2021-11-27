@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/models"
 	"doubleboiler/util"
@@ -254,6 +255,20 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	loggedInUser := r.Context().Value("user").(models.User)
 	if !loggedInUser.Admin {
 		errRes(w, r, http.StatusForbidden, "Only application admins may list users", nil)
+		return
+	}
+
+	if r.FormValue("email") != "" {
+		user := models.User{}
+		if err := user.FindByColumn(r.Context(), "email", r.FormValue(("email"))); err != nil {
+			if err == sql.ErrNoRows {
+				errRes(w, r, http.StatusNotFound, "No user found with that email address", nil)
+				return
+			}
+			errRes(w, r, http.StatusInternalServerError, "Database error", err)
+			return
+		}
+		http.Redirect(w, r, "/users/"+user.ID, 302)
 		return
 	}
 
