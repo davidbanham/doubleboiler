@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 type SearchResult struct {
@@ -31,27 +32,21 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByPhrase:
-		query := `SELECT
-					text 'Thing' AS entity_type, text 'things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
-			FROM
-					things, plainto_tsquery('english', $2) query WHERE organisation_id = $1 AND query @@ ts
-			UNION ALL
-			SELECT
-					text 'Organisation' AS entity_type, text 'organisations' AS uri_path, id AS id, name AS label, ts_rank_cd(ts, query) AS rank
-			FROM
-					organisations, plainto_tsquery('english', $2) query WHERE id = $1 AND query @@ ts`
-
-		if v.IncludeUsers {
-			query += `
-			UNION ALL
-			SELECT
-					text 'User' AS entity_type, text 'users' AS uri_path, id AS id, email AS label, 1 AS rank
-			FROM
-					users WHERE email = $2`
+		parts := []string{
+			searchThings(v.User),
+			searchOrganisations(v.User),
+			searchUsers(v.User),
 		}
+		filteredParts := []string{}
+		for _, part := range parts {
+			if part == "" {
+				continue
+			}
+			filteredParts = append(filteredParts, part)
+		}
+		query := strings.Join(filteredParts, " UNION ALL ")
 
-		query += `
-			ORDER BY rank DESC`
+		query += " ORDER BY rank DESC"
 
 		rows, err = db.QueryContext(ctx, query, v.OrgID, v.Phrase)
 	}

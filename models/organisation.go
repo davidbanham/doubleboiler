@@ -147,3 +147,10 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 
 	return err
 }
+
+func searchOrganisations(user User) string {
+	return `SELECT
+		text 'Organisation' AS entity_type, text 'organisations' AS uri_path, id AS id, name AS label, ts_rank_cd(ts, query) AS rank
+FROM
+		organisations, plainto_tsquery('english', $2) query WHERE id = $1 AND query @@ ts`
+}

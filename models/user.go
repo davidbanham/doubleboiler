@@ -166,3 +166,13 @@ func HashPassword(rawpassword string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(rawpassword), 10)
 	return string(hash), err
 }
+
+func searchUsers(user User) string {
+	if user.Admin {
+		return `SELECT
+			text 'User' AS entity_type, text 'users' AS uri_path, id AS id, email AS label, 1 AS rank FROM
+			users WHERE email = $2`
+	} else {
+		return ""
+	}
+}

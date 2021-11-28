@@ -578,3 +578,10 @@ func isAppAdmin(ctx context.Context) bool {
 	}
 	return ctx.Value("user").(models.User).Admin
 }
+
+func userFromContext(ctx context.Context) models.User {
+	if !isLoggedIn(ctx) {
+		return models.User{}
+	}
+	return ctx.Value("user").(models.User)
+}
