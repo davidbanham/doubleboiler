@@ -272,8 +272,12 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	query := models.All{}
+	query.DefaultPageSize = 50
+	query.Paginate(r.Form)
+
 	users := models.Users{}
-	if err := users.FindAll(r.Context(), models.All{}); err != nil {
+	if err := users.FindAll(r.Context(), query); err != nil {
 		errRes(w, r, 500, "error fetching users", err)
 		return
 	}

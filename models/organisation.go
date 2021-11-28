@@ -121,7 +121,7 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, name, country FROM organisations")
+		rows, err = db.QueryContext(ctx, "SELECT id, revision, name, country FROM organisations "+v.Pagination())
 		if err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 		JOIN organisations_users
 		ON organisations_users.organisation_id = organisations.id
 		WHERE organisations_users.user_id = $1
-		`, v.ID)
+		`+v.Pagination(), v.ID)
 		if err != nil {
 			return err
 		}

@@ -78,11 +78,11 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id, revision, name, description, organisation_id
-		FROM things WHERE organisation_id = $1`, v.ID)
+		FROM things WHERE organisation_id = $1 `+v.Pagination(), v.ID)
 	case All:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id, revision, name, description, organisation_id
-		FROM things`)
+		FROM things `+v.Pagination())
 	}
 	if err != nil {
 		return err

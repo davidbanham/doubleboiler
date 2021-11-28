@@ -144,9 +144,9 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users")
+		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users "+v.Pagination())
 	case ByOrg:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE id IN (SELECT user_id FROM members WHERE organisation_id = $1)", v.ID)
+		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE id IN (SELECT user_id FROM members WHERE organisation_id = $1) "+v.Pagination(), v.ID)
 	}
 
 	if err != nil {

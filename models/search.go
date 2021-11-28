@@ -45,7 +45,7 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 		}
 		query := strings.Join(filteredParts, " UNION ALL ")
 
-		query += " ORDER BY rank DESC"
+		query += " ORDER BY rank DESC " + q.Pagination()
 
 		rows, err = db.QueryContext(ctx, query, v.OrgID, v.Phrase)
 	}
