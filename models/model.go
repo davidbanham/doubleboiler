@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+var searchFuncs []func(User) string
+
 type ClientSafeError struct {
 	Message string
 }

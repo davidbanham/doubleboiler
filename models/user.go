@@ -16,6 +16,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func init() {
+	searchFuncs = append(searchFuncs, searchUsers)
+}
+
 type User struct {
 	ID                    string
 	Email                 string

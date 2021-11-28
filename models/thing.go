@@ -8,6 +8,10 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+func init() {
+	searchFuncs = append(searchFuncs, searchThings)
+}
+
 type Thing struct {
 	ID             string
 	Name           string

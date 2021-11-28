@@ -32,10 +32,9 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByPhrase:
-		parts := []string{
-			searchThings(v.User),
-			searchOrganisations(v.User),
-			searchUsers(v.User),
+		parts := []string{}
+		for _, f := range searchFuncs {
+			parts = append(parts, f(v.User))
 		}
 		filteredParts := []string{}
 		for _, part := range parts {
