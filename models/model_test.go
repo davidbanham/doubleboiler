@@ -53,6 +53,14 @@ func TestSave(t *testing.T) {
 		ctx := getCtx(t)
 		for _, m := range c {
 			assert.Nil(t, m.Save(ctx))
+			switch m.(type) {
+			case auditableModel:
+				db := ctx.Value("tx").(Querier)
+				row := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM audit_log WHERE entity_id = $1", m.id())
+				count := 0
+				assert.Nil(t, row.Scan(&count))
+				assert.Greater(t, count, 0)
+			}
 		}
 		closeTx(t, ctx)
 	}
@@ -90,6 +98,32 @@ func TestFindByColumn(t *testing.T) {
 	models := modelsUnderTest
 
 	for _, c := range models {
+		for _, m := range c {
+			assert.Nil(t, m.Save(ctx))
+		}
+	}
+
+	for _, c := range models {
+		m := c[len(c)-1]
+		found := m.blank()
+		err := found.FindByColumn(ctx, "id", m.id())
+		assert.Nil(t, err)
+		found.nullDynamicValues()
+		m.nullDynamicValues()
+		assert.Equal(t, m, found)
+	}
+
+	closeTx(t, ctx)
+}
+
+func TestAuditLog(t *testing.T) {
+	t.Parallel()
+	ctx := getCtx(t)
+
+	models := modelsUnderTest
+
+	for _, c := range models {
+
 		for _, m := range c {
 			assert.Nil(t, m.Save(ctx))
 		}
@@ -146,6 +180,10 @@ type model interface {
 	nullDynamicValues()
 	blank() model
 	id() string
+}
+
+type auditableModel interface {
+	auditQuery(context.Context, string) string
 }
 
 type models interface {

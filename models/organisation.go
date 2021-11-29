@@ -28,10 +28,14 @@ func (org *Organisation) New(name, country string, users []OrganisationUser, cur
 	org.Revision = uuid.NewV4().String()
 }
 
+func (org *Organisation) auditQuery(ctx context.Context, action string) string {
+	return auditQuery(ctx, action, "organisations", org.ID)
+}
+
 func (org *Organisation) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, `INSERT INTO organisations (
+	row := db.QueryRowContext(ctx, org.auditQuery(ctx, "U")+`INSERT INTO organisations (
 		id,
 		revision,
 		name,

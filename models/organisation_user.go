@@ -43,10 +43,14 @@ func (c *OrganisationUser) New(userID, organisationID string, roles Roles) {
 	c.Roles = roles
 }
 
+func (orguser *OrganisationUser) auditQuery(ctx context.Context, action string) string {
+	return auditQuery(ctx, action, "organisations_users", orguser.ID)
+}
+
 func (c *OrganisationUser) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, "INSERT INTO organisations_users (id, revision, user_id, organisation_id, roles) VALUES ($1, $2, $4, $5, $6) ON CONFLICT (revision) DO UPDATE SET (revision, user_id, organisation_id, roles) = ($3, $4, $5, $6) RETURNING revision", c.ID, c.Revision, uuid.NewV4().String(), c.UserID, c.OrganisationID, c.Roles)
+	row := db.QueryRowContext(ctx, c.auditQuery(ctx, "U")+"INSERT INTO organisations_users (id, revision, user_id, organisation_id, roles) VALUES ($1, $2, $4, $5, $6) ON CONFLICT (revision) DO UPDATE SET (revision, user_id, organisation_id, roles) = ($3, $4, $5, $6) RETURNING revision", c.ID, c.Revision, uuid.NewV4().String(), c.UserID, c.OrganisationID, c.Roles)
 	return row.Scan(&c.Revision)
 }
 
@@ -74,7 +78,7 @@ func (c *OrganisationUser) FindByColumn(ctx context.Context, col, val string) er
 func (c OrganisationUser) Delete(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	_, err := db.ExecContext(ctx, "DELETE FROM organisations_users WHERE id = $1 AND revision = $2", c.ID, c.Revision)
+	_, err := db.ExecContext(ctx, c.auditQuery(ctx, "D")+"DELETE FROM organisations_users WHERE id = $1 AND revision = $2", c.ID, c.Revision)
 	return err
 }
 

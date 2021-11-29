@@ -1,9 +1,11 @@
 package models
 
 import (
+	"context"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 )
 
@@ -78,4 +80,20 @@ func (p *IntMap) Scan(src interface{}) error {
 	}
 
 	return json.Unmarshal(source, p)
+}
+
+func currentUser(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
+	unconv := ctx.Value("user")
+
+	if unconv != nil {
+		return unconv.(User).ID
+	}
+	return ""
+}
+
+func auditQuery(ctx context.Context, action, table_name, entity_id string) string {
+	return fmt.Sprintf("WITH audit_entry AS (INSERT INTO audit_log (entity_id, table_name, action, user_id, old_row_data) VALUES ('%s', '%s', '%s', '%s', (SELECT to_jsonb(%s) from %s WHERE id = '%s')))", entity_id, table_name, action, currentUser(ctx), table_name, table_name, entity_id)
 }

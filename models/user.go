@@ -39,10 +39,14 @@ func (user *User) New(email, rawpassword string) {
 	user.Revision = uuid.NewV4().String()
 }
 
+func (user *User) auditQuery(ctx context.Context, action string) string {
+	return auditQuery(ctx, action, "users", user.ID)
+}
+
 func (user *User) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, "INSERT INTO users (id, revision, email, password, verified, verification_email_sent) VALUES ($1, $2, $4, $5, $6, $7) ON CONFLICT (revision) DO UPDATE SET (revision, email, password, verified, verification_email_sent) = ($3, $4, $5, $6, $7) RETURNING revision", user.ID, user.Revision, uuid.NewV4().String(), strings.ToLower(user.Email), user.Password, user.Verified, user.VerificationEmailSent)
+	row := db.QueryRowContext(ctx, user.auditQuery(ctx, "U")+"INSERT INTO users (id, revision, email, password, verified, verification_email_sent) VALUES ($1, $2, $4, $5, $6, $7) ON CONFLICT (revision) DO UPDATE SET (revision, email, password, verified, verification_email_sent) = ($3, $4, $5, $6, $7) RETURNING revision", user.ID, user.Revision, uuid.NewV4().String(), strings.ToLower(user.Email), user.Password, user.Verified, user.VerificationEmailSent)
 	err := row.Scan(&user.Revision)
 	if err != nil {
 		return err
