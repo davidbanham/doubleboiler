@@ -1,7 +1,8 @@
 {{ define "date" }}
-  <span class="{{ isoTime . }}">{{ humanDate . }}</span>
+  {{ $id := despace (humanDate .) }}
+  <span class="{{ $id }}">{{ humanDate . }}</span>
   <script>
-    var times = document.getElementsByClassName('{{ isoTime . }}');
+    var times = document.getElementsByClassName('{{ $id }}');
 
     for (var i = 0; i < times.length; i++) {
       times[i].innerText = moment("{{ isoTime . }}").format("MMMM Do YYYY");
