@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -18,6 +19,8 @@ type OrganisationUser struct {
 	Email          string
 	Revision       string
 	Roles          Roles
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type Roles map[string]bool
@@ -41,6 +44,8 @@ func (c *OrganisationUser) New(userID, organisationID string, roles Roles) {
 	c.OrganisationID = organisationID
 	c.Revision = uuid.NewV4().String()
 	c.Roles = roles
+	c.CreatedAt = time.Now()
+	c.UpdatedAt = time.Now()
 }
 
 func (orguser *OrganisationUser) auditQuery(ctx context.Context, action string) string {
@@ -50,7 +55,7 @@ func (orguser *OrganisationUser) auditQuery(ctx context.Context, action string) 
 func (c *OrganisationUser) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, c.auditQuery(ctx, "U")+"INSERT INTO organisations_users (id, revision, user_id, organisation_id, roles) VALUES ($1, $2, $4, $5, $6) ON CONFLICT (revision) DO UPDATE SET (revision, user_id, organisation_id, roles) = ($3, $4, $5, $6) RETURNING revision", c.ID, c.Revision, uuid.NewV4().String(), c.UserID, c.OrganisationID, c.Roles)
+	row := db.QueryRowContext(ctx, c.auditQuery(ctx, "U")+"INSERT INTO organisations_users (id, revision, user_id, organisation_id, roles) VALUES ($1, $2, $4, $5, $6) ON CONFLICT (revision) DO UPDATE SET (revision, updated_at, user_id, organisation_id, roles) = ($3, now(), $4, $5, $6) RETURNING revision", c.ID, c.Revision, uuid.NewV4().String(), c.UserID, c.OrganisationID, c.Roles)
 	return row.Scan(&c.Revision)
 }
 
@@ -64,6 +69,8 @@ func (c *OrganisationUser) FindByColumn(ctx context.Context, col, val string) er
 	err := db.QueryRowContext(ctx, `SELECT
 	organisations_users.id,
 	organisations_users.revision,
+	organisations_users.created_at,
+	organisations_users.updated_at,
 	organisations_users.user_id,
 	organisations_users.organisation_id,
 	organisations_users.roles,
@@ -71,7 +78,16 @@ func (c *OrganisationUser) FindByColumn(ctx context.Context, col, val string) er
 	FROM organisations_users
 	INNER JOIN users
 	ON organisations_users.user_id = users.id
-	WHERE organisations_users.id = $1`, val).Scan(&c.ID, &c.Revision, &c.UserID, &c.OrganisationID, &c.Roles, &c.Email)
+	WHERE organisations_users.id = $1`, val).Scan(
+		&c.ID,
+		&c.Revision,
+		&c.CreatedAt,
+		&c.UpdatedAt,
+		&c.UserID,
+		&c.OrganisationID,
+		&c.Roles,
+		&c.Email,
+	)
 	return err
 }
 
@@ -102,6 +118,8 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 		rows, err = db.QueryContext(ctx, `SELECT
 	organisations_users.id,
 	organisations_users.revision,
+	organisations_users.created_at,
+	organisations_users.updated_at,
 	organisations_users.user_id,
 	organisations_users.organisation_id,
 	organisations_users.roles,
@@ -117,6 +135,8 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 		rows, err = db.QueryContext(ctx, `SELECT
 	organisations_users.id,
 	organisations_users.revision,
+	organisations_users.created_at,
+	organisations_users.updated_at,
 	organisations_users.user_id,
 	organisations_users.organisation_id,
 	organisations_users.roles,
@@ -133,7 +153,16 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 
 	for rows.Next() {
 		ou := OrganisationUser{}
-		if err := rows.Scan(&ou.ID, &ou.Revision, &ou.UserID, &ou.OrganisationID, &ou.Roles, &ou.Email); err != nil {
+		if err := rows.Scan(
+			&ou.ID,
+			&ou.Revision,
+			&ou.CreatedAt,
+			&ou.UpdatedAt,
+			&ou.UserID,
+			&ou.OrganisationID,
+			&ou.Roles,
+			&ou.Email,
+		); err != nil {
 			return err
 		}
 

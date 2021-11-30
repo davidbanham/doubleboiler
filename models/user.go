@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/davidbanham/notifications"
@@ -28,6 +29,8 @@ type User struct {
 	Verified              bool
 	VerificationEmailSent bool
 	Revision              string
+	CreatedAt             time.Time
+	UpdatedAt             time.Time
 }
 
 func (user *User) New(email, rawpassword string) {
@@ -37,6 +40,8 @@ func (user *User) New(email, rawpassword string) {
 	user.Password = string(hash)
 	user.Verified = false
 	user.Revision = uuid.NewV4().String()
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = time.Now()
 }
 
 func (user *User) auditQuery(ctx context.Context, action string) string {
@@ -46,7 +51,7 @@ func (user *User) auditQuery(ctx context.Context, action string) string {
 func (user *User) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, user.auditQuery(ctx, "U")+"INSERT INTO users (id, revision, email, password, verified, verification_email_sent) VALUES ($1, $2, $4, $5, $6, $7) ON CONFLICT (revision) DO UPDATE SET (revision, email, password, verified, verification_email_sent) = ($3, $4, $5, $6, $7) RETURNING revision", user.ID, user.Revision, uuid.NewV4().String(), strings.ToLower(user.Email), user.Password, user.Verified, user.VerificationEmailSent)
+	row := db.QueryRowContext(ctx, user.auditQuery(ctx, "U")+"INSERT INTO users (id, revision, email, password, verified, verification_email_sent) VALUES ($1, $2, $4, $5, $6, $7) ON CONFLICT (revision) DO UPDATE SET (revision, updated_at, email, password, verified, verification_email_sent) = ($3, now(), $4, $5, $6, $7) RETURNING revision", user.ID, user.Revision, uuid.NewV4().String(), strings.ToLower(user.Email), user.Password, user.Verified, user.VerificationEmailSent)
 	err := row.Scan(&user.Revision)
 	if err != nil {
 		return err
@@ -68,7 +73,26 @@ func (user *User) FindByID(ctx context.Context, id string) error {
 func (user *User) FindByColumn(ctx context.Context, col, val string) error {
 	db := ctx.Value("tx").(Querier)
 
-	err := db.QueryRowContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE "+col+" = $1", val).Scan(&user.ID, &user.Revision, &user.Email, &user.Password, &user.Admin, &user.Verified, &user.VerificationEmailSent)
+	err := db.QueryRowContext(ctx, `SELECT
+		id,
+		revision,
+		created_at,
+		updated_at,
+		email,
+		password,
+		admin,
+		verified,
+		verification_email_sent
+	FROM users WHERE `+col+" = $1", val).Scan(&user.ID,
+		&user.Revision,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Email,
+		&user.Password,
+		&user.Admin,
+		&user.Verified,
+		&user.VerificationEmailSent,
+	)
 	if err != nil {
 		return err
 	}

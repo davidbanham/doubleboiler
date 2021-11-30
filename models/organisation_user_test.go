@@ -2,6 +2,7 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -30,6 +31,8 @@ func (c OrganisationUser) id() string {
 
 func (i *OrganisationUser) nullDynamicValues() {
 	i.Email = ""
+	i.CreatedAt = time.Time{}
+	i.UpdatedAt = time.Time{}
 }
 
 func organisationUserFix() []model {

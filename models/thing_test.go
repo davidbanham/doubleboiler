@@ -2,6 +2,7 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -25,6 +26,8 @@ func (thing Thing) id() string {
 }
 
 func (thing *Thing) nullDynamicValues() {
+	thing.CreatedAt = time.Time{}
+	thing.UpdatedAt = time.Time{}
 }
 
 func (Things) tablename() string {

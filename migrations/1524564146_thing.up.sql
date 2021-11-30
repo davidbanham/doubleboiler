@@ -3,7 +3,9 @@ CREATE TABLE things (
   revision TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   description TEXT NOT NULL,
-  organisation_id UUID REFERENCES organisations (id) ON UPDATE CASCADE ON DELETE CASCADE
+  organisation_id UUID REFERENCES organisations (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc')
 );
 
 ALTER TABLE things ADD COLUMN ts tsvector

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -13,11 +14,13 @@ func init() {
 }
 
 type Organisation struct {
-	ID       string
-	Name     string
-	Country  string
-	Users    []OrganisationUser
-	Revision string
+	ID        string
+	Name      string
+	Country   string
+	Users     []OrganisationUser
+	Revision  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (org *Organisation) New(name, country string, users []OrganisationUser, currency string) {
@@ -26,6 +29,8 @@ func (org *Organisation) New(name, country string, users []OrganisationUser, cur
 	org.Name = name
 	org.Country = country
 	org.Revision = uuid.NewV4().String()
+	org.CreatedAt = time.Now()
+	org.UpdatedAt = time.Now()
 }
 
 func (org *Organisation) auditQuery(ctx context.Context, action string) string {
@@ -42,9 +47,10 @@ func (org *Organisation) Save(ctx context.Context) error {
 		country
 	) VALUES ($1, $2, $4, $5) ON CONFLICT (revision) DO UPDATE SET (
 		revision,
+		updated_at,
 		name,
 		country
-	) = ($3, $4, $5) RETURNING revision`,
+	) = ($3, now(), $4, $5) RETURNING revision`,
 		org.ID,
 		org.Revision,
 		uuid.NewV4().String(),
@@ -80,6 +86,8 @@ func (org *Organisation) FindByColumn(ctx context.Context, col, val string) erro
 	rows, err := db.QueryContext(ctx, `SELECT
 	organisations_users.id,
 	organisations_users.revision,
+	organisations_users.created_at,
+	organisations_users.updated_at,
 	organisations_users.user_id,
 	organisations_users.organisation_id,
 	users.email
@@ -94,7 +102,7 @@ func (org *Organisation) FindByColumn(ctx context.Context, col, val string) erro
 
 	for rows.Next() {
 		orguser := OrganisationUser{}
-		err = rows.Scan(&orguser.ID, &orguser.Revision, &orguser.UserID, &orguser.OrganisationID, &orguser.Email)
+		err = rows.Scan(&orguser.ID, &orguser.Revision, &orguser.CreatedAt, &orguser.UpdatedAt, &orguser.UserID, &orguser.OrganisationID, &orguser.Email)
 		if err != nil {
 			return err
 		}
@@ -125,14 +133,20 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, name, country FROM organisations "+v.Pagination())
+		rows, err = db.QueryContext(ctx, "SELECT id, revision, created_at, updated_at, name, country FROM organisations "+v.Pagination())
 		if err != nil {
 			return err
 		}
 		defer rows.Close()
 	case OrganisationsContainingUser:
 		rows, err = db.QueryContext(ctx, `
-		SELECT organisations.id, organisations.revision, organisations.name, organisations.country FROM organisations
+		SELECT organisations.id,
+			organisations.revision,
+			organisations.created_at,
+			organisations.updated_at,
+			organisations.name,
+			organisations.country
+		FROM organisations
 		JOIN organisations_users
 		ON organisations_users.organisation_id = organisations.id
 		WHERE organisations_users.user_id = $1
@@ -145,7 +159,13 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 
 	for rows.Next() {
 		org := Organisation{}
-		err = rows.Scan(&org.ID, &org.Revision, &org.Name, &org.Country)
+		err = rows.Scan(&org.ID,
+			&org.Revision,
+			&org.CreatedAt,
+			&org.UpdatedAt,
+			&org.Name,
+			&org.Country,
+		)
 		if err != nil {
 			return err
 		}

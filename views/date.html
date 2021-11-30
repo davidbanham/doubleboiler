@@ -1,5 +1,5 @@
 {{ define "date" }}
-  <span class="{{ isoTime . }}">{{ humanTime . }}</span>
+  <span class="{{ isoTime . }}">{{ humanDate . }}</span>
   <script>
     var times = document.getElementsByClassName('{{ isoTime . }}');
 

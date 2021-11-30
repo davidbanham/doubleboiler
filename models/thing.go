@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -18,6 +19,8 @@ type Thing struct {
 	Description    string
 	OrganisationID string
 	Revision       string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 func (thing *Thing) New(name, description, organisationID string) {
@@ -26,6 +29,8 @@ func (thing *Thing) New(name, description, organisationID string) {
 	thing.Description = description
 	thing.OrganisationID = organisationID
 	thing.Revision = uuid.NewV4().String()
+	thing.CreatedAt = time.Now()
+	thing.UpdatedAt = time.Now()
 }
 
 func (thing *Thing) auditQuery(ctx context.Context, action string) string {
@@ -40,9 +45,9 @@ func (thing *Thing) Save(ctx context.Context) error {
 	) VALUES (
 		$1, $2, $4, $5, $6
 	) ON CONFLICT (revision) DO UPDATE SET (
-		revision, name, description, organisation_id
+		updated_at, revision, name, description, organisation_id
 	) = (
-		$3, $4, $5, $6
+		now(), $3, $4, $5, $6
 	) RETURNING revision`,
 		thing.ID, thing.Revision, uuid.NewV4().String(), thing.Name, thing.Description, thing.OrganisationID,
 	)
@@ -57,9 +62,9 @@ func (thing *Thing) FindByColumn(ctx context.Context, col, val string) error {
 	db := ctx.Value("tx").(Querier)
 
 	return db.QueryRowContext(ctx, `SELECT
-	id, revision, name, description, organisation_id
+	id, revision, created_at, updated_at, name, description, organisation_id
 	FROM things WHERE `+col+` = $1`, val).Scan(
-		&thing.ID, &thing.Revision, &thing.Name, &thing.Description, &thing.OrganisationID,
+		&thing.ID, &thing.Revision, &thing.CreatedAt, &thing.UpdatedAt, &thing.Name, &thing.Description, &thing.OrganisationID,
 	)
 }
 
@@ -81,11 +86,11 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 		return fmt.Errorf("Unknown query")
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
-		id, revision, name, description, organisation_id
+		id, revision, created_at, updated_at, name, description, organisation_id
 		FROM things WHERE organisation_id = $1 `+v.Pagination(), v.ID)
 	case All:
 		rows, err = db.QueryContext(ctx, `SELECT
-		id, revision, name, description, organisation_id
+		id, revision, created_at, updated_at, name, description, organisation_id
 		FROM things `+v.Pagination())
 	}
 	if err != nil {
@@ -96,7 +101,7 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 	for rows.Next() {
 		thing := Thing{}
 		err = rows.Scan(
-			&thing.ID, &thing.Revision, &thing.Name, &thing.Description, &thing.OrganisationID,
+			&thing.ID, &thing.Revision, &thing.CreatedAt, &thing.UpdatedAt, &thing.Name, &thing.Description, &thing.OrganisationID,
 		)
 		if err != nil {
 			return err

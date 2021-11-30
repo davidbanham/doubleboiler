@@ -45,6 +45,16 @@
           Impersonate
         </button>
       </form>
+      <div class="grid grid-cols-2 lg:grid-cols-1">
+          <h3 class="col-span-1 px-4 lg:text-center text-md font-medium leading-6 text-gray-900">Created</h3>
+          <p class="col-span-1 px-4 sm:text-right md:text-right lg:text-center mt-1 self-end text-sm text-gray-500">
+          {{ template "time" .User.CreatedAt }}
+          </p>
+          <h3 class="col-span-1 px-4 lg:text-center text-md font-medium leading-6 text-gray-900">Last Updated</h3>
+          <p class="col-span-1 px-4 sm:text-right md:text-right lg:text-center mt-1 self-end text-sm text-gray-500">
+          {{ template "time" .User.UpdatedAt }}
+          </p>
+      </div>
     </nav>
   </div>
 </div>
