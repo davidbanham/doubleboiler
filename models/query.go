@@ -95,7 +95,7 @@ func (this queryBase) Pagination() string {
 	if this.Limit == 0 {
 		return ""
 	}
-	return fmt.Sprintf("LIMIT %d OFFSET %d", this.Limit, this.Skip)
+	return fmt.Sprintf(" LIMIT %d OFFSET %d", this.Limit, this.Skip)
 }
 
 type Gettable interface {

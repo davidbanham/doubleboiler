@@ -20,3 +20,7 @@ type ByPhrase struct {
 	User   User
 	queryBase
 }
+type ByEntityID struct {
+	EntityID string
+	queryBase
+}

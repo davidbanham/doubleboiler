@@ -94,6 +94,6 @@ func currentUser(ctx context.Context) string {
 	return ""
 }
 
-func auditQuery(ctx context.Context, action, table_name, entity_id string) string {
-	return fmt.Sprintf("WITH audit_entry AS (INSERT INTO audit_log (entity_id, table_name, action, user_id, old_row_data) VALUES ('%s', '%s', '%s', '%s', (SELECT to_jsonb(%s) from %s WHERE id = '%s')))", entity_id, table_name, action, currentUser(ctx), table_name, table_name, entity_id)
+func auditQuery(ctx context.Context, action, tableName, entityID, organisationID string) string {
+	return fmt.Sprintf("WITH audit_entry AS (INSERT INTO audit_log (entity_id, organisation_id, table_name, action, user_id, old_row_data) VALUES ('%s', '%s', '%s', '%s', '%s', (SELECT to_jsonb(%s) - 'ts' FROM %s WHERE id = '%s')))", entityID, organisationID, tableName, action, currentUser(ctx), tableName, tableName, entityID)
 }

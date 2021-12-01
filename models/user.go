@@ -45,7 +45,7 @@ func (user *User) New(email, rawpassword string) {
 }
 
 func (user *User) auditQuery(ctx context.Context, action string) string {
-	return auditQuery(ctx, action, "users", user.ID)
+	return auditQuery(ctx, action, "users", user.ID, user.ID)
 }
 
 func (user *User) Save(ctx context.Context) error {

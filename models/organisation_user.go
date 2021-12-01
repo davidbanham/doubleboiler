@@ -49,7 +49,7 @@ func (c *OrganisationUser) New(userID, organisationID string, roles Roles) {
 }
 
 func (orguser *OrganisationUser) auditQuery(ctx context.Context, action string) string {
-	return auditQuery(ctx, action, "organisations_users", orguser.ID)
+	return auditQuery(ctx, action, "organisations_users", orguser.ID, orguser.OrganisationID)
 }
 
 func (c *OrganisationUser) Save(ctx context.Context) error {

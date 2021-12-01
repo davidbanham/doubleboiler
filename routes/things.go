@@ -72,9 +72,8 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Thing already exists. This is an update.
 	if r.FormValue("id") != "" {
-		err := thing.FindByID(r.Context(), r.FormValue("id"))
-		if err != nil {
-			errRes(w, r, 500, "Error looking up thing", err)
+		if err := thing.FindByID(r.Context(), r.FormValue("id")); err != nil {
+			errRes(w, r, http.StatusInternalServerError, "Error looking up thing", err)
 			return
 		}
 
@@ -91,7 +90,7 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := thing.Save(r.Context()); err != nil {
-		errRes(w, r, 500, "A database error has occurred", err)
+		errRes(w, r, http.StatusInternalServerError, "A database error has occurred", err)
 		return
 	}
 
@@ -112,16 +111,15 @@ type thingPageData struct {
 func thingHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	thing := models.Thing{}
-	err := thing.FindByID(r.Context(), vars["id"])
-	if err != nil {
-		errRes(w, r, 500, "A database error has occurred", err)
+	if err := thing.FindByID(r.Context(), vars["id"]); err != nil {
+		errRes(w, r, http.StatusInternalServerError, "A database error has occurred", err)
 		return
 	}
 
 	org := orgFromContext(r.Context(), thing.OrganisationID)
 
 	if !can(r.Context(), org, "admin") {
-		errRes(w, r, http.StatusForbidden, "You cannot create things for that organisation", nil)
+		errRes(w, r, http.StatusForbidden, "You cannot view things for that organisation", nil)
 		return
 	}
 
@@ -159,7 +157,7 @@ func thingsHandler(w http.ResponseWriter, r *http.Request) {
 	query.Paginate(r.Form)
 
 	if err := things.FindAll(r.Context(), query); err != nil {
-		errRes(w, r, 500, "error fetching things", err)
+		errRes(w, r, http.StatusInternalServerError, "error fetching things", err)
 		return
 	}
 

@@ -34,7 +34,7 @@ func (thing *Thing) New(name, description, organisationID string) {
 }
 
 func (thing *Thing) auditQuery(ctx context.Context, action string) string {
-	return auditQuery(ctx, action, "things", thing.ID)
+	return auditQuery(ctx, action, "things", thing.ID, thing.OrganisationID)
 }
 
 func (thing *Thing) Save(ctx context.Context) error {

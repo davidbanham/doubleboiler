@@ -34,7 +34,7 @@ func (org *Organisation) New(name, country string, users []OrganisationUser, cur
 }
 
 func (org *Organisation) auditQuery(ctx context.Context, action string) string {
-	return auditQuery(ctx, action, "organisations", org.ID)
+	return auditQuery(ctx, action, "organisations", org.ID, org.ID)
 }
 
 func (org *Organisation) Save(ctx context.Context) error {
