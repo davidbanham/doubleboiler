@@ -77,6 +77,11 @@ func authFreeMiddleware(h http.Handler) http.Handler {
 	})
 }
 
+func isAuthFree(ctx context.Context) bool {
+	authFree, ok := ctx.Value("authFree").(bool)
+	return authFree && ok
+}
+
 func can(ctx context.Context, target models.Organisation, role string) bool {
 	if isAppAdmin(ctx) {
 		return true

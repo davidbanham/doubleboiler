@@ -37,6 +37,10 @@ func userMiddleware(h http.Handler) http.Handler {
 		user := models.User{}
 		err = user.FindByID(r.Context(), cookieValue["ID"])
 		if err != nil {
+			if isAuthFree(r.Context()) {
+				h.ServeHTTP(w, r)
+				return
+			}
 			errRes(w, r, 403, "Invalid user", err)
 			return
 		}

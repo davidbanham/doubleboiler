@@ -9,6 +9,8 @@ import (
 
 func loginMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authFree := isAuthFree(r.Context())
+
 		if len(r.URL.Path) > 5 && r.URL.Path[0:6] == "/users" {
 			if r.Method == "POST" {
 				uid := r.FormValue("id")
@@ -19,6 +21,10 @@ func loginMiddleware(h http.Handler) http.Handler {
 				if r.FormValue("token") != "" {
 					user := models.User{}
 					if err := user.FindByID(r.Context(), r.FormValue("id")); err != nil {
+						if authFree {
+							h.ServeHTTP(w, r)
+							return
+						}
 						errRes(w, r, 403, "Invalid user", err)
 						return
 					}
@@ -53,7 +59,6 @@ func loginMiddleware(h http.Handler) http.Handler {
 			}
 		}
 
-		authFree := r.Context().Value("authFree").(bool)
 		if authFree {
 			h.ServeHTTP(w, r)
 			return
