@@ -1,7 +1,5 @@
 package heroicons
 
-// FIXME figure out a better abstraction that allows for different classes
-
 var Icons = map[string]string{
 	"globe-alt": `
     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
