@@ -1,6 +1,5 @@
-CREATE extension IF NOT EXISTS "uuid-ossp";
 CREATE TABLE audit_log (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     entity_id UUID not null,
     organisation_id UUID not null,
     table_name text not null,
