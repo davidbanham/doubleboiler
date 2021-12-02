@@ -7,7 +7,6 @@ import (
 	"doubleboiler/logger"
 	"fmt"
 	"net/http"
-	"strings"
 )
 
 func txMiddleware(h http.Handler) http.Handler {
@@ -21,14 +20,7 @@ func txMiddleware(h http.Handler) http.Handler {
 			var tx *sql.Tx
 			var err error
 
-			if strings.Contains(r.URL.Path, "bookings") {
-				opts := sql.TxOptions{
-					Isolation: sql.LevelReadUncommitted,
-				}
-				tx, err = config.Db.BeginTx(ctx, &opts)
-			} else {
-				tx, err = config.Db.BeginTx(ctx, nil)
-			}
+			tx, err = config.Db.BeginTx(ctx, nil)
 			if err != nil {
 				errRes(w, r, 500, "Cannot begin transaction", err)
 				return
