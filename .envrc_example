@@ -4,8 +4,8 @@ export AWS_SECRET_ACCESS_KEY=secret_goes_here
 export GOOGLE_PROJECT_ID=project_id_goes_here_for_pubsub
 export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials
 
-export GOOGLE_PUBSUB_AUDIENCE=paidright
-export DB_URI=postgres://paidright:wut@localhost:5432/paidright_test?sslmode=disable
+export GOOGLE_PUBSUB_AUDIENCE=doubleboiler
+export DB_URI=postgres://doubleboiler:wut@localhost:5432/doubleboiler_test?sslmode=disable
 
 export SUPPORT_EMAIL=help@example.com
 export SYSTEM_EMAIL=hello@example.com
@@ -18,8 +18,8 @@ export KEWPIE_BACKEND=postgres
 export MAX_OPEN_SQL_CONNS=5
 export TEST_MOCKS_ON=true
 export STAGE=testing
-export DOMAIN=paidright.localhost
-export URI=https://paidright.localhost
+export DOMAIN=doubleboiler.localhost
+export URI=https://doubleboiler.localhost
 export PORT=3000
 export AUTOCERT=false
 export RENDER_ERRORS=true
