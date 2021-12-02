@@ -13,8 +13,11 @@ export SYSTEM_EMAIL=hello@example.com
 export SECRET=2998a22c-5a9a-425c-85f6-e27be7650a0f
 export HASH_KEY=lulhaksuhoiyupai8s987o21i2hpi1jnok1jbwdpoiu1oibd1oiu2doi121basdi
 export BLOCK_KEY=ljkansdoas787d817218ywdasdasdkjg
+export WEBHOOK_SECRET=a6afc2a2-d17b-4f82-b693-a0a7e14220a9
 
 export KEWPIE_BACKEND=postgres
+export START_WORKERS=true
+
 export MAX_OPEN_SQL_CONNS=5
 export TEST_MOCKS_ON=true
 export STAGE=testing
