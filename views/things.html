@@ -4,6 +4,9 @@
 
 <div class="px-4 bg-white shadow overflow-hidden sm:rounded-md">
 	<ul class="divide-y divide-gray-200">
+    <li>
+      {{ template "searchbox" dict "EntityFilter" "Things" }}
+    </li>
     {{ range .Things.Data }}
 		<li>
       <a href="/things/{{.ID}}" class="block hover:bg-gray-50">

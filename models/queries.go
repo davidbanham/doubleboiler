@@ -15,9 +15,10 @@ type ByUser struct {
 	queryBase
 }
 type ByPhrase struct {
-	Phrase string
-	OrgID  string
-	User   User
+	Phrase       string
+	OrgID        string
+	User         User
+	EntityFilter map[string]bool
 	queryBase
 }
 type ByEntityID struct {

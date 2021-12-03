@@ -6,16 +6,24 @@ import (
 	"net/http"
 )
 
+var searchableWhitelist map[string]models.Searchable
+
 func init() {
 	r.Path("/search").
 		Methods("GET").
 		HandlerFunc(searchHandler)
+
+	searchableWhitelist = map[string]models.Searchable{}
+	for _, searchable := range models.Searchables {
+		searchableWhitelist[searchable.Label] = searchable
+	}
 }
 
 type searchResultPageData struct {
-	Context context.Context
-	Phrase  string
-	Results models.SearchResults
+	Context         context.Context
+	Phrase          string
+	EntityFilterMap map[string]bool
+	Results         models.SearchResults
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,10 +42,17 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	results := models.SearchResults{}
 
 	query := models.ByPhrase{
-		OrgID:  targetOrg.ID,
-		Phrase: r.FormValue("search_field"),
-		User:   userFromContext(r.Context()),
+		OrgID:        targetOrg.ID,
+		Phrase:       r.FormValue("search_field"),
+		User:         userFromContext(r.Context()),
+		EntityFilter: map[string]bool{},
 	}
+	for _, label := range r.Form["entity-filter"] {
+		if label != "" && searchableWhitelist[label].Label == label {
+			query.EntityFilter[label] = true
+		}
+	}
+
 	query.DefaultPageSize = 50
 	query.Paginate(r.Form)
 
@@ -47,9 +62,10 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "searchresults.html", searchResultPageData{
-		Results: results,
-		Phrase:  r.FormValue("search_field"),
-		Context: r.Context(),
+		Results:         results,
+		Phrase:          r.FormValue("search_field"),
+		EntityFilterMap: query.EntityFilter,
+		Context:         r.Context(),
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return

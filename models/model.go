@@ -9,7 +9,12 @@ import (
 	"sync"
 )
 
-var searchFuncs []func(User) string
+var Searchables []Searchable
+
+type Searchable struct {
+	Label      string
+	searchFunc func(ByPhrase) string
+}
 
 type ClientSafeError struct {
 	Message string

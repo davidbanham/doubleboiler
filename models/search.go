@@ -33,8 +33,12 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 		return fmt.Errorf("Unknown query")
 	case ByPhrase:
 		parts := []string{}
-		for _, f := range searchFuncs {
-			parts = append(parts, f(v.User))
+		for _, entity := range Searchables {
+			include := len(v.EntityFilter) == 0 || v.EntityFilter[entity.Label]
+
+			if include {
+				parts = append(parts, entity.searchFunc(v))
+			}
 		}
 		filteredParts := []string{}
 		for _, part := range parts {

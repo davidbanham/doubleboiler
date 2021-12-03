@@ -18,7 +18,10 @@ import (
 )
 
 func init() {
-	searchFuncs = append(searchFuncs, searchUsers)
+	Searchables = append(Searchables, Searchable{
+		Label:      "Users",
+		searchFunc: searchUsers,
+	})
 }
 
 type User struct {
@@ -199,8 +202,8 @@ func HashPassword(rawpassword string) (string, error) {
 	return string(hash), err
 }
 
-func searchUsers(user User) string {
-	if user.Admin {
+func searchUsers(query ByPhrase) string {
+	if query.User.Admin {
 		return `SELECT
 			text 'User' AS entity_type, text 'users' AS uri_path, id AS id, email AS label, 1 AS rank FROM
 			users WHERE email = $2`

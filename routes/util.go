@@ -325,6 +325,13 @@ func init() {
 		"queryString": func(vals url.Values) template.URL {
 			return "?" + template.URL(vals.Encode())
 		},
+		"searchableEntities": func() []models.Searchable {
+			ret := []models.Searchable{}
+			for _, entity := range models.Searchables {
+				ret = append(ret, entity)
+			}
+			return ret
+		},
 	}
 
 	Tmpl = template.Must(template.New("main").Funcs(templateFuncMap).ParseGlob(getPath() + "/*"))

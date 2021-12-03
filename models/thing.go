@@ -10,7 +10,10 @@ import (
 )
 
 func init() {
-	searchFuncs = append(searchFuncs, searchThings)
+	Searchables = append(Searchables, Searchable{
+		Label:      "Things",
+		searchFunc: searchThings,
+	})
 }
 
 type Thing struct {
@@ -111,7 +114,7 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 	return err
 }
 
-func searchThings(user User) string {
+func searchThings(query ByPhrase) string {
 	return `SELECT
 		text 'Thing' AS entity_type, text 'things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
 FROM

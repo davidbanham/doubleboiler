@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
 )
@@ -133,13 +132,6 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 		user.FindByID(r.Context(), targetID)
 		if r.FormValue("email") != user.Email {
-
-			task := kewpie.Task{}
-			if err := task.Marshal(user); err != nil {
-				errRes(w, r, 500, "Error queueing stripe member record update", err)
-				return
-			}
-
 			if user.HasEmail() {
 				if !user.Verified {
 					orgs := models.Organisations{}
