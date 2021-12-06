@@ -13,7 +13,7 @@ func init() {
 }
 
 func organisationFixture() (m Organisation) {
-	m.New(randString(), "Australia", []OrganisationUser{}, "aud")
+	m.New(randString(), "Australia", OrganisationUsers{}, "aud")
 	return
 }
 
@@ -28,6 +28,7 @@ func (i Organisation) id() string {
 func (i *Organisation) nullDynamicValues() {
 	i.CreatedAt = time.Time{}
 	i.UpdatedAt = time.Time{}
+	i.Users.Query = All{}
 }
 
 func (Organisation) tablename() string {

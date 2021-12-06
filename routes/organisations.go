@@ -88,7 +88,7 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		org.New(
 			r.FormValue("name"),
 			r.FormValue("country"),
-			[]models.OrganisationUser{},
+			models.OrganisationUsers{},
 			r.FormValue("currency"),
 		)
 
@@ -103,7 +103,11 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ou := models.OrganisationUser{}
-		ou.New(user.ID, org.ID, models.Roles{"admin": true})
+		ou.New(user.ID, org.ID, models.Roles{
+			models.Role{
+				Name: "admin",
+			},
+		})
 		if err := ou.Save(r.Context()); err != nil {
 			errRes(w, r, 500, "A database error has occurred", err)
 			return
@@ -147,6 +151,7 @@ type organisationPageData struct {
 	Organisation models.Organisation
 	URI          string
 	ProductName  string
+	ValidRoles   map[string]models.Role
 }
 
 func organisationHandler(w http.ResponseWriter, r *http.Request) {
@@ -160,12 +165,13 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := targetOrg.FindByID(r.Context(), vars["id"]); err != nil {
-		errRes(w, r, http.StatusNotFound, "Organisation not found", nil)
+		errRes(w, r, http.StatusNotFound, "Error looking up organisation", err)
 		return
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "organisation.html", organisationPageData{
 		Organisation: targetOrg,
+		ValidRoles:   models.ValidRoles,
 		ProductName:  config.NAME,
 		Context:      r.Context(),
 		URI:          config.URI,

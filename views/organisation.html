@@ -6,101 +6,122 @@
   <div class="md:grid md:grid-cols-3 md:gap-6">
     <div class="md:col-span-1">
       <h3 class="text-lg font-medium leading-6 text-gray-900">Admin Users</h3>
-      <p class="mt-1 text-sm text-gray-500">
-        Add or remove administrative users.
-      </p>
-    </div>
-    <div class="mt-5 md:mt-0 md:col-span-2">
-      <div>
-        <ul>
-        <form action="/organisation-users" method="post">
-        {{range .Organisation.Users}}
-        <li class="collection-item avatar">
-          <form action="/organisations/remove-user/{{.ID}}" method="post">
-            <input type="hidden" name="csrf" value="{{csrf $.Context}}"></input>
-            <div class="mt-2 flex items-center space-x-5">
-              <span class="w-full block text-sm font-medium text-gray-700">{{.Email}}</span>
-              <span class="w-full text-right block text-sm font-medium leading-6 text-gray-700">Added {{template "date" .CreatedAt}}</span>
-              <button type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    onclick="document.getElementById('{{.ID}}').hidden = false"
-                >
-                Remove
-              </button>
-            </div>
-            {{ template "confirm_modal" dict "Title" "Remove admin user" "ButtonText" "Confirm" "ID" .ID "Text" .Email}}
-          </form>
-        </li>
-        {{end}}
-        </ul>
-      </div>
-
-      <div class="border border-gray-300 rounded-md mt-2 py-3 px-2 leading-4">
+      <div class="mt-1 text-sm text-gray-500">
         <form action="/organisation-users" method="post">
           <input type="hidden" name="csrf" value="{{csrf $.Context}}"></input>
           <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
-          <label for="email" class="block text-sm font-medium text-gray-700">
-            Invite User to Organisation
-          </label>
-          <div class="mt-1 flex items-center">
-            <input type="email" id="email" name="email" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="name@example.com">
-            <button type="submit" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Submit</button>
+          <div class="md:grid md:grid-cols-2 md:gap-6">
+            <div class="md:col-span-1">
+              <input required type="email" id="email" name="email" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="name@example.com">
+            </div>
+            <div class="md:col-span-1">
+              <button type="submit" class="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <!-- Heroicon name: solid/plus-sm -->
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
           </div>
         </form>
       </div>
     </div>
-  </div>
-</div>
+    <div class="mt-5 md:mt-0 md:col-span-2">
+      <ul role="list" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {{range .Organisation.Users.Data}}
+        {{ $ou := . }}
+        <li class="col-span-1 bg-white rounded-lg shadow divide-y divide-gray-200">
+          <div class="w-full flex items-center justify-between p-6 space-x-6">
+            <div class="flex-1 truncate">
+              <div class="flex items-center space-x-3">
+                <h3 class="text-gray-900 text-sm font-medium truncate">{{.Email}}</h3>
+              </div>
+              <p class="mt-1 text-gray-500 text-sm truncate">Added {{humanDate .CreatedAt}}</p>
+              <form action="/organisation-users/{{.ID}}" method="post">
+                <input type="hidden" name="csrf" value="{{csrf $.Context}}"></input>
+                <input type="hidden" name="id" value="{{.ID}}"></input>
+                <input type="hidden" name="email" value="{{.Email}}"></input>
+                <input type="hidden" name="organisationID" value="{{$.Organisation.ID}}"></input>
+                {{ range $.ValidRoles }}
+                {{ template "toggle" dict "Label" .Label "Selected" ($ou.Roles.Can .Name) "Key" "roles" "Value" .Name }}
+                {{ end }}
+              </form>
+            </div>
+          </div>
+          <div>
+            <div class="-mt-px flex divide-x divide-gray-200">
+              <div class="w-0 flex-1 flex">
+                <div class="relative -mr-px w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-bl-lg hover:text-gray-500">
+                  <form action="/organisations/remove-user/{{.ID}}" method="post">
+                    <input type="hidden" name="csrf" value="{{csrf $.Context}}"></input>
+                    <button type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                          onclick="document.getElementById('{{.ID}}').hidden = false"
+                                          >
+                                          Remove
+                    </button>
+                      {{ template "confirm_modal" dict "Title" "Remove admin user" "ButtonText" "Confirm" "ID" .ID "Text" .Email}}
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+        {{ end }}
+      </ul>
+    </div>
 
-<div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-  <div class="md:grid md:grid-cols-3 md:gap-6">
-    <div class="md:col-span-1">
+    <div class="mt-5 md:col-span-1">
       <h3 class="text-lg font-medium leading-6 text-gray-900">Organisation Information</h3>
     </div>
+
     <div class="mt-5 md:mt-0 md:col-span-2">
-      <form action="/organisations/{{.Organisation.ID}}" method="post">
-        <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
-        <input type="hidden" name="id" value="{{.Organisation.ID}}"></input>
-        <input type="hidden" name="revision" value="{{.Organisation.Revision}}"></input>
-        {{range .Organisation.Users}}
-        <input type="hidden" name="users.id" value="{{.ID}}"></input>
-        <input type="hidden" name="users.revision" value="{{.Revision}}"></input>
-        <input type="hidden" name="users.userid" value="{{.UserID}}"></input>
-        <input type="hidden" name="users.organisationid" value="{{.OrganisationID}}"></input>
-        {{end}}
+      <div class="bg-white shadow px-4 py-5 mt-6 sm:rounded-lg sm:p-6">
+        <div class="md:grid md:grid-cols-2 md:gap-6">
+          <div class="mt-5 md:mt-0 md:col-span-2">
+            <form action="/organisations/{{.Organisation.ID}}" method="post">
+              <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+              <input type="hidden" name="id" value="{{.Organisation.ID}}"></input>
+              <input type="hidden" name="revision" value="{{.Organisation.Revision}}"></input>
+              {{range .Organisation.Users.Data}}
+              <input type="hidden" name="users.id" value="{{.ID}}"></input>
+              <input type="hidden" name="users.revision" value="{{.Revision}}"></input>
+              <input type="hidden" name="users.userid" value="{{.UserID}}"></input>
+              <input type="hidden" name="users.organisationid" value="{{.OrganisationID}}"></input>
+              {{end}}
 
-        <div class="grid grid-cols-6 gap-6">
-          <div class="col-span-6 sm:col-span-3">
-            <h3 class="text-md font-medium leading-6 text-gray-900">Created</h3>
-            <p class="mt-1 text-sm text-gray-500">
-            {{ template "time" .Organisation.CreatedAt }}
-            </p>
-          </div>
-          <div class="col-span-6 sm:col-span-3">
-            <h3 class="text-md font-medium leading-6 text-gray-900">Last Updated</h3>
-            <p class="mt-1 text-sm text-gray-500">
-            {{ template "time" .Organisation.UpdatedAt }}
-            </p>
-          </div>
-          <div class="col-span-6 sm:col-span-3">
-            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-            <input value="{{.Organisation.Name}}" type="text" name="name" id="name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-          </div>
+              <div class="grid grid-cols-6 gap-6">
+                <div class="col-span-6 sm:col-span-3">
+                  <h3 class="text-md font-medium leading-6 text-gray-900">Created</h3>
+                  <p class="mt-1 text-sm text-gray-500">
+                  {{ template "time" .Organisation.CreatedAt }}
+                  </p>
+                </div>
+                <div class="col-span-6 sm:col-span-3">
+                  <h3 class="text-md font-medium leading-6 text-gray-900">Last Updated</h3>
+                  <p class="mt-1 text-sm text-gray-500">
+                  {{ template "time" .Organisation.UpdatedAt }}
+                  </p>
+                </div>
+                <div class="col-span-6 sm:col-span-3">
+                  <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                  <input value="{{.Organisation.Name}}" type="text" name="name" id="name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
 
-          <div class="col-span-6 sm:col-span-3">
-            <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
-            <select id="country" name="country" autocomplete="country" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-              {{ template "countries" .Organisation.Country}}
-            </select>
+                <div class="col-span-6 sm:col-span-3">
+                  <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
+                  <select id="country" name="country" autocomplete="country" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    {{ template "countries" .Organisation.Country}}
+                  </select>
+                </div>
+              </div>
+
+              <div class="mt-3 col-span-6">
+                <button class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Save</button>
+              </div>
+
+            </form>
           </div>
         </div>
+      </div>
 
-        <div class="mt-3 col-span-6 float-right">
-          <button class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Save</button>
-        </div>
-
-      </form>
-    </div>
-  </div>
-</div>
-
-{{ template "footer" . }}
+      {{ template "footer" . }}

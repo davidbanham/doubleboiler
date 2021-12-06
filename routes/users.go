@@ -345,14 +345,18 @@ type userPageData struct {
 
 func createOrgFromSignup(ctx context.Context, user models.User, orgname, orgcountry, orgcurrency string) (error, models.Organisation) {
 	orgUser := models.OrganisationUser{}
-	orgUser.New(user.ID, "", models.Roles{"admin": true})
+	orgUser.New(user.ID, "", models.Roles{
+		models.Role{
+			Name: "admin",
+		},
+	})
 
 	org := models.Organisation{}
 	org.New(
 		orgname,
 		orgcountry,
-		[]models.OrganisationUser{
-			orgUser,
+		models.OrganisationUsers{
+			Data: []models.OrganisationUser{orgUser},
 		},
 		orgcurrency,
 	)

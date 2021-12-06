@@ -16,7 +16,11 @@ func organisationUserFixture(userID, organisationID string) (c OrganisationUser)
 	c.New(
 		userID,
 		organisationID,
-		Roles{"admin": true},
+		Roles{
+			Role{
+				Name: "admin",
+			},
+		},
 	)
 	return
 }

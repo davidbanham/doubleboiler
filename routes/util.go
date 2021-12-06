@@ -195,6 +195,10 @@ func init() {
 		"activeOrgFromContext": func(ctx context.Context) models.Organisation {
 			return activeOrgFromContext(ctx)
 		},
+		"can": func(ctx context.Context, role string) bool {
+			org := activeOrgFromContext(ctx)
+			return can(ctx, org, role)
+		},
 		"csrf": func(ctx context.Context) string {
 			unconv := ctx.Value("user")
 			if unconv == nil {
@@ -230,22 +234,6 @@ func init() {
 		"isLocal": func() bool { return config.LOCAL },
 		"now": func() string {
 			return time.Now().Format("2006-01-02")
-		},
-		"tripListStart": func(then time.Time) string {
-			target := then
-
-			if then.Weekday() != time.Sunday {
-				target = util.NextDay(then, time.Sunday).Add(-7 * 24 * time.Hour)
-			}
-			return target.Format("2006-01-02")
-		},
-		"tripListEnd": func(then time.Time) string {
-			target := then
-
-			if then.Weekday() != time.Sunday {
-				target = util.NextDay(then, time.Sunday).Add(-7 * 24 * time.Hour)
-			}
-			return target.Add(7 * 24 * time.Hour).Format("2006-01-02")
 		},
 		"nextWeekStart": func() string {
 			return util.NextDay(time.Now(), time.Monday).Format("2006-01-02")
@@ -307,12 +295,6 @@ func init() {
 		"noescape": func(str string) template.HTML {
 			return template.HTML(str)
 		},
-		"nightIsBetween": func(night, start, end time.Time) bool {
-			return night.After(start) && night.Before(end)
-		},
-		"nightsBetween": func(start, end time.Time) []time.Time {
-			return util.NightsBetween(start, end)
-		},
 		"urlescape": func(input string) string {
 			return url.QueryEscape(input)
 		},
@@ -331,6 +313,18 @@ func init() {
 				ret = append(ret, entity)
 			}
 			return ret
+		},
+		"isOrgSettingsPage": func(ctx context.Context) bool {
+			currentURL := ctx.Value("url")
+			if v, ok := currentURL.(*url.URL); ok {
+				parts := strings.Split(v.Path, "/")
+				if len(parts) > 1 {
+					if parts[1] == "organisations" {
+						return true
+					}
+				}
+			}
+			return false
 		},
 	}
 

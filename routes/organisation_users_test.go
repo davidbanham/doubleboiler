@@ -20,7 +20,7 @@ func TestOrganisationUserCreateHandler(t *testing.T) {
 	org.New(
 		bandname(),
 		"Australia",
-		[]models.OrganisationUser{},
+		models.OrganisationUsers{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
@@ -43,7 +43,7 @@ func TestOrganisationUserCreateHandler(t *testing.T) {
 	req = contextify(user, req)
 
 	rr := httptest.NewRecorder()
-	organisationUserCreateHandler(rr, req)
+	organisationUserCreateOrUpdateHandler(rr, req)
 
 	assert.Equal(t, http.StatusFound, rr.Code)
 
@@ -55,7 +55,7 @@ func organisationUserFixture(ctx context.Context, t *testing.T) (i models.Organi
 	org.New(
 		bandname(),
 		"Australia",
-		[]models.OrganisationUser{},
+		models.OrganisationUsers{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
@@ -70,7 +70,9 @@ func organisationUserFixture(ctx context.Context, t *testing.T) (i models.Organi
 	i.New(
 		user.ID,
 		org.ID,
-		models.Roles{"admin": true},
+		models.Roles{
+			models.Role{Name: "admin"},
+		},
 	)
 	i.Save(ctx)
 	return
@@ -144,7 +146,7 @@ func TestOrganisationUserCreateHandlerAddExistingUser(t *testing.T) {
 	assert.Nil(t, user.Save(ctx))
 
 	org := models.Organisation{}
-	org.New(bandname(), "Australia", []models.OrganisationUser{}, "aud")
+	org.New(bandname(), "Australia", models.OrganisationUsers{}, "aud")
 	assert.Nil(t, org.Save(ctx))
 
 	form := url.Values{
@@ -164,7 +166,7 @@ func TestOrganisationUserCreateHandlerAddExistingUser(t *testing.T) {
 	req = contextify(user, req)
 
 	rr := httptest.NewRecorder()
-	organisationUserCreateHandler(rr, req)
+	organisationUserCreateOrUpdateHandler(rr, req)
 
 	assert.Equal(t, http.StatusFound, rr.Code)
 
@@ -200,7 +202,7 @@ func TestOrganisationUserCreateHandlerAddNewUserByEmail(t *testing.T) {
 	org.New(
 		bandname(),
 		"Australia",
-		[]models.OrganisationUser{},
+		models.OrganisationUsers{},
 		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
@@ -223,7 +225,7 @@ func TestOrganisationUserCreateHandlerAddNewUserByEmail(t *testing.T) {
 	req = contextify(user, req)
 
 	rr := httptest.NewRecorder()
-	organisationUserCreateHandler(rr, req)
+	organisationUserCreateOrUpdateHandler(rr, req)
 
 	assert.Equal(t, http.StatusFound, rr.Code)
 

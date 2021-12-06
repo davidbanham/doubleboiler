@@ -29,14 +29,14 @@ func init() {
 
 	r.Path("/organisation-users/{id}").
 		Methods("POST").
-		HandlerFunc(organisationUserCreateHandler)
+		HandlerFunc(organisationUserCreateOrUpdateHandler)
 
 	r.Path("/organisation-users").
 		Methods("POST").
-		HandlerFunc(organisationUserCreateHandler)
+		HandlerFunc(organisationUserCreateOrUpdateHandler)
 }
 
-func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
+func organisationUserCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	required := []string{
 		"email",
@@ -58,38 +58,55 @@ func organisationUserCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := strings.ToLower(r.FormValue("email"))
-	user := models.User{}
-	if err := user.FindByColumn(r.Context(), "email", strings.ToLower(email)); err != nil {
-		if err != sql.ErrNoRows {
-			errRes(w, r, 500, "Error looking up user", err)
-			return
-		}
-		user.New(
-			email,
-			uuid.NewV4().String(),
-		)
-		if err = sendOrgInviteEmail(r.Context(), user, org); err != nil {
-			errRes(w, r, 500, "Error inviting user", err)
-			return
-		}
-		if err := user.Save(r.Context()); err != nil {
-			errRes(w, r, 500, "Error saving user", err)
-			return
-		}
-	} else if err == nil {
-		if err := sendOrgAdditionEmail(r.Context(), user, org); err != nil {
-			errRes(w, r, 500, "Error notifying user about new org", err)
-			return
-		}
-	}
-
+	targetID := r.FormValue("id")
 	ou := models.OrganisationUser{}
-	ou.New(
-		user.ID,
-		org.ID,
-		models.Roles{"admin": true},
-	)
+	if targetID != "" {
+		if err := ou.FindByID(r.Context(), targetID); err != nil {
+			if err != sql.ErrNoRows {
+				errRes(w, r, http.StatusInternalServerError, "Error looking up org user", err)
+				return
+			}
+		}
+
+		ou.Roles = models.Roles{}
+		for _, role := range r.Form["roles"] {
+			ou.Roles = append(ou.Roles, models.Role{
+				Name: role,
+			})
+		}
+	} else {
+		email := strings.ToLower(r.FormValue("email"))
+		user := models.User{}
+		if err := user.FindByColumn(r.Context(), "email", strings.ToLower(email)); err != nil {
+			if err != sql.ErrNoRows {
+				errRes(w, r, 500, "Error looking up user", err)
+				return
+			}
+			user.New(
+				email,
+				uuid.NewV4().String(),
+			)
+			if err = sendOrgInviteEmail(r.Context(), user, org); err != nil {
+				errRes(w, r, 500, "Error inviting user", err)
+				return
+			}
+			if err := user.Save(r.Context()); err != nil {
+				errRes(w, r, 500, "Error saving user", err)
+				return
+			}
+		} else if err == nil {
+			if err := sendOrgAdditionEmail(r.Context(), user, org); err != nil {
+				errRes(w, r, 500, "Error notifying user about new org", err)
+				return
+			}
+		}
+
+		ou.New(
+			user.ID,
+			org.ID,
+			models.Roles{},
+		)
+	}
 
 	if err := ou.Save(r.Context()); err != nil {
 		errRes(w, r, 500, "Error saving organisationUser", err)

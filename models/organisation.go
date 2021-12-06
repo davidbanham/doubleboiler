@@ -20,13 +20,13 @@ type Organisation struct {
 	ID        string
 	Name      string
 	Country   string
-	Users     []OrganisationUser
+	Users     OrganisationUsers
 	Revision  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func (org *Organisation) New(name, country string, users []OrganisationUser, currency string) {
+func (org *Organisation) New(name, country string, users OrganisationUsers, currency string) {
 	org.ID = uuid.NewV4().String()
 	org.Users = users
 	org.Name = name
@@ -84,32 +84,9 @@ func (org *Organisation) FindByColumn(ctx context.Context, col, val string) erro
 		return err
 	}
 
-	org.Users = []OrganisationUser{}
-
-	rows, err := db.QueryContext(ctx, `SELECT
-	organisations_users.id,
-	organisations_users.revision,
-	organisations_users.created_at,
-	organisations_users.updated_at,
-	organisations_users.user_id,
-	organisations_users.organisation_id,
-	users.email
-	FROM organisations_users
-	INNER JOIN users
-	ON organisations_users.user_id = users.id
-	WHERE organisations_users.organisation_id = $1`, org.ID)
-	if err != nil {
+	org.Users = OrganisationUsers{}
+	if err := org.Users.FindAll(ctx, ByOrg{ID: org.ID}); err != nil {
 		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		orguser := OrganisationUser{}
-		err = rows.Scan(&orguser.ID, &orguser.Revision, &orguser.CreatedAt, &orguser.UpdatedAt, &orguser.UserID, &orguser.OrganisationID, &orguser.Email)
-		if err != nil {
-			return err
-		}
-		org.Users = append(org.Users, orguser)
 	}
 
 	return err
@@ -162,18 +139,25 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 
 	for rows.Next() {
 		org := Organisation{}
-		err = rows.Scan(&org.ID,
+		if err = rows.Scan(&org.ID,
 			&org.Revision,
 			&org.CreatedAt,
 			&org.UpdatedAt,
 			&org.Name,
 			&org.Country,
-		)
-		if err != nil {
+		); err != nil {
 			return err
 		}
 
 		(*organisations).Data = append((*organisations).Data, org)
+	}
+
+	for i, org := range (*organisations).Data {
+		org.Users = OrganisationUsers{}
+		if err := org.Users.FindAll(ctx, ByOrg{ID: org.ID}); err != nil {
+			return err
+		}
+		(*organisations).Data[i] = org
 	}
 
 	return err
