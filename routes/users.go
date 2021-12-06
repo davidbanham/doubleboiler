@@ -103,8 +103,13 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		user.FindByColumn(r.Context(), "email", r.FormValue("email"))
-		// Ignore errors since we might be just trying to create this user
+		if err := user.FindByColumn(r.Context(), "email", r.FormValue("email")); err != nil {
+			if err != sql.ErrNoRows {
+				// Might be a PUT-style user creation
+				errRes(w, r, 500, "Error looking up user", err)
+				return
+			}
+		}
 	}
 
 	newUser := false
@@ -130,10 +135,20 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			targetID = user.ID
 		}
 
-		user.FindByID(r.Context(), targetID)
+		if err := user.FindByID(r.Context(), targetID); err != nil {
+			if err != nil && err != sql.ErrNoRows {
+				// Might be a PUT-style user creation
+				errRes(w, r, 500, "Error looking up user", err)
+				return
+			}
+		}
 		if r.FormValue("email") != user.Email {
 			if user.HasEmail() {
 				if !user.Verified {
+					if r.FormValue("terms") != "agreed" {
+						errRes(w, r, http.StatusBadRequest, "You must accept the terms and conditions if you wish to sign up", nil)
+						return
+					}
 					orgs := models.Organisations{}
 					if err := orgs.FindAll(r.Context(), models.OrganisationsContainingUser{ID: user.ID}); err != nil {
 						errRes(w, r, 500, "Error looking up organisations", err)
@@ -166,6 +181,10 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !user.Verified {
+			if r.FormValue("terms") != "agreed" {
+				errRes(w, r, http.StatusBadRequest, "You must accept the terms and conditions if you wish to sign up", nil)
+				return
+			}
 			user.Verified = true
 		}
 	}

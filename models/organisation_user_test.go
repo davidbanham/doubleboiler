@@ -48,6 +48,10 @@ func organisationUserFix() []model {
 	}
 }
 
+func (OrganisationUser) tablename() string {
+	return "organisations_users"
+}
+
 func (OrganisationUsers) tablename() string {
 	return "organisations_users"
 }

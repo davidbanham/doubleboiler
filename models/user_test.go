@@ -32,6 +32,10 @@ func (i *User) nullDynamicValues() {
 	i.UpdatedAt = time.Time{}
 }
 
+func (User) tablename() string {
+	return "users"
+}
+
 func (Users) tablename() string {
 	return "users"
 }
