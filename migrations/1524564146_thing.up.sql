@@ -3,7 +3,7 @@ CREATE TABLE things (
   revision TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   description TEXT NOT NULL,
-  organisation_id UUID REFERENCES organisations (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  organisation_id UUID REFERENCES organisations (id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
