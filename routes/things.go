@@ -94,12 +94,6 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	flash := Flash{
-		Type: Success,
-		Text: "Awwww yeah!",
-	}
-	r = r.WithContext(flash.Add(r.Context()))
-
 	http.Redirect(w, r, "/things/"+thing.ID, 302)
 }
 
