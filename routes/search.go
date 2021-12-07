@@ -45,6 +45,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		OrgID:        targetOrg.ID,
 		Phrase:       r.FormValue("search_field"),
 		User:         userFromContext(r.Context()),
+		Roles:        orgUserFromContext(r.Context(), targetOrg).Roles,
 		EntityFilter: map[string]bool{},
 	}
 	for _, label := range r.Form["entity-filter"] {

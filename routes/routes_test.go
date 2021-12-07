@@ -33,8 +33,9 @@ func contextifyOrgAdmin(ctx context.Context, org models.Organisation) context.Co
 	ctx = context.WithValue(ctx, "organisation_users", models.OrganisationUsers{
 		Data: []models.OrganisationUser{
 			models.OrganisationUser{
-				OrganisationID: org.ID, Roles: models.Roles{
-					models.Role{Name: "admin"},
+				OrganisationID: org.ID,
+				Roles: models.Roles{
+					models.ValidRoles["admin"],
 				},
 			},
 		},

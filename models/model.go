@@ -12,8 +12,9 @@ import (
 var Searchables []Searchable
 
 type Searchable struct {
-	Label      string
-	searchFunc func(ByPhrase) string
+	Label        string
+	RequiredRole Role
+	searchFunc   func(ByPhrase) string
 }
 
 type ClientSafeError struct {

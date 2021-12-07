@@ -10,9 +10,11 @@ import (
 )
 
 func init() {
+	requiredRole := ValidRoles["admin"]
 	Searchables = append(Searchables, Searchable{
-		Label:      "Things",
-		searchFunc: searchThings,
+		Label:        "Things",
+		RequiredRole: requiredRole,
+		searchFunc:   searchThings(requiredRole),
 	})
 }
 
@@ -114,9 +116,14 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 	return err
 }
 
-func searchThings(query ByPhrase) string {
-	return `SELECT
+func searchThings(requiredRole Role) func(ByPhrase) string {
+	return func(query ByPhrase) string {
+		if query.User.Admin || query.Roles.Can(requiredRole.Name) {
+			return `SELECT
 		text 'Thing' AS entity_type, text 'things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
 FROM
 		things, plainto_tsquery('english', $2) query WHERE organisation_id = $1 AND query @@ ts`
+		}
+		return ""
+	}
 }

@@ -18,6 +18,7 @@ type ByPhrase struct {
 	Phrase       string
 	OrgID        string
 	User         User
+	Roles        Roles
 	EntityFilter map[string]bool
 	queryBase
 }

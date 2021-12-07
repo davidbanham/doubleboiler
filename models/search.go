@@ -47,6 +47,11 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 			}
 			filteredParts = append(filteredParts, part)
 		}
+
+		if len(filteredParts) == 0 {
+			return nil
+		}
+
 		query := strings.Join(filteredParts, " UNION ALL ")
 
 		query += " ORDER BY rank DESC " + q.Pagination()

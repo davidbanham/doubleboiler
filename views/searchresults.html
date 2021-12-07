@@ -11,7 +11,7 @@
     </li>
     <li>
       <select class="choices-picker {{$uniqClass}}" id="entity-filter" name="entity-filter" multiple>
-        {{ range searchableEntities }}
+        {{ range searchableEntities .Context }}
         <option
             value="{{.Label}}"
             {{ if and $.EntityFilterMap .Label}}

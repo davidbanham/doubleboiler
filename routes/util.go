@@ -307,10 +307,13 @@ func init() {
 		"queryString": func(vals url.Values) template.URL {
 			return "?" + template.URL(vals.Encode())
 		},
-		"searchableEntities": func() []models.Searchable {
+		"searchableEntities": func(ctx context.Context) []models.Searchable {
 			ret := []models.Searchable{}
+			org := activeOrgFromContext(ctx)
 			for _, entity := range models.Searchables {
-				ret = append(ret, entity)
+				if can(ctx, org, entity.RequiredRole.Name) {
+					ret = append(ret, entity)
+				}
 			}
 			return ret
 		},
@@ -585,4 +588,15 @@ func userFromContext(ctx context.Context) models.User {
 		return models.User{}
 	}
 	return ctx.Value("user").(models.User)
+}
+
+func orgUserFromContext(ctx context.Context, org models.Organisation) models.OrganisationUser {
+	if v, ok := ctx.Value("organisation_users").(models.OrganisationUsers); ok {
+		for _, ou := range v.Data {
+			if ou.OrganisationID == org.ID {
+				return ou
+			}
+		}
+	}
+	return models.OrganisationUser{}
 }
