@@ -20,8 +20,6 @@ func TestOrganisationUserCreateHandler(t *testing.T) {
 	org.New(
 		bandname(),
 		"Australia",
-		models.OrganisationUsers{},
-		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
 
@@ -55,8 +53,6 @@ func organisationUserFixture(ctx context.Context, t *testing.T) (i models.Organi
 	org.New(
 		bandname(),
 		"Australia",
-		models.OrganisationUsers{},
-		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
 
@@ -146,7 +142,7 @@ func TestOrganisationUserCreateHandlerAddExistingUser(t *testing.T) {
 	assert.Nil(t, user.Save(ctx))
 
 	org := models.Organisation{}
-	org.New(bandname(), "Australia", models.OrganisationUsers{}, "aud")
+	org.New(bandname(), "Australia")
 	assert.Nil(t, org.Save(ctx))
 
 	form := url.Values{
@@ -202,8 +198,6 @@ func TestOrganisationUserCreateHandlerAddNewUserByEmail(t *testing.T) {
 	org.New(
 		bandname(),
 		"Australia",
-		models.OrganisationUsers{},
-		"aud",
 	)
 	assert.Nil(t, org.Save(ctx))
 

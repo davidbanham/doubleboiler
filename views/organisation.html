@@ -28,7 +28,7 @@
     </div>
     <div class="mt-5 md:mt-0 md:col-span-2">
       <ul role="list" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {{range .Organisation.Users.Data}}
+        {{range .OrganisationUsers.Data}}
         {{ $ou := . }}
         <li class="col-span-1 bg-white rounded-lg shadow divide-y divide-gray-200">
           <div class="w-full flex items-center justify-between p-6 space-x-6">
@@ -82,7 +82,7 @@
               <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
               <input type="hidden" name="id" value="{{.Organisation.ID}}"></input>
               <input type="hidden" name="revision" value="{{.Organisation.Revision}}"></input>
-              {{range .Organisation.Users.Data}}
+              {{range .OrganisationUsers.Data}}
               <input type="hidden" name="users.id" value="{{.ID}}"></input>
               <input type="hidden" name="users.revision" value="{{.Revision}}"></input>
               <input type="hidden" name="users.userid" value="{{.UserID}}"></input>

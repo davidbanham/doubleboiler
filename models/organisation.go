@@ -20,15 +20,13 @@ type Organisation struct {
 	ID        string
 	Name      string
 	Country   string
-	Users     OrganisationUsers
 	Revision  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func (org *Organisation) New(name, country string, users OrganisationUsers, currency string) {
+func (org *Organisation) New(name, country string) {
 	org.ID = uuid.NewV4().String()
-	org.Users = users
 	org.Name = name
 	org.Country = country
 	org.Revision = uuid.NewV4().String()
@@ -68,7 +66,7 @@ func (org *Organisation) Save(ctx context.Context) error {
 func (org *Organisation) FindByColumn(ctx context.Context, col, val string) error {
 	db := ctx.Value("tx").(Querier)
 
-	err := db.QueryRowContext(ctx, `SELECT
+	return db.QueryRowContext(ctx, `SELECT
 	id,
 	revision,
 	name,
@@ -79,17 +77,6 @@ func (org *Organisation) FindByColumn(ctx context.Context, col, val string) erro
 		&org.Name,
 		&org.Country,
 	)
-
-	if err != nil {
-		return err
-	}
-
-	org.Users = OrganisationUsers{}
-	if err := org.Users.FindAll(ctx, ByOrg{ID: org.ID}); err != nil {
-		return err
-	}
-
-	return err
 }
 
 func (org *Organisation) FindByID(ctx context.Context, id string) error {
@@ -150,14 +137,6 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 		}
 
 		(*organisations).Data = append((*organisations).Data, org)
-	}
-
-	for i, org := range (*organisations).Data {
-		org.Users = OrganisationUsers{}
-		if err := org.Users.FindAll(ctx, ByOrg{ID: org.ID}); err != nil {
-			return err
-		}
-		(*organisations).Data[i] = org
 	}
 
 	return err

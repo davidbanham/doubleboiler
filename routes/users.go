@@ -344,24 +344,23 @@ type userPageData struct {
 }
 
 func createOrgFromSignup(ctx context.Context, user models.User, orgname, orgcountry, orgcurrency string) (error, models.Organisation) {
-	orgUser := models.OrganisationUser{}
-	orgUser.New(user.ID, "", models.Roles{
-		models.Role{
-			Name: "admin",
-		},
-	})
-
 	org := models.Organisation{}
 	org.New(
 		orgname,
 		orgcountry,
-		models.OrganisationUsers{
-			Data: []models.OrganisationUser{orgUser},
-		},
-		orgcurrency,
 	)
 
 	if err := org.Save(ctx); err != nil {
+		return err, org
+	}
+
+	orgUser := models.OrganisationUser{}
+	orgUser.New(user.ID, org.ID, models.Roles{
+		models.Role{
+			Name: "admin",
+		},
+	})
+	if err := orgUser.Save(ctx); err != nil {
 		return err, org
 	}
 

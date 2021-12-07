@@ -57,8 +57,6 @@ func TestOrganisationCreateOrUpdateHandlerUpdate(t *testing.T) {
 	org.New(
 		bandname(),
 		"Australia",
-		models.OrganisationUsers{},
-		"aud",
 	)
 	org.Save(ctx)
 
@@ -204,8 +202,6 @@ func organisationFixture(ctx context.Context, t *testing.T) (i models.Organisati
 	i.New(
 		bandname(),
 		"Australia",
-		models.OrganisationUsers{},
-		"aud",
 	)
 	err := i.Save(ctx)
 	assert.Nil(t, err)

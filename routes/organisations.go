@@ -88,8 +88,6 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		org.New(
 			r.FormValue("name"),
 			r.FormValue("country"),
-			models.OrganisationUsers{},
-			r.FormValue("currency"),
 		)
 
 		if err := org.Save(r.Context()); err != nil {
@@ -147,11 +145,12 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type organisationPageData struct {
-	Context      context.Context
-	Organisation models.Organisation
-	URI          string
-	ProductName  string
-	ValidRoles   map[string]models.Role
+	Context           context.Context
+	Organisation      models.Organisation
+	OrganisationUsers models.OrganisationUsers
+	URI               string
+	ProductName       string
+	ValidRoles        map[string]models.Role
 }
 
 func organisationHandler(w http.ResponseWriter, r *http.Request) {
@@ -165,16 +164,23 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := targetOrg.FindByID(r.Context(), vars["id"]); err != nil {
-		errRes(w, r, http.StatusNotFound, "Error looking up organisation", err)
+		errRes(w, r, http.StatusInternalServerError, "Error looking up organisation", err)
+		return
+	}
+
+	orgUsers := models.OrganisationUsers{}
+	if err := orgUsers.FindAll(r.Context(), models.ByOrg{ID: targetOrg.ID}); err != nil {
+		errRes(w, r, http.StatusInternalServerError, "Error looking up organisation users", err)
 		return
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "organisation.html", organisationPageData{
-		Organisation: targetOrg,
-		ValidRoles:   models.ValidRoles,
-		ProductName:  config.NAME,
-		Context:      r.Context(),
-		URI:          config.URI,
+		Organisation:      targetOrg,
+		OrganisationUsers: orgUsers,
+		ValidRoles:        models.ValidRoles,
+		ProductName:       config.NAME,
+		Context:           r.Context(),
+		URI:               config.URI,
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
