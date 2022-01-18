@@ -52,7 +52,7 @@
             <div class="-mt-px flex divide-x divide-gray-200">
               <div class="w-0 flex-1 flex">
                 <div class="relative -mr-px w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-bl-lg hover:text-gray-500">
-                  <form action="/organisations/remove-user/{{.ID}}" method="post">
+                  <form action="/organisation-users/{{.ID}}/delete" method="post">
                     <input type="hidden" name="csrf" value="{{csrf $.Context}}"></input>
                     <button type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                           onclick="document.getElementById('{{.ID}}').hidden = false"

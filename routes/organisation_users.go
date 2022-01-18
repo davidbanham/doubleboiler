@@ -19,7 +19,7 @@ import (
 )
 
 func init() {
-	r.Path("/organisations/remove-user/{id}").
+	r.Path("/organisation-users/{id}/delete").
 		Methods("POST").
 		HandlerFunc(organisationUserDeletionHandler)
 
