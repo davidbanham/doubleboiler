@@ -8,6 +8,7 @@ include ./makefiles/standup.mk
 include ./makefiles/tailwind.mk
 include ./makefiles/areyousure.mk
 include ./makefiles/deployment.mk
+include ./makefiles/secrets.mk
 
 parentname = notbad
 name = app
