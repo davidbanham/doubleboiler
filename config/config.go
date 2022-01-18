@@ -92,6 +92,11 @@ func init() {
 	if err := os.Setenv("DB_URI", dbURI); err != nil {
 		log.Fatal(err)
 	}
+
+	if os.Getenv("DB_USE_UNIX_SOCKET") == "true" {
+		dbURI = fmt.Sprintf("user=%s password=%s database=%s host=%s", os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_SOCKET_ADDRESS"))
+	}
+
 	Db, err = sql.Open("postgres", dbURI)
 	if err != nil {
 		log.Fatal(err)
