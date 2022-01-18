@@ -5,3 +5,5 @@ doubleboiler
 .db_init
 node_modules
 ./assets/css/main.css
+bin
+ca-certificates.crt

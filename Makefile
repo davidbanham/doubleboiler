@@ -6,12 +6,17 @@ include ./makefiles/go.mk
 include ./makefiles/migrations.mk
 include ./makefiles/standup.mk
 include ./makefiles/tailwind.mk
+include ./makefiles/areyousure.mk
+include ./makefiles/deployment.mk
 
+parentname = notbad
 name = app
 brand = doubleboiler
 prefix = $(brand)-
 project = speedtest-186210
+cloudsql_instance_name = sql_instance_name_for_deployment
 keybase_team = notbad.software
+domain = doubleboiler.app
 forbidden_untracked_extensions = '\.go|\.js'
 now = $(shell date -u --rfc-3339 seconds | sed 's/ /T/')
 now_no_colons = $(shell echo $(now) | sed 's/:/_/g')

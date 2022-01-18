@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	_ "time/tzdata"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
