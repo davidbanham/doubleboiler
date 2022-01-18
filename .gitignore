@@ -7,3 +7,6 @@ node_modules
 ./assets/css/main.css
 bin
 ca-certificates.crt
+production.env
+staging.env
+development.env
