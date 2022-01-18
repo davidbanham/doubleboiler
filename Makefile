@@ -1,11 +1,11 @@
 DEV_DB_URI = postgres://doubleboiler:wut@localhost:5432/doubleboiler?sslmode=disable
 TESTING_DB_URI = postgres://doubleboiler:wut@localhost:5432/doubleboiler_test?sslmode=disable
 
-include ./makefiles/development.make
-include ./makefiles/go.make
-include ./makefiles/migrations.make
-include ./makefiles/standup.make
-include ./makefiles/tailwind.make
+include ./makefiles/development.mk
+include ./makefiles/go.mk
+include ./makefiles/migrations.mk
+include ./makefiles/standup.mk
+include ./makefiles/tailwind.mk
 
 name = app
 brand = doubleboiler
