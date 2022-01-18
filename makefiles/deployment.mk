@@ -23,7 +23,7 @@ demand_clean:
 	@# Check that there are no local modifications
 	git diff-index --quiet HEAD -- && test -z "$(git ls-files --exclude-standard --others)"
 	@# Check that we are up to date with remotes
-	./kube_maker/makefiles/gitup.sh
+	./makefiles/gitup.sh
 	$(eval pull_policy=IfNotPresent)
 	$(eval tag=$(shell git rev-parse HEAD))
 
