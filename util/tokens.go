@@ -1,8 +1,8 @@
 package util
 
 import (
-	"doubleboiler/config"
 	"crypto/sha256"
+	"doubleboiler/config"
 	"encoding/base64"
 	"time"
 )
@@ -14,8 +14,7 @@ func CalcExpiry(days int) string {
 func CalcToken(input, expiry string) (token string) {
 	plaintext := config.SECRET + input + expiry
 	hash := sha256.New()
-	hash.Write([]byte(plaintext))
-	encHash := hash.Sum(nil)
+	encHash := hash.Sum([]byte(plaintext))
 	token = base64.StdEncoding.EncodeToString(encHash)
 	return
 }
