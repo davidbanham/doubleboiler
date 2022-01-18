@@ -19,11 +19,11 @@ development: test build stage_development docker_image_build registry_push cloud
 .PHONY: demand_clean
 demand_clean:
 	@# Check there are no forbidden extensions not tracked by git
-	echo git ls-files --others --exclude-standard | grep -E $(forbidden_untracked_extensions) | xargs -n 1 test -z
+	git ls-files --others --exclude-standard | grep -E $(forbidden_untracked_extensions) | xargs -n 1 test -z
 	@# Check that there are no local modifications
-	echo git diff-index --quiet HEAD -- && test -z "$(git ls-files --exclude-standard --others)"
+	git diff-index --quiet HEAD -- && test -z "$(git ls-files --exclude-standard --others)"
 	@# Check that we are up to date with remotes
-	echo ./kube_maker/makefiles/gitup.sh
+	./kube_maker/makefiles/gitup.sh
 	$(eval pull_policy=IfNotPresent)
 	$(eval tag=$(shell git rev-parse HEAD))
 
@@ -54,7 +54,7 @@ registry_push:
 
 .PHONY: cloud_run_deploy
 cloud_run_deploy: service_route
-	echo gcloud run deploy $(servicename) --image gcr.io/$(project)/$(prefix)$(name):$(tag) --platform managed --region $(region) \
+	gcloud run deploy $(servicename) --image gcr.io/$(project)/$(prefix)$(name):$(tag) --platform managed --region $(region) \
 		--set-env-vars=$(shell keybase decrypt < $(stage).env.encrypted | tr '\n' ',') \
 	  --add-cloudsql-instances $(project):$(region):$(cloudsql_instance_name)
 
