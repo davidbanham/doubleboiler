@@ -1,5 +1,7 @@
 {{ template "header" . }}
 
+{{ template "breadcrumbs" dict "Crumbs" (crumbs "Things" "/things" "New" "#") }}
+
 {{ template "page_head" dict "Title" "Create Thing" }}
 
 <div class="relative bg-white">

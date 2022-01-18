@@ -1,6 +1,6 @@
 {{ template "header" . }}
 
-{{ template "page_head" dict "Title" "Things" }}
+{{ template "breadcrumbs" dict "Crumbs" (crumbs "Things" "#") }}
 
 <div class="px-4 bg-white shadow overflow-hidden sm:rounded-md">
 	<ul class="divide-y divide-gray-200">
