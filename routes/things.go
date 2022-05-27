@@ -77,6 +77,11 @@ func thingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if thing.Revision != r.FormValue("revision") {
+			errRes(w, r, http.StatusBadRequest, models.ErrWrongRev.Message, nil)
+			return
+		}
+
 		thing.Name = r.FormValue("name")
 		thing.Description = r.FormValue("description")
 	} else {

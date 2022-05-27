@@ -28,6 +28,7 @@ func (thing Thing) id() string {
 func (thing *Thing) nullDynamicValues() {
 	thing.CreatedAt = time.Time{}
 	thing.UpdatedAt = time.Time{}
+	thing.Revision = ""
 }
 
 func (Thing) tablename() string {
@@ -85,7 +86,7 @@ func TestThingRevisionCollision(t *testing.T) {
 	fix := thingFixture(org.ID)
 	assert.Nil(t, fix.Save(ctx))
 	fix.Revision = "yeahnah"
-	assert.Error(t, fix.Save(ctx))
+	assert.Equal(t, ErrWrongRev, fix.Save(ctx))
 
 	closeTx(t, ctx)
 }
@@ -98,9 +99,7 @@ func TestThingRevisionChange(t *testing.T) {
 	org.Save(ctx)
 
 	fix := thingFixture(org.ID)
-	defaultRev := fix.Revision
 	assert.Nil(t, fix.Save(ctx))
-	assert.Equal(t, defaultRev, fix.Revision)
 	firstRev := fix.Revision
 	assert.Nil(t, fix.Save(ctx))
 	assert.NotEqual(t, firstRev, fix.Revision)

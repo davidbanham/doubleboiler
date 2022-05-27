@@ -23,9 +23,9 @@ type Thing struct {
 	Name           string
 	Description    string
 	OrganisationID string
-	Revision       string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	Revision       string
 }
 
 func (thing *Thing) New(name, description, organisationID string) {
@@ -33,7 +33,6 @@ func (thing *Thing) New(name, description, organisationID string) {
 	thing.Name = name
 	thing.Description = description
 	thing.OrganisationID = organisationID
-	thing.Revision = uuid.NewV4().String()
 	thing.CreatedAt = time.Now()
 	thing.UpdatedAt = time.Now()
 }
@@ -45,18 +44,48 @@ func (thing *Thing) auditQuery(ctx context.Context, action string) string {
 func (thing *Thing) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, thing.auditQuery(ctx, "U")+`INSERT INTO things (
-		id, revision, name, description, organisation_id
+	newRev := uuid.NewV4().String()
+
+	result, err := db.ExecContext(ctx, thing.auditQuery(ctx, "U")+`INSERT INTO things (
+		updated_at,
+		id,
+		revision,
+		name,
+		description,
+		organisation_id
 	) VALUES (
-		$1, $2, $4, $5, $6
-	) ON CONFLICT (revision) DO UPDATE SET (
-		updated_at, revision, name, description, organisation_id
+		now(), $1, $3, $4, $5, $6
+	) ON CONFLICT (id) DO UPDATE SET (
+		updated_at,
+		revision,
+		name,
+		description,
+		organisation_id
 	) = (
 		now(), $3, $4, $5, $6
-	) RETURNING revision`,
-		thing.ID, thing.Revision, uuid.NewV4().String(), thing.Name, thing.Description, thing.OrganisationID,
+	) WHERE things.revision = $2`,
+		thing.ID,
+		thing.Revision,
+		newRev,
+		thing.Name,
+		thing.Description,
+		thing.OrganisationID,
 	)
-	return row.Scan(&thing.Revision)
+	if err != nil {
+		return err
+	}
+	num, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if num == 0 {
+		return ErrWrongRev
+	}
+
+	thing.Revision = newRev
+
+	return nil
 }
 
 func (thing *Thing) FindByID(ctx context.Context, id string) error {
@@ -67,9 +96,21 @@ func (thing *Thing) FindByColumn(ctx context.Context, col, val string) error {
 	db := ctx.Value("tx").(Querier)
 
 	return db.QueryRowContext(ctx, `SELECT
-	id, revision, created_at, updated_at, name, description, organisation_id
+	id,
+	revision,
+	created_at,
+	updated_at,
+	name,
+	description,
+	organisation_id
 	FROM things WHERE `+col+` = $1`, val).Scan(
-		&thing.ID, &thing.Revision, &thing.CreatedAt, &thing.UpdatedAt, &thing.Name, &thing.Description, &thing.OrganisationID,
+		&thing.ID,
+		&thing.Revision,
+		&thing.CreatedAt,
+		&thing.UpdatedAt,
+		&thing.Name,
+		&thing.Description,
+		&thing.OrganisationID,
 	)
 }
 
@@ -91,11 +132,23 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 		return fmt.Errorf("Unknown query")
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
-		id, revision, created_at, updated_at, name, description, organisation_id
+			id,
+			revision,
+			created_at,
+			updated_at,
+			name,
+			description,
+			organisation_id
 		FROM things WHERE organisation_id = $1 `+v.Pagination(), v.ID)
 	case All:
 		rows, err = db.QueryContext(ctx, `SELECT
-		id, revision, created_at, updated_at, name, description, organisation_id
+			id,
+			revision,
+			created_at,
+			updated_at,
+			name,
+			description,
+			organisation_id
 		FROM things `+v.Pagination())
 	}
 	if err != nil {
@@ -106,7 +159,13 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 	for rows.Next() {
 		thing := Thing{}
 		err = rows.Scan(
-			&thing.ID, &thing.Revision, &thing.CreatedAt, &thing.UpdatedAt, &thing.Name, &thing.Description, &thing.OrganisationID,
+			&thing.ID,
+			&thing.Revision,
+			&thing.CreatedAt,
+			&thing.UpdatedAt,
+			&thing.Name,
+			&thing.Description,
+			&thing.OrganisationID,
 		)
 		if err != nil {
 			return err

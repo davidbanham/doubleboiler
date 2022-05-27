@@ -27,6 +27,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/kylelemons/godebug v1.1.0
 	github.com/lib/pq v1.10.4
+	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871

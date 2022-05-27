@@ -28,6 +28,7 @@ func (i Organisation) id() string {
 func (i *Organisation) nullDynamicValues() {
 	i.CreatedAt = time.Time{}
 	i.UpdatedAt = time.Time{}
+	i.Revision = ""
 }
 
 func (Organisation) tablename() string {
@@ -78,7 +79,7 @@ func TestOrganisationRevisionCollision(t *testing.T) {
 	fix := organisationFixture()
 	assert.Nil(t, fix.Save(ctx))
 	fix.Revision = "yeahnah"
-	assert.Error(t, fix.Save(ctx))
+	assert.Equal(t, ErrWrongRev, fix.Save(ctx))
 
 	closeTx(t, ctx)
 }
@@ -87,9 +88,7 @@ func TestOrganisationRevisionChange(t *testing.T) {
 	t.Parallel()
 	ctx := getCtx(t)
 	fix := organisationFixture()
-	defaultRev := fix.Revision
 	assert.Nil(t, fix.Save(ctx))
-	assert.Equal(t, defaultRev, fix.Revision)
 	firstRev := fix.Revision
 	assert.Nil(t, fix.Save(ctx))
 	assert.NotEqual(t, firstRev, fix.Revision)

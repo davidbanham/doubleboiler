@@ -31,7 +31,6 @@ func (org *Organisation) New(name, country string) {
 	org.ID = uuid.NewV4().String()
 	org.Name = name
 	org.Country = country
-	org.Revision = uuid.NewV4().String()
 	org.CreatedAt = time.Now()
 	org.UpdatedAt = time.Now()
 }
@@ -43,26 +42,45 @@ func (org *Organisation) auditQuery(ctx context.Context, action string) string {
 func (org *Organisation) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, org.auditQuery(ctx, "U")+`INSERT INTO organisations (
+	newRev := uuid.NewV4().String()
+
+	result, err := db.ExecContext(ctx, org.auditQuery(ctx, "U")+`INSERT INTO organisations (
+		updated_at,
 		id,
 		revision,
 		name,
 		country
-	) VALUES ($1, $2, $4, $5) ON CONFLICT (revision) DO UPDATE SET (
-		revision,
+	) VALUES (
+		now(), $1, $3, $4, $5
+	) ON CONFLICT (id) DO UPDATE SET (
 		updated_at,
+		revision,
 		name,
 		country
-	) = ($3, now(), $4, $5) RETURNING revision`,
+	) = (
+		now(), $3, $4, $5
+	) WHERE organisations.revision = $2`,
 		org.ID,
 		org.Revision,
-		uuid.NewV4().String(),
+		newRev,
 		org.Name,
 		org.Country,
 	)
+	if err != nil {
+		return err
+	}
+	num, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
 
-	err := row.Scan(&org.Revision)
-	return err
+	if num == 0 {
+		return ErrWrongRev
+	}
+
+	org.Revision = newRev
+
+	return nil
 }
 
 func (org *Organisation) FindByColumn(ctx context.Context, col, val string) error {
@@ -71,11 +89,15 @@ func (org *Organisation) FindByColumn(ctx context.Context, col, val string) erro
 	return db.QueryRowContext(ctx, `SELECT
 	id,
 	revision,
+	created_at,
+	updated_at,
 	name,
 	country
 	FROM organisations WHERE `+col+` = $1`, val).Scan(
 		&org.ID,
 		&org.Revision,
+		&org.CreatedAt,
+		&org.UpdatedAt,
 		&org.Name,
 		&org.Country,
 	)
@@ -102,14 +124,23 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, created_at, updated_at, name, country FROM organisations "+v.Pagination())
+		rows, err = db.QueryContext(ctx, `SELECT
+		id,
+		revision,
+		created_at,
+		updated_at,
+		name,
+		country
+		FROM organisations
+		`+v.Pagination())
 		if err != nil {
 			return err
 		}
 		defer rows.Close()
 	case OrganisationsContainingUser:
 		rows, err = db.QueryContext(ctx, `
-		SELECT organisations.id,
+		SELECT
+		organisations.id,
 			organisations.revision,
 			organisations.created_at,
 			organisations.updated_at,
@@ -128,7 +159,8 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 
 	for rows.Next() {
 		org := Organisation{}
-		if err = rows.Scan(&org.ID,
+		if err = rows.Scan(
+			&org.ID,
 			&org.Revision,
 			&org.CreatedAt,
 			&org.UpdatedAt,

@@ -61,9 +61,10 @@ func TestOrganisationCreateOrUpdateHandlerUpdate(t *testing.T) {
 	org.Save(ctx)
 
 	form := url.Values{
-		"name":    {org.Name},
-		"country": {org.Country},
-		"id":      {org.ID},
+		"name":     {org.Name},
+		"country":  {org.Country},
+		"id":       {org.ID},
+		"revision": {org.Revision},
 	}
 	req := &http.Request{
 		Method: "POST",

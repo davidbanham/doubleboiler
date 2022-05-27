@@ -117,6 +117,7 @@ func TestVerificationHandlerValid(t *testing.T) {
 	// Set password for new user
 	form := url.Values{
 		"id":       {fix.ID},
+		"revision": {fix.Revision},
 		"email":    {bandname()},
 		"password": {bandname()},
 		"terms":    {"agreed"},

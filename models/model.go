@@ -32,6 +32,7 @@ func (err ClientSafeError) Error() string {
 // For example
 var ErrRelationships = ClientSafeError{Message: "This entity has active relationships"}
 var ErrOrgLive = ClientSafeError{Message: "This action is not permitted once an organisation is live"}
+var ErrWrongRev = ClientSafeError{Message: "This record has been changed by another request since you loaded it. Review the changes by going back and refreshing, and try again if appropriate."}
 
 func Parallelize(functions ...func() error) (errors []error) {
 	var waitGroup sync.WaitGroup

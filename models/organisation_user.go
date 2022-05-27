@@ -96,14 +96,13 @@ func (this Role) Implications() []string {
 	return ret
 }
 
-func (c *OrganisationUser) New(userID, organisationID string, roles Roles) {
-	c.ID = uuid.NewV4().String()
-	c.UserID = userID
-	c.OrganisationID = organisationID
-	c.Revision = uuid.NewV4().String()
-	c.Roles = roles
-	c.CreatedAt = time.Now()
-	c.UpdatedAt = time.Now()
+func (orguser *OrganisationUser) New(userID, organisationID string, roles Roles) {
+	orguser.ID = uuid.NewV4().String()
+	orguser.UserID = userID
+	orguser.OrganisationID = organisationID
+	orguser.Roles = roles
+	orguser.CreatedAt = time.Now()
+	orguser.UpdatedAt = time.Now()
 }
 
 func (orguser *OrganisationUser) auditQuery(ctx context.Context, action string) string {
@@ -119,22 +118,62 @@ func (orguser OrganisationUser) checkRolesAreValid() error {
 	return nil
 }
 
-func (c *OrganisationUser) Save(ctx context.Context) error {
+func (orguser *OrganisationUser) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	if err := c.checkRolesAreValid(); err != nil {
+	if err := orguser.checkRolesAreValid(); err != nil {
 		return err
 	}
 
-	row := db.QueryRowContext(ctx, c.auditQuery(ctx, "U")+"INSERT INTO organisations_users (id, revision, user_id, organisation_id, roles) VALUES ($1, $2, $4, $5, $6) ON CONFLICT (revision) DO UPDATE SET (revision, updated_at, user_id, organisation_id, roles) = ($3, now(), $4, $5, $6) RETURNING revision", c.ID, c.Revision, uuid.NewV4().String(), c.UserID, c.OrganisationID, c.Roles)
-	return row.Scan(&c.Revision)
+	newRev := uuid.NewV4().String()
+
+	result, err := db.ExecContext(ctx, orguser.auditQuery(ctx, "U")+`INSERT INTO organisations_users (
+		updated_at,
+		id,
+		revision,
+		user_id,
+		organisation_id,
+		roles
+	) VALUES (
+		now(), $1, $3, $4, $5, $6
+	) ON CONFLICT (id) DO UPDATE SET (
+		updated_at,
+		revision,
+		user_id,
+		organisation_id,
+		roles
+	) = (
+		now(), $3, $4, $5, $6
+	) WHERE organisations_users.revision = $2`,
+		orguser.ID,
+		orguser.Revision,
+		newRev,
+		orguser.UserID,
+		orguser.OrganisationID,
+		orguser.Roles,
+	)
+	if err != nil {
+		return nil
+	}
+	num, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if num == 0 {
+		return ErrWrongRev
+	}
+
+	orguser.Revision = newRev
+
+	return nil
 }
 
-func (c *OrganisationUser) FindByID(ctx context.Context, id string) error {
-	return c.FindByColumn(ctx, "id", id)
+func (orguser *OrganisationUser) FindByID(ctx context.Context, id string) error {
+	return orguser.FindByColumn(ctx, "id", id)
 }
 
-func (c *OrganisationUser) FindByColumn(ctx context.Context, col, val string) error {
+func (orguser *OrganisationUser) FindByColumn(ctx context.Context, col, val string) error {
 	db := ctx.Value("tx").(Querier)
 
 	err := db.QueryRowContext(ctx, `SELECT
@@ -150,22 +189,22 @@ func (c *OrganisationUser) FindByColumn(ctx context.Context, col, val string) er
 	INNER JOIN users
 	ON organisations_users.user_id = users.id
 	WHERE organisations_users.id = $1`, val).Scan(
-		&c.ID,
-		&c.Revision,
-		&c.CreatedAt,
-		&c.UpdatedAt,
-		&c.UserID,
-		&c.OrganisationID,
-		&c.Roles,
-		&c.Email,
+		&orguser.ID,
+		&orguser.Revision,
+		&orguser.CreatedAt,
+		&orguser.UpdatedAt,
+		&orguser.UserID,
+		&orguser.OrganisationID,
+		&orguser.Roles,
+		&orguser.Email,
 	)
 	return err
 }
 
-func (c OrganisationUser) Delete(ctx context.Context) error {
+func (orguser OrganisationUser) Delete(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	_, err := db.ExecContext(ctx, c.auditQuery(ctx, "D")+"DELETE FROM organisations_users WHERE id = $1 AND revision = $2", c.ID, c.Revision)
+	_, err := db.ExecContext(ctx, orguser.auditQuery(ctx, "D")+"DELETE FROM organisations_users WHERE id = $1 AND revision = $2", orguser.ID, orguser.Revision)
 	return err
 }
 

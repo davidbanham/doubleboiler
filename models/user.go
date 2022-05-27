@@ -42,7 +42,6 @@ func (user *User) New(email, rawpassword string) {
 	user.Email = strings.ToLower(email)
 	user.Password = string(hash)
 	user.Verified = false
-	user.Revision = uuid.NewV4().String()
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 }
@@ -54,17 +53,49 @@ func (user *User) auditQuery(ctx context.Context, action string) string {
 func (user *User) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
-	row := db.QueryRowContext(ctx, user.auditQuery(ctx, "U")+"INSERT INTO users (id, revision, email, password, verified, verification_email_sent) VALUES ($1, $2, $4, $5, $6, $7) ON CONFLICT (revision) DO UPDATE SET (revision, updated_at, email, password, verified, verification_email_sent) = ($3, now(), $4, $5, $6, $7) RETURNING revision", user.ID, user.Revision, uuid.NewV4().String(), strings.ToLower(user.Email), user.Password, user.Verified, user.VerificationEmailSent)
-	err := row.Scan(&user.Revision)
+	newRev := uuid.NewV4().String()
+
+	result, err := db.ExecContext(ctx, user.auditQuery(ctx, "U")+`INSERT INTO users (
+		updated_at,
+		id,
+		revision,
+		email,
+		password,
+		verified,
+		verification_email_sent
+	) VALUES (
+		now(), $1, $3, $4, $5, $6, $7
+	) ON CONFLICT (id) DO UPDATE SET (
+		updated_at,
+		revision,
+		email,
+		password,
+		verified,
+		verification_email_sent
+	) = (
+		now(), $3, $4, $5, $6, $7
+	) WHERE users.revision = $2`,
+		user.ID,
+		user.Revision,
+		newRev,
+		strings.ToLower(user.Email),
+		user.Password,
+		user.Verified,
+		user.VerificationEmailSent,
+	)
+	if err != nil {
+		return err
+	}
+	num, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
 
-	task := kewpie.Task{}
-	err = task.Marshal(user)
-	if err != nil {
-		return err
+	if num == 0 {
+		return ErrWrongRev
 	}
+
+	user.Revision = newRev
 
 	return nil
 }
@@ -175,9 +206,27 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users "+v.Pagination())
+		rows, err = db.QueryContext(ctx, `SELECT
+		id,
+		revision,
+		email,
+		password,
+		admin,
+		verified,
+		verification_email_sent
+		FROM users `+v.Pagination())
 	case ByOrg:
-		rows, err = db.QueryContext(ctx, "SELECT id, revision, email, password, admin, verified, verification_email_sent FROM users WHERE id IN (SELECT user_id FROM members WHERE organisation_id = $1) "+v.Pagination(), v.ID)
+		rows, err = db.QueryContext(ctx, `SELECT
+		id,
+		revision,
+		email,
+		password,
+		admin,
+		verified,
+		verification_email_sent
+		FROM users WHERE id
+		IN (SELECT user_id FROM members WHERE organisation_id = $1)
+		`+v.Pagination(), v.ID)
 	}
 
 	if err != nil {
@@ -188,7 +237,15 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 	for rows.Next() {
 		user := User{}
 
-		err = rows.Scan(&user.ID, &user.Revision, &user.Email, &user.Password, &user.Admin, &user.Verified, &user.VerificationEmailSent)
+		err = rows.Scan(
+			&user.ID,
+			&user.Revision,
+			&user.Email,
+			&user.Password,
+			&user.Admin,
+			&user.Verified,
+			&user.VerificationEmailSent,
+		)
 		if err != nil {
 			return err
 		}

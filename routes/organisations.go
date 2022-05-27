@@ -80,6 +80,11 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if org.Revision != r.FormValue("revision") {
+			errRes(w, r, http.StatusBadRequest, models.ErrWrongRev.Message, nil)
+			return
+		}
+
 		org.Name = r.FormValue("name")
 		org.Country = r.FormValue("country")
 	} else {

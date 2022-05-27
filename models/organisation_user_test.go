@@ -37,6 +37,7 @@ func (i *OrganisationUser) nullDynamicValues() {
 	i.Email = ""
 	i.CreatedAt = time.Time{}
 	i.UpdatedAt = time.Time{}
+	i.Revision = ""
 }
 
 func organisationUserFix() []model {
@@ -104,7 +105,7 @@ func TestOrganisationUserRevisionCollision(t *testing.T) {
 	fix := organisationUserFixture(user.ID, org.ID)
 	assert.Nil(t, fix.Save(ctx))
 	fix.Revision = "yeahnah"
-	assert.Error(t, fix.Save(ctx))
+	assert.Equal(t, ErrWrongRev, fix.Save(ctx))
 
 	closeTx(t, ctx)
 }
@@ -119,9 +120,7 @@ func TestOrganisationUserRevisionChange(t *testing.T) {
 	org.Save(ctx)
 
 	fix := organisationUserFixture(user.ID, org.ID)
-	defaultRev := fix.Revision
 	assert.Nil(t, fix.Save(ctx))
-	assert.Equal(t, defaultRev, fix.Revision)
 	firstRev := fix.Revision
 	assert.Nil(t, fix.Save(ctx))
 	assert.NotEqual(t, firstRev, fix.Revision)

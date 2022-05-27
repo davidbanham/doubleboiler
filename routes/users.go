@@ -102,10 +102,13 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			errRes(w, r, 400, "Specified ID does not exist", err)
 			return
 		}
+		if user.Revision != r.FormValue("revision") {
+			errRes(w, r, http.StatusBadRequest, models.ErrWrongRev.Message, nil)
+			return
+		}
 	} else {
 		if err := user.FindByColumn(r.Context(), "email", r.FormValue("email")); err != nil {
 			if err != sql.ErrNoRows {
-				// Might be a PUT-style user creation
 				errRes(w, r, 500, "Error looking up user", err)
 				return
 			}
@@ -130,18 +133,6 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			rawpassword,
 		)
 	} else {
-		targetID := r.FormValue("id")
-		if user.ID != "" {
-			targetID = user.ID
-		}
-
-		if err := user.FindByID(r.Context(), targetID); err != nil {
-			if err != nil && err != sql.ErrNoRows {
-				// Might be a PUT-style user creation
-				errRes(w, r, 500, "Error looking up user", err)
-				return
-			}
-		}
 		if r.FormValue("email") != user.Email {
 			if user.HasEmail() {
 				if !user.Verified {
