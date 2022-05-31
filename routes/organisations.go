@@ -143,10 +143,35 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Tmpl.ExecuteTemplate(w, "organisations.html", organisationsPageData{
-		Organisations: orgsFromContext(r.Context()),
+	organisations := models.Organisations{}
+
+	query := models.All{}
+	query.DefaultPageSize = 50
+	query.Paginate(r.Form)
+	query.FilterFromForm(r.Form, organisations.AvailableFilters())
+
+	if err := organisations.FindAll(r.Context(), query); err != nil {
+		errRes(w, r, 500, "error fetching organisations", err)
+		return
+	}
+
+	filtered := models.Organisations{}
+	whitelisted := orgsFromContext(r.Context()).ByID()
+	for _, org := range organisations.Data {
+		if whitelisted[org.ID].ID == org.ID {
+			filtered.Data = append(filtered.Data, org)
+		}
+	}
+
+	filtered.Query = query
+
+	if err := Tmpl.ExecuteTemplate(w, "organisations.html", organisationsPageData{
+		Organisations: filtered,
 		Context:       r.Context(),
-	})
+	}); err != nil {
+		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
+		return
+	}
 }
 
 type organisationPageData struct {
@@ -174,6 +199,7 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orgUsers := models.OrganisationUsers{}
+
 	if err := orgUsers.FindAll(r.Context(), models.ByOrg{ID: targetOrg.ID}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Error looking up organisation users", err)
 		return

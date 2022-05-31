@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
-	"doubleboiler/logger"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"fmt"
@@ -13,6 +12,7 @@ import (
 	"net/url"
 	"strings"
 
+	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/davidbanham/notifications"
 	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
@@ -138,17 +138,28 @@ func organisationUserDeletionHandler(w http.ResponseWriter, r *http.Request) {
 func sendOrgAdditionEmail(ctx context.Context, user models.User, org models.Organisation) error {
 	emailHTML, emailText := copy.OrgAdditionEmail(org.Name)
 
-	if err := notifications.SendEmail(notifications.Email{
+	mail := notifications.Email{
 		To:      user.Email,
 		From:    config.SYSTEM_EMAIL,
 		ReplyTo: config.SUPPORT_EMAIL,
 		Text:    emailText,
 		HTML:    emailHTML,
 		Subject: fmt.Sprintf("%s - New %s organisation", org.Name, config.NAME),
-	}); err != nil {
-		logger.Log(ctx, logger.Error, "sending verification email", err)
+	}
+
+	task := kewpie.Task{}
+	if err := task.Marshal(mail); err != nil {
 		return err
 	}
+
+	task.Tags.Set("user_id", user.ID)
+	task.Tags.Set("organisation_id", org.ID)
+	task.Tags.Set("communication_subject", fmt.Sprintf("New organisation notification"))
+
+	if err := config.QUEUE.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -160,16 +171,27 @@ func sendOrgInviteEmail(ctx context.Context, user models.User, org models.Organi
 
 	emailHTML, emailText := copy.OrgInviteEmail(org.Name, verificationUrl)
 
-	if err := notifications.SendEmail(notifications.Email{
+	mail := notifications.Email{
 		To:      user.Email,
 		From:    config.SYSTEM_EMAIL,
 		ReplyTo: config.SUPPORT_EMAIL,
 		Text:    emailText,
 		HTML:    emailHTML,
 		Subject: fmt.Sprintf("%s - Confirm your %s account", org.Name, config.NAME),
-	}); err != nil {
-		logger.Log(ctx, logger.Error, "sending verification email", err)
+	}
+
+	task := kewpie.Task{}
+	if err := task.Marshal(mail); err != nil {
 		return err
 	}
+
+	task.Tags.Set("user_id", user.ID)
+	task.Tags.Set("organisation_id", org.ID)
+	task.Tags.Set("communication_subject", fmt.Sprintf("Organisation invitation"))
+
+	if err := config.QUEUE.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -26,3 +26,7 @@ type ByEntityID struct {
 	EntityID string
 	queryBase
 }
+type ByIDs struct {
+	IDs []string
+	queryBase
+}

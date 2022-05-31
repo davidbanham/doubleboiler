@@ -8,12 +8,14 @@ import (
 	"doubleboiler/flashes"
 	"doubleboiler/util"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 	"time"
 
 	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/davidbanham/notifications"
+	"github.com/lib/pq"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -220,6 +222,10 @@ func (user *User) SendVerificationEmail(ctx context.Context, org Organisation) e
 		return err
 	}
 
+	task.Tags.Set("user_id", user.ID)
+	task.Tags.Set("organisation_id", org.ID)
+	task.Tags.Set("communication_subject", fmt.Sprintf("Account confirmation request"))
+
 	if err := config.QUEUE.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
 		return err
 	}
@@ -243,6 +249,14 @@ func (user User) HasEmail() bool {
 type Users struct {
 	Data  []User
 	Query Query
+}
+
+func (this Users) ByID() map[string]User {
+	ret := map[string]User{}
+	for _, t := range this.Data {
+		ret[t.ID] = t
+	}
+	return ret
 }
 
 func (users *Users) FindAll(ctx context.Context, q Query) error {
@@ -269,6 +283,20 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		FROM users
 		`+filterQuery(v)+`
 		ORDER BY email`+v.Pagination())
+	case ByIDs:
+		rows, err = db.QueryContext(ctx, `SELECT
+		id,
+		revision,
+		email,
+		password,
+		admin,
+		verified,
+		verification_email_sent,
+		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
+		FROM users
+		`+filterQuery(v)+`
+		AND id = ANY ($1)
+		ORDER BY email`+v.Pagination(), pq.Array(v.IDs))
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id,
@@ -281,7 +309,7 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
 		FROM users
 		`+filterQuery(v)+`
-		AND id IN (SELECT user_id FROM members WHERE organisation_id = $1)
+		AND id IN (SELECT user_id FROM organisations_users WHERE organisation_id = $1)
 		ORDER BY email`+v.Pagination(), v.ID)
 	}
 
@@ -308,6 +336,7 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		}
 		(*users).Data = append((*users).Data, user)
 	}
+	log.Printf("DEBUG users.Data: %+v \n", users.Data)
 	return err
 }
 

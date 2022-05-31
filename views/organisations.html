@@ -7,6 +7,9 @@
     <li>
       {{ template "searchbox" dict "EntityFilter" "Organisations" }}
     </li>
+    <li>
+      {{ template "filterbox" dict "Entity" .Organisations "Context" .Context }}
+    </li>
     {{ range .Organisations.Data }}
 		<li>
       <a href="/organisations/{{.ID}}" class="block hover:bg-gray-50">

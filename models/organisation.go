@@ -39,6 +39,14 @@ func (org *Organisation) auditQuery(ctx context.Context, action string) string {
 	return auditQuery(ctx, action, "organisations", org.ID, org.ID)
 }
 
+func (organisations Organisations) AvailableFilters() Filters {
+	return organisationFilters()
+}
+
+func organisationFilters() Filters {
+	return standardFilters()
+}
+
 func (org *Organisation) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
@@ -112,6 +120,14 @@ type Organisations struct {
 	Query Query
 }
 
+func (this Organisations) ByID() map[string]Organisation {
+	ret := map[string]Organisation{}
+	for _, t := range this.Data {
+		ret[t.ID] = t
+	}
+	return ret
+}
+
 func (organisations *Organisations) FindAll(ctx context.Context, q Query) error {
 	organisations.Query = q
 
@@ -132,7 +148,8 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 		name,
 		country
 		FROM organisations
-		`+v.Pagination())
+		`+filterQuery(v)+`
+		ORDER BY name`+v.Pagination())
 		if err != nil {
 			return err
 		}
@@ -149,8 +166,9 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 		FROM organisations
 		JOIN organisations_users
 		ON organisations_users.organisation_id = organisations.id
-		WHERE organisations_users.user_id = $1
-		`+v.Pagination(), v.ID)
+		`+filterQuery(v)+`
+		AND organisations_users.user_id = $1
+		ORDER BY name`+v.Pagination(), v.ID)
 		if err != nil {
 			return err
 		}

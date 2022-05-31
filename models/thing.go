@@ -122,6 +122,14 @@ type Things struct {
 	Query Query
 }
 
+func (this Things) ByID() map[string]Thing {
+	ret := map[string]Thing{}
+	for _, t := range this.Data {
+		ret[t.ID] = t
+	}
+	return ret
+}
+
 func (things *Things) FindAll(ctx context.Context, q Query) error {
 	things.Query = q
 
