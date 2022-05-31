@@ -1,6 +1,6 @@
 {{ define "date" }}
   {{ $id := despace (humanDate .) }}
-  <span class="{{ $id }}">{{ humanDate . }}</span>
+  <time title="{{ humanDate . }}" datetime="{{ humanDate . }}" class="{{ $id }}">{{ humanDate . }}</time>
   <script>
     var times = document.getElementsByClassName('{{ $id }}');
 

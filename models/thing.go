@@ -12,9 +12,10 @@ import (
 func init() {
 	requiredRole := ValidRoles["admin"]
 	Searchables = append(Searchables, Searchable{
-		Label:        "Things",
-		RequiredRole: requiredRole,
-		searchFunc:   searchThings(requiredRole),
+		Label:            "Things",
+		RequiredRole:     requiredRole,
+		searchFunc:       searchThings(requiredRole),
+		availableFilters: thingFilters,
 	})
 }
 
@@ -103,7 +104,9 @@ func (thing *Thing) FindByColumn(ctx context.Context, col, val string) error {
 	name,
 	description,
 	organisation_id
-	FROM things WHERE `+col+` = $1`, val).Scan(
+	FROM things
+	WHERE `+col+` = $1
+	`, val).Scan(
 		&thing.ID,
 		&thing.Revision,
 		&thing.CreatedAt,
@@ -139,7 +142,10 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 			name,
 			description,
 			organisation_id
-		FROM things WHERE organisation_id = $1 `+v.Pagination(), v.ID)
+		FROM things
+		`+filterQuery(v)+`
+		AND organisation_id = $1
+		ORDER BY name`+v.Pagination(), v.ID)
 	case All:
 		rows, err = db.QueryContext(ctx, `SELECT
 			id,
@@ -149,7 +155,9 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 			name,
 			description,
 			organisation_id
-		FROM things `+v.Pagination())
+		FROM things
+		`+filterQuery(v)+`
+		ORDER BY name`+v.Pagination())
 	}
 	if err != nil {
 		return err
@@ -175,13 +183,21 @@ func (things *Things) FindAll(ctx context.Context, q Query) error {
 	return err
 }
 
+func (things Things) AvailableFilters() Filters {
+	return standardFilters()
+}
+
+func thingFilters() Filters {
+	return Filters{}
+}
+
 func searchThings(requiredRole Role) func(ByPhrase) string {
 	return func(query ByPhrase) string {
 		if query.User.Admin || query.Roles.Can(requiredRole.Name) {
 			return `SELECT
 		text 'Thing' AS entity_type, text 'things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
 FROM
-		things, plainto_tsquery('english', $2) query WHERE organisation_id = $1 AND query @@ ts`
+		things, plainto_tsquery('english', $2) query ` + filterQuery(query) + ` AND organisation_id = $1 AND query @@ ts`
 		}
 		return ""
 	}

@@ -5,7 +5,7 @@
 <div class="px-4 bg-white shadow overflow-hidden sm:rounded-md">
   <ul class="divide-y divide-gray-200">
     <li>
-      <form class="w-full flex md:ml-0" action="/users" method="GET">
+      <form id="searchform" class="w-full flex md:ml-0" action="/users" method="GET">
         <label for="email" class="sr-only">Search</label>
         <div class="relative w-full text-gray-400 focus-within:text-gray-600">
           <div class="absolute inset-y-0 left-0 flex items-center pointer-events-none">
@@ -16,6 +16,9 @@
           <input id="email" name="email" class="block w-full h-full pl-8 pr-3 py-2 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 sm:text-sm" value="" placeholder="Search" type="search">
         </div>
       </form>
+    </li>
+    <li>
+      {{ template "filterbox" dict "Entity" .Users "Context" .Context }}
     </li>
     {{ range .Users.Data }}
     <li>

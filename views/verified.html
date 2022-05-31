@@ -10,7 +10,7 @@
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
     <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
       <form action="/users/{{.User.ID}}" method="post" class="space-y-6">
-        <input type="hidden" name="next" value="welcome"></input>
+        <input type="hidden" name="next" value="/welcome"></input>
         <input type="hidden" name="flow" value="signup"></input>
         <input type="hidden" name="id" value="{{.User.ID}}"></input>
         <input type="hidden" name="revision" value="{{.User.Revision}}"></input>
@@ -21,6 +21,10 @@
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
           <input id="password" name="password" type="password" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Password">
+        </div>
+        <div>
+          <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <input id="confirm-password" name="password" type="password" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Confirm Password">
         </div>
         <div>
           <div class="flex items-center">

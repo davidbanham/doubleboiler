@@ -7,6 +7,9 @@
     <li>
       {{ template "searchbox" dict "EntityFilter" "Things" }}
     </li>
+    <li class="mt-3 mb-0">
+      {{ template "filterbox" dict "Entity" .Things "Context" .Context }}
+    </li>
     {{ range .Things.Data }}
 		<li>
       <a href="/things/{{.ID}}" class="block hover:bg-gray-50">
@@ -24,6 +27,8 @@
   {{ template "pagination" .Things }}
 </div>
 
+{{ if (can .Context "admin") }}
 {{ template "create_button" dict "Path" "/create-thing" "Text" "Create Thing" }}
+{{ end }}
 
 {{ template "footer" . }}

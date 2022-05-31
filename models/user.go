@@ -78,6 +78,27 @@ func (user *User) FetchFlashes(ctx context.Context) error {
 	return db.QueryRowContext(ctx, `SELECT flashes FROM users WHERE id = $1`, user.ID).Scan(&user.Flashes)
 }
 
+func (users Users) AvailableFilters() Filters {
+	return userFilters()
+}
+
+func userFilters() Filters {
+	return append(standardFilters(),
+		HasProp{
+			key:   "verification_email_sent",
+			value: "true",
+			label: "Has Been Invited",
+			id:    "user-has-been-invited",
+		},
+		HasProp{
+			key:   "verified",
+			value: "true",
+			label: "Has Accepted Invite",
+			id:    "user-is-verified",
+		},
+	)
+}
+
 func (user *User) Save(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 
@@ -245,7 +266,9 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		verified,
 		verification_email_sent,
 		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
-		FROM users `+v.Pagination())
+		FROM users
+		`+filterQuery(v)+`
+		ORDER BY email`+v.Pagination())
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id,
@@ -256,9 +279,10 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		verified,
 		verification_email_sent,
 		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
-		FROM users WHERE id
-		IN (SELECT user_id FROM members WHERE organisation_id = $1)
-		`+v.Pagination(), v.ID)
+		FROM users
+		`+filterQuery(v)+`
+		AND id IN (SELECT user_id FROM members WHERE organisation_id = $1)
+		ORDER BY email`+v.Pagination(), v.ID)
 	}
 
 	if err != nil {

@@ -2,6 +2,11 @@
 
 {{ template "breadcrumbs" dict "Crumbs" (crumbs "Things" "/things" .Thing.Name "#") }}
 
+{{ $edits := "disabled" }}
+{{ if (can .Context "admin") }}
+{{ $edits = "" }}
+{{ end }}
+
 <div class="relative bg-white">
   <div class="relative max-w-7xl mx-auto lg:grid lg:grid-cols-5">
     <div class="bg-white py-16 px-4 sm:px-6 lg:col-span-3 lg:py-24 lg:px-8 xl:pl-12">
@@ -13,17 +18,19 @@
           <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
           <div class="col-span-6">
             <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-            <input value="{{.Thing.Name}}" id="name" name="name" type="text" autocomplete="on" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Name">
+            <input {{$edits}} value="{{.Thing.Name}}" id="name" name="name" type="text" autocomplete="on" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Name">
           </div>
           <div class="col-span-6">
             <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-            <input value="{{.Thing.Description}}" id="description" name="description" type="text" autocomplete="on" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Description">
+            <input {{$edits}} value="{{.Thing.Description}}" id="description" name="description" type="text" autocomplete="on" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Description">
           </div>
+          {{ if (can .Context "admin") }}
           <div>
             <button type="submit" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              Submit
+              Save
             </button>
           </div>
+          {{ end }}
       </div>
     </div>
     <div class="bg-white py-16 px-4 sm:px-6 lg:col-span-1 lg:py-24 lg:px-8 xl:pl-12">
@@ -35,7 +42,9 @@
       <p class="mt-1 text-sm text-gray-500">
       {{ template "time" .Thing.UpdatedAt }}
       </p>
+      {{ if (can .Context "admin") }}
       <a href="/audits/{{.Thing.ID}}" class="text-md font-medium leading-6 text-indigo-600">Audit Log</a>
+      {{ end }}
     </div>
   </div>
 </div>

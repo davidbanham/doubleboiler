@@ -284,11 +284,13 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	users := models.Users{}
+
 	query := models.All{}
 	query.DefaultPageSize = 50
 	query.Paginate(r.Form)
+	query.FilterFromForm(r.Form, users.AvailableFilters())
 
-	users := models.Users{}
 	if err := users.FindAll(r.Context(), query); err != nil {
 		errRes(w, r, 500, "error fetching users", err)
 		return

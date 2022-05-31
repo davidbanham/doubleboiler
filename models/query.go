@@ -21,6 +21,8 @@ type Query interface {
 	Values() url.Values
 	NextPage() url.Values
 	PrevPage() url.Values
+	ActiveFilters() Filters
+	CustomFilters() Filters
 }
 
 type Paginatable interface {
@@ -31,6 +33,40 @@ type queryBase struct {
 	Limit           int
 	Skip            int
 	DefaultPageSize int
+	activeFilters   Filters
+	customFilters   Filters
+	input           url.Values
+}
+
+func (query queryBase) ActiveFilters() Filters {
+	return query.activeFilters
+}
+
+func (query queryBase) CustomFilters() Filters {
+	return query.customFilters
+}
+
+func (query *queryBase) FilterFromForm(form url.Values, availableFilters Filters, customFilters ...Filter) {
+	availableFiltersByID := append(availableFilters, customFilters...).ByID()
+	cfs := Filters{}
+	for _, f := range customFilters {
+		cfs = append(cfs, f)
+	}
+	customFiltersByID := cfs.ByID()
+	for _, k := range form["filter"] {
+		f, ok := availableFiltersByID[k]
+		if ok {
+			query.activeFilters = append(query.activeFilters, f)
+		}
+	}
+	for _, k := range form["custom-filter"] {
+		cf, ok := customFiltersByID[k]
+		if ok {
+			query.customFilters = append(query.customFilters, cf)
+		}
+	}
+	form.Del("custom-filter")
+	query.input = form
 }
 
 func (this queryBase) Values() url.Values {

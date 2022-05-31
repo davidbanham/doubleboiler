@@ -19,6 +19,8 @@ type OrganisationUser struct {
 	Email          string
 	Revision       string
 	Roles          Roles
+	Name           string
+	FamilyName     string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -133,17 +135,21 @@ func (orguser *OrganisationUser) Save(ctx context.Context) error {
 		revision,
 		user_id,
 		organisation_id,
-		roles
+		roles,
+		name,
+		family_name
 	) VALUES (
-		now(), $1, $3, $4, $5, $6
+		now(), $1, $3, $4, $5, $6, $7, $8
 	) ON CONFLICT (id) DO UPDATE SET (
 		updated_at,
 		revision,
 		user_id,
 		organisation_id,
-		roles
+		roles,
+		name,
+		family_name
 	) = (
-		now(), $3, $4, $5, $6
+		now(), $3, $4, $5, $6, $7, $8
 	) WHERE organisations_users.revision = $2`,
 		orguser.ID,
 		orguser.Revision,
@@ -151,6 +157,8 @@ func (orguser *OrganisationUser) Save(ctx context.Context) error {
 		orguser.UserID,
 		orguser.OrganisationID,
 		orguser.Roles,
+		orguser.Name,
+		orguser.FamilyName,
 	)
 	if err != nil {
 		return nil
@@ -184,6 +192,8 @@ func (orguser *OrganisationUser) FindByColumn(ctx context.Context, col, val stri
 	organisations_users.user_id,
 	organisations_users.organisation_id,
 	organisations_users.roles,
+	organisations_users.name,
+	organisations_users.family_name,
 	users.email
 	FROM organisations_users
 	INNER JOIN users
@@ -196,6 +206,8 @@ func (orguser *OrganisationUser) FindByColumn(ctx context.Context, col, val stri
 		&orguser.UserID,
 		&orguser.OrganisationID,
 		&orguser.Roles,
+		&orguser.Name,
+		&orguser.FamilyName,
 		&orguser.Email,
 	)
 	return err
@@ -206,6 +218,10 @@ func (orguser OrganisationUser) Delete(ctx context.Context) error {
 
 	_, err := db.ExecContext(ctx, orguser.auditQuery(ctx, "D")+"DELETE FROM organisations_users WHERE id = $1 AND revision = $2", orguser.ID, orguser.Revision)
 	return err
+}
+
+func (orguser OrganisationUser) FullName() string {
+	return orguser.Name + " " + orguser.FamilyName
 }
 
 type OrganisationUsers struct {
@@ -233,6 +249,8 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 	organisations_users.user_id,
 	organisations_users.organisation_id,
 	organisations_users.roles,
+	organisations_users.name,
+	organisations_users.family_name,
 	users.email
 	FROM organisations_users
 	INNER JOIN users
@@ -250,6 +268,8 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 	organisations_users.user_id,
 	organisations_users.organisation_id,
 	organisations_users.roles,
+	organisations_users.name,
+	organisations_users.family_name,
 	users.email
 	FROM organisations_users
 	INNER JOIN users
@@ -268,6 +288,8 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 	organisations_users.user_id,
 	organisations_users.organisation_id,
 	organisations_users.roles,
+	organisations_users.name,
+	organisations_users.family_name,
 	users.email
 	FROM organisations_users
 	INNER JOIN users
@@ -290,6 +312,8 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query
 			&ou.UserID,
 			&ou.OrganisationID,
 			&ou.Roles,
+			&ou.Name,
+			&ou.FamilyName,
 			&ou.Email,
 		); err != nil {
 			return err
