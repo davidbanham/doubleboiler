@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"doubleboiler/flashes"
 	"doubleboiler/logger"
 	"doubleboiler/models"
 	"net/http"
@@ -32,11 +33,12 @@ type loginPageData struct {
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("flow") == "signup" {
-		flash := Flash{
-			Type: Success,
-			Text: "Password set successfully. Now please log in.",
+		flash := flashes.Flash{
+			Type: flashes.Success,
+			Text: "Please use your new password to log in.",
 		}
-		r = r.WithContext(flash.Add(r.Context()))
+		flashed, _ := flash.Add(r.Context())
+		r = r.WithContext(flashed)
 	}
 
 	next := r.URL.Query().Get("next")

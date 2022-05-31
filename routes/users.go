@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"doubleboiler/config"
+	"doubleboiler/flashes"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
@@ -209,6 +210,15 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 				config.ReportError(errors.New("Duplicate email hit: " + user.Email))
 				errRes(w, r, 409, "That email address already exists in our system.", err)
 				return
+			}
+			if r.FormValue("password") != "" {
+				flash := flashes.Flash{
+					Persistent: true,
+					Type:       flashes.Success,
+					Text:       "Password set successfully.",
+				}
+				flashed, _ := flash.Add(r.Context())
+				r = r.WithContext(flashed)
 			}
 			errRes(w, r, 500, "A database error has occurred", err)
 			return

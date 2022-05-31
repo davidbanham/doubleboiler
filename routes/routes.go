@@ -101,13 +101,6 @@ type welcomePageData struct {
 }
 
 func serveWelcome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Get("flow") == "signup" {
-		flash := Flash{
-			Type: Success,
-			Text: "Password set successfully.",
-		}
-		r = r.WithContext(flash.Add(r.Context()))
-	}
 	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
 		Context: r.Context(),
 	}); err != nil {

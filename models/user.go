@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
+	"doubleboiler/flashes"
 	"doubleboiler/util"
 	"fmt"
 	"net/url"
@@ -34,6 +35,8 @@ type User struct {
 	Revision              string
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
+	HasFlashes            bool
+	Flashes               flashes.Flashes
 }
 
 func (user *User) New(email, rawpassword string) {
@@ -48,6 +51,31 @@ func (user *User) New(email, rawpassword string) {
 
 func (user *User) auditQuery(ctx context.Context, action string) string {
 	return auditQuery(ctx, action, "users", user.ID, user.ID)
+}
+
+func (user User) PersistFlash(ctx context.Context, flash flashes.Flash) error {
+	user.Flashes = append(user.Flashes, flash)
+	db := ctx.Value("tx").(Querier)
+	_, err := db.ExecContext(ctx, "UPDATE users SET flashes = $2 WHERE id = $1", user.ID, user.Flashes)
+	return err
+}
+
+func (user User) DeleteFlash(ctx context.Context, flash flashes.Flash) error {
+	db := ctx.Value("tx").(Querier)
+	_, err := db.ExecContext(ctx, `
+UPDATE users
+SET flashes = flashes #- coalesce(('{' || (
+	SELECT i
+		FROM generate_series(0, jsonb_array_length(flashes) - 1) AS i
+	 WHERE (flashes->i->'id' = '"`+flash.ID+`"')
+) || '}')::text[], '{}')
+WHERE id = $1`, user.ID)
+	return err
+}
+
+func (user *User) FetchFlashes(ctx context.Context) error {
+	db := ctx.Value("tx").(Querier)
+	return db.QueryRowContext(ctx, `SELECT flashes FROM users WHERE id = $1`, user.ID).Scan(&user.Flashes)
 }
 
 func (user *User) Save(ctx context.Context) error {
@@ -116,7 +144,8 @@ func (user *User) FindByColumn(ctx context.Context, col, val string) error {
 		password,
 		admin,
 		verified,
-		verification_email_sent
+		verification_email_sent,
+		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
 	FROM users WHERE `+col+" = $1", val).Scan(&user.ID,
 		&user.Revision,
 		&user.CreatedAt,
@@ -126,6 +155,7 @@ func (user *User) FindByColumn(ctx context.Context, col, val string) error {
 		&user.Admin,
 		&user.Verified,
 		&user.VerificationEmailSent,
+		&user.HasFlashes,
 	)
 	if err != nil {
 		return err
@@ -213,7 +243,8 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		password,
 		admin,
 		verified,
-		verification_email_sent
+		verification_email_sent,
+		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
 		FROM users `+v.Pagination())
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
@@ -223,7 +254,8 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		password,
 		admin,
 		verified,
-		verification_email_sent
+		verification_email_sent,
+		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
 		FROM users WHERE id
 		IN (SELECT user_id FROM members WHERE organisation_id = $1)
 		`+v.Pagination(), v.ID)
@@ -245,6 +277,7 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 			&user.Admin,
 			&user.Verified,
 			&user.VerificationEmailSent,
+			&user.HasFlashes,
 		)
 		if err != nil {
 			return err

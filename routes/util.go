@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/copy"
+	"doubleboiler/flashes"
 	"doubleboiler/heroicons"
 	"doubleboiler/logger"
 	"doubleboiler/models"
@@ -192,6 +193,7 @@ func init() {
 		"orgsFromContext": func(ctx context.Context) models.Organisations {
 			return orgsFromContext(ctx)
 		},
+		"flashes": flashesFromContext,
 		"activeOrgFromContext": func(ctx context.Context) models.Organisation {
 			return activeOrgFromContext(ctx)
 		},
@@ -281,16 +283,6 @@ func init() {
 				})
 			}
 			return crumbs, nil
-		},
-		"flashes": func(ctx context.Context) []Flash {
-			if ctx == nil {
-				return []Flash{}
-			}
-			unconv := ctx.Value("flashes")
-			if unconv == nil {
-				return []Flash{}
-			}
-			return unconv.([]Flash)
 		},
 		"noescape": func(str string) template.HTML {
 			return template.HTML(str)
@@ -599,4 +591,30 @@ func orgUserFromContext(ctx context.Context, org models.Organisation) models.Org
 		}
 	}
 	return models.OrganisationUser{}
+}
+
+func flashesFromContext(ctx context.Context) flashes.Flashes {
+	if ctx == nil {
+		return flashes.Flashes{}
+	}
+	unconv := ctx.Value("flashes")
+	unconvUser := ctx.Value("user")
+	if unconv == nil && unconvUser == nil {
+		return flashes.Flashes{}
+	}
+
+	f := flashes.Flashes{}
+	if unconv != nil {
+		f = unconv.(flashes.Flashes)
+	}
+	if unconvUser != nil {
+		user := unconvUser.(models.User)
+		for _, flash := range user.Flashes {
+			if !flash.Sticky {
+				user.DeleteFlash(ctx, flash)
+			}
+		}
+		f = append(f, user.Flashes...)
+	}
+	return f
 }

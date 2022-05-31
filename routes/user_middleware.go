@@ -48,6 +48,13 @@ func userMiddleware(h http.Handler) http.Handler {
 			logger.Log(r.Context(), logger.Info, fmt.Sprintf("User seen: %s, %s, %s, %s\n", user.ID, user.Email, r.Method, r.URL.Path))
 		}
 
+		if user.HasFlashes {
+			if err := user.FetchFlashes(r.Context()); err != nil {
+				errRes(w, r, http.StatusInternalServerError, "Error looking up flashes", err)
+				return
+			}
+		}
+
 		con := context.WithValue(r.Context(), "user", user)
 		h.ServeHTTP(w, r.WithContext(con))
 	})
