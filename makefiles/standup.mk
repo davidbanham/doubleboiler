@@ -12,11 +12,13 @@ check_name: recase_brand
 	@echo kebab $(kebabCaseBrandName)
 	@echo snake $(snakeCaseBrandName)
 	@echo upper $(upperCaseBrand)
+	@echo lower $(upperCaseBrand)
 
 .PHONY: rename
 rename: recase_brand
 	find ./ -type f | grep -v .git | xargs sed -i -e 's/DoubleBoiler/$(camelCaseBrandName)/g'
-	find ./ -type f | grep -v .git | xargs sed -i -e 's/doubleboiler/$(lowerCamelCaseBrandName)/g'
+	find ./ -type f | grep -v .git | xargs sed -i -e 's/doubleboiler/$(lowerCaseBrand)/g'
+	find ./ -type f | grep -v .git | xargs sed -i -e 's/doubleBoiler/$(lowerCamelCaseBrandName)/g'
 	find ./ -type f | grep -v .git | xargs sed -i -e 's/Doubleboiler/$(camelCaseBrandName)/g'
 	find ./ -type f | grep -v .git | xargs sed -i -e 's/double-boiler/$(kebabCaseBrandName)/g'
 	find ./ -type f | grep -v .git | xargs sed -i -e 's/double_boiler/$(snakeCaseBrandName)/g'

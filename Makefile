@@ -14,6 +14,7 @@ parentname = notbad
 name = app
 brand = DoubleBoiler
 upperCaseBrand := $(shell awk 'BEGIN{print toupper("$(brand)")}')
+lowerCaseBrand := $(shell awk 'BEGIN{print tolower("$(brand)")}')
 prefix = $(brand)-
 project = speedtest-186210
 cloudsql_instance_name = sql_instance_name_for_deployment
