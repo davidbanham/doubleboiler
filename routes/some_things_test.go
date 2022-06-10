@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestThingCreateHandler(t *testing.T) {
+func TestSomeThingCreateHandler(t *testing.T) {
 	t.Parallel()
 
 	ctx := getCtx(t)
@@ -27,30 +27,30 @@ func TestThingCreateHandler(t *testing.T) {
 	}
 	req := &http.Request{
 		Method: "POST",
-		URL:    &url.URL{Path: "/things"},
+		URL:    &url.URL{Path: "/some-things"},
 		Form:   form,
 	}
 
 	req = req.WithContext(ctx)
 
 	rr := httptest.NewRecorder()
-	thingCreateOrUpdateHandler(rr, req)
+	someThingCreateOrUpdateHandler(rr, req)
 
 	assert.Equal(t, http.StatusFound, rr.Code)
 
 	closeTx(t, ctx)
 }
 
-func TestThingHandler(t *testing.T) {
+func TestSomeThingHandler(t *testing.T) {
 	t.Parallel()
 
 	ctx := getCtx(t)
 	org := organisationFixture(ctx, t)
 	ctx = contextifyOrgAdmin(ctx, org)
 
-	fixture := thingFixture(ctx, t, org)
+	fixture := someThingFixture(ctx, t, org)
 
-	req, err := http.NewRequest("GET", "/things/"+fixture.ID, nil)
+	req, err := http.NewRequest("GET", "/some-things/"+fixture.ID, nil)
 	req = req.WithContext(ctx)
 
 	assert.Nil(t, err)
@@ -59,7 +59,7 @@ func TestThingHandler(t *testing.T) {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/things/{id}", thingHandler).Methods("GET")
+	r.HandleFunc("/some-things/{id}", someThingHandler).Methods("GET")
 
 	r.ServeHTTP(rr, req)
 
@@ -69,16 +69,16 @@ func TestThingHandler(t *testing.T) {
 	closeTx(t, ctx)
 }
 
-func TestThingsHandler(t *testing.T) {
+func TestSomeThingsHandler(t *testing.T) {
 	t.Parallel()
 
 	ctx := getCtx(t)
 	org := organisationFixture(ctx, t)
 	ctx = contextifyOrgAdmin(ctx, org)
 
-	fixture := thingFixture(ctx, t, org)
+	fixture := someThingFixture(ctx, t, org)
 
-	targetUrl := fmt.Sprintf("/things?organisationid=%s", org.ID)
+	targetUrl := fmt.Sprintf("/some-things?organisationid=%s", org.ID)
 
 	req, err := http.NewRequest("GET", targetUrl, nil)
 	assert.Nil(t, err)
@@ -89,7 +89,7 @@ func TestThingsHandler(t *testing.T) {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/things", thingsHandler).Methods("GET")
+	r.HandleFunc("/some-things", someThingsHandler).Methods("GET")
 
 	r.ServeHTTP(rr, req)
 
@@ -99,13 +99,12 @@ func TestThingsHandler(t *testing.T) {
 	closeTx(t, ctx)
 }
 
-func thingFixture(ctx context.Context, t *testing.T, org models.Organisation) (thing models.Thing) {
-	thing.New(
+func someThingFixture(ctx context.Context, t *testing.T, org models.Organisation) (someThing models.SomeThing) {
+	someThing.New(
 		bandname(),
 		bandname(),
 		org.ID,
 	)
-	err := thing.Save(ctx)
-	assert.Nil(t, err)
-	return thing
+	assert.Nil(t, someThing.Save(ctx))
+	return someThing
 }

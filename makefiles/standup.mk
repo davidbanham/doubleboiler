@@ -1,7 +1,25 @@
+.PHONY: recase_brand
+recase_brand:
+	$(eval camelCaseBrandName := $(shell go run util/cased/main.go --text "$(brand)" --format camel))
+	$(eval lowerCamelCaseBrandName := $(shell go run util/cased/main.go --text "$(brand)" --format lower_camel))
+	$(eval kebabCaseBrandName := $(shell go run util/cased/main.go --text "$(brand)" --format kebab))
+	$(eval snakeCaseBrandName := $(shell go run util/cased/main.go --text "$(brand)" --format snake))
+
+.PHONY: check_name
+check_name: recase_brand
+	@echo camel $(camelCaseBrandName)
+	@echo lowerCamel $(lowerCamelCaseBrandName)
+	@echo kebab $(kebabCaseBrandName)
+	@echo snake $(snakeCaseBrandName)
+	@echo upper $(upperCaseBrand)
+
 .PHONY: rename
-rename:
-	find ./ -type f | grep -v .git | xargs sed -i -e 's/doubleboiler/$(brand)/g'
-	find ./ -type f | grep -v .git | xargs sed -i -e 's/Doubleboiler/$(titleCaseBrand)/g'
+rename: recase_brand
+	find ./ -type f | grep -v .git | xargs sed -i -e 's/DoubleBoiler/$(camelCaseBrandName)/g'
+	find ./ -type f | grep -v .git | xargs sed -i -e 's/doubleboiler/$(lowerCamelCaseBrandName)/g'
+	find ./ -type f | grep -v .git | xargs sed -i -e 's/Doubleboiler/$(camelCaseBrandName)/g'
+	find ./ -type f | grep -v .git | xargs sed -i -e 's/double-boiler/$(kebabCaseBrandName)/g'
+	find ./ -type f | grep -v .git | xargs sed -i -e 's/double_boiler/$(snakeCaseBrandName)/g'
 	find ./ -type f | grep -v .git | xargs sed -i -e 's/DOUBLEBOILER/$(upperCaseBrand)/g'
 
 .PHONY: logos_to_paths
@@ -34,10 +52,15 @@ logos_to_paths:
 .PHONY: new_resource
 new_resource:
 	$(eval newResourceName := $(shell bash -c 'read -p "Name: " name; echo $$name'))
-	$(eval titleCaseNewResourceName := $(shell awk 'BEGIN{print toupper(substr("$(newResourceName)",1,1)) substr("$(newResourceName)", 2, length("$(newResourceName)"))}'))
-	for file in models/thing.go models/thing_test.go routes/things.go routes/things_test.go views/thing.html views/things.html views/create-thing.html ; do \
-		cat $$file | sed 's/Thing/$(titleCaseNewResourceName)/g' \
-		| sed 's/thing/$(newResourceName)/g' \
-		> `echo $$file | sed 's/thing/$(newResourceName)/'` ; \
+	$(eval camelCaseNewResourceName := $(shell go run util/cased/main.go --text "$(newResourceName)" --format camel))
+	$(eval lowerCamelCaseNewResourceName := $(shell go run util/cased/main.go --text "$(newResourceName)" --format lower_camel))
+	$(eval kebabCaseNewResourceName := $(shell go run util/cased/main.go --text "$(newResourceName)" --format kebab))
+	$(eval snakeCaseNewResourceName := $(shell go run util/cased/main.go --text "$(newResourceName)" --format snake))
+	for file in models/some_thing.go models/some_thing_test.go routes/some_things.go routes/some_things_test.go views/some-thing.html views/some-things.html views/create-some-thing.html ; do \
+		cat $$file | sed 's/SomeThing/$(camelCaseNewResourceName)/g' \
+		| sed 's/someThing/$(lowerCamelCaseNewResourceName)/g' \
+		| sed 's/some-thing/$(kebabCaseNewResourceName)/g' \
+		| sed 's/some_thing/$(snakeCaseNewResourceName)/g' \
+		> `echo $$file | sed 's/some-thing/$(kebabCaseNewResourceName)/' | sed 's/some_thing/$(snakeCaseNewResourceName)/'` ; \
 	done
-	make migration migname=$(newResourceName)
+	make migration migname=$(snakeCaseNewResourceName)

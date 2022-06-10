@@ -1,6 +1,6 @@
 {{ template "header" . }}
 
-{{ template "breadcrumbs" dict "Crumbs" (crumbs "Things" "/things" .Thing.Name "#") }}
+{{ template "breadcrumbs" dict "Crumbs" (crumbs "SomeThings" "/some-things" .SomeThing.Name "#") }}
 
 {{ $edits := "disabled" }}
 {{ if (can .Context "admin") }}
@@ -11,18 +11,18 @@
   <div class="relative max-w-7xl mx-auto lg:grid lg:grid-cols-5">
     <div class="bg-white py-16 px-4 sm:px-6 lg:col-span-3 lg:py-24 lg:px-8 xl:pl-12">
       <div class="max-w-lg mx-auto lg:max-w-none">
-        <form action="/things/{{.Thing.ID}}" method="post" class="grid grid-cols-1 gap-y-6">
-          <input type="hidden" name="id" value="{{.Thing.ID}}"></input>
-          <input type="hidden" name="revision" value="{{.Thing.Revision}}"></input>
+        <form action="/some-things/{{.SomeThing.ID}}" method="post" class="grid grid-cols-1 gap-y-6">
+          <input type="hidden" name="id" value="{{.SomeThing.ID}}"></input>
+          <input type="hidden" name="revision" value="{{.SomeThing.Revision}}"></input>
           <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
           <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
           <div class="col-span-6">
             <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-            <input {{$edits}} value="{{.Thing.Name}}" id="name" name="name" type="text" autocomplete="on" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Name">
+            <input {{$edits}} value="{{.SomeThing.Name}}" id="name" name="name" type="text" autocomplete="on" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Name">
           </div>
           <div class="col-span-6">
             <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-            <input {{$edits}} value="{{.Thing.Description}}" id="description" name="description" type="text" autocomplete="on" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Description">
+            <input {{$edits}} value="{{.SomeThing.Description}}" id="description" name="description" type="text" autocomplete="on" class="block w-full shadow-sm py-3 px-4 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 border-black-300 rounded-md" placeholder="Description">
           </div>
           {{ if (can .Context "admin") }}
           <div>
@@ -36,14 +36,14 @@
     <div class="bg-white py-16 px-4 sm:px-6 lg:col-span-1 lg:py-24 lg:px-8 xl:pl-12">
       <h3 class="text-md font-medium leading-6 text-gray-900">Created</h3>
       <p class="mt-1 text-sm text-gray-500">
-      {{ template "time" .Thing.CreatedAt }}
+      {{ template "time" .SomeThing.CreatedAt }}
       </p>
       <h3 class="text-md font-medium leading-6 text-gray-900">Last Updated</h3>
       <p class="mt-1 text-sm text-gray-500">
-      {{ template "time" .Thing.UpdatedAt }}
+      {{ template "time" .SomeThing.UpdatedAt }}
       </p>
       {{ if (can .Context "admin") }}
-      <a href="/audits/{{.Thing.ID}}" class="text-md font-medium leading-6 text-indigo-600">Audit Log</a>
+      <a href="/audits/{{.SomeThing.ID}}" class="text-md font-medium leading-6 text-indigo-600">Audit Log</a>
       {{ end }}
     </div>
   </div>

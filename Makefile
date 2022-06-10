@@ -12,7 +12,8 @@ include ./makefiles/secrets.mk
 
 parentname = notbad
 name = app
-brand = doubleboiler
+brand = DoubleBoiler
+upperCaseBrand := $(shell awk 'BEGIN{print toupper("$(brand)")}')
 prefix = $(brand)-
 project = speedtest-186210
 cloudsql_instance_name = sql_instance_name_for_deployment

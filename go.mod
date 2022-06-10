@@ -23,6 +23,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/websocket v1.5.0
+	github.com/iancoleman/strcase v0.2.0
 	github.com/kylelemons/godebug v1.1.0
 	github.com/lib/pq v1.10.6
 	github.com/satori/go.uuid v1.2.0

@@ -1,4 +1,4 @@
-CREATE TABLE things (
+CREATE TABLE some_things (
   id UUID PRIMARY KEY,
   revision TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
@@ -8,10 +8,10 @@ CREATE TABLE things (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-ALTER TABLE things ADD COLUMN ts tsvector
+ALTER TABLE some_things ADD COLUMN ts tsvector
   GENERATED ALWAYS AS
     (  to_tsvector('english', coalesce(name, ''))
     || to_tsvector('english', coalesce(description, ''))
   ) STORED;
 
-CREATE INDEX things_ts_idx ON things USING GIN (ts);
+CREATE INDEX some_things_ts_idx ON some_things USING GIN (ts);
