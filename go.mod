@@ -3,39 +3,36 @@ module doubleboiler
 go 1.13
 
 require (
-	cloud.google.com/go/cloudtasks v1.0.0 // indirect
-	cloud.google.com/go/errorreporting v0.1.0
-	cloud.google.com/go/storage v1.18.2
-	github.com/aws/aws-sdk-go v1.42.13 // indirect
-	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	cloud.google.com/go v0.102.0 // indirect
+	cloud.google.com/go/cloudtasks v1.3.0 // indirect
+	cloud.google.com/go/errorreporting v0.2.0
+	cloud.google.com/go/storage v1.22.1
+	github.com/aws/aws-sdk-go v1.44.31 // indirect
 	github.com/davidbanham/bandname_go v0.0.0-20180317100912-bb6893a85259
 	github.com/davidbanham/certcache v0.0.0-20180228104134-93d5ff2ba3a1
-	github.com/davidbanham/english_conjoin v0.0.0-20190322044305-fef4c88385d1
+	github.com/davidbanham/english_conjoin v1.0.0
 	github.com/davidbanham/human_duration v1.3.0
-	github.com/davidbanham/kewpie_go/v3 v3.2.3
-	github.com/davidbanham/notifications v1.2.13
+	github.com/davidbanham/kewpie_go/v3 v3.2.4
+	github.com/davidbanham/notifications v1.2.14
 	github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244
-	github.com/envoyproxy/go-control-plane v0.10.1 // indirect
-	github.com/envoyproxy/protoc-gen-validate v0.6.2 // indirect
-	github.com/felixge/httpsnoop v1.0.2 // indirect
+	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/securecookie v1.1.1
-	github.com/gorilla/websocket v1.4.2
+	github.com/gorilla/websocket v1.5.0
 	github.com/kylelemons/godebug v1.1.0
-	github.com/lib/pq v1.10.4
-	github.com/mitchellh/hashstructure/v2 v2.0.2
+	github.com/lib/pq v1.10.6
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871
-	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
-	google.golang.org/api v0.60.0 // indirect
-	google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1 // indirect
-	google.golang.org/grpc v1.42.0 // indirect
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+	golang.org/x/mod v0.5.0 // indirect
+	golang.org/x/oauth2 v0.0.0-20220608161450-d0670ef3b1eb // indirect
+	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 // indirect
+	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
+	google.golang.org/api v0.83.0 // indirect
+	google.golang.org/genproto v0.0.0-20220608133413-ed9918b62aac // indirect
 	gopkg.in/fsnotify.v1 v1.4.7
 )
