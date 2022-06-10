@@ -15,7 +15,7 @@ func init() {
 	Changes = append(Changes, Change{
 		Date:  now,
 		Title: "Hello World",
-		Body:  `Welcome to Double Boiler`,
+		Body:  `Welcome to DoubleBoiler`,
 	})
 
 	sort.Sort(Changes)
