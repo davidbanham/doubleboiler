@@ -17,7 +17,7 @@ func init() {
 		Methods("POST").
 		HandlerFunc(someThingCreateOrUpdateHandler)
 
-	r.Path("/create-some-things").
+	r.Path("/create-some-thing").
 		Methods("GET").
 		HandlerFunc(someThingCreationFormHandler)
 
