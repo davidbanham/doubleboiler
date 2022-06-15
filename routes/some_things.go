@@ -41,6 +41,11 @@ func someThingCreationFormHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !can(r.Context(), targetOrg, "admin") {
+		errRes(w, r, http.StatusForbidden, "You cannot create someThings for that organisation", nil)
+		return
+	}
+
 	if err := Tmpl.ExecuteTemplate(w, "create-some-thing.html", someThingCreationPageData{
 		Context: r.Context(),
 	}); err != nil {
