@@ -110,23 +110,23 @@ type someThingPageData struct {
 
 func someThingHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	p := models.SomeThing{}
-	err := p.FindByID(r.Context(), vars["id"])
+	someThing := models.SomeThing{}
+	err := someThing.FindByID(r.Context(), vars["id"])
 	if err != nil {
 		errRes(w, r, 500, "A database error has occurred", err)
 		return
 	}
 
-	org := orgFromContext(r.Context(), p.OrganisationID)
+	org := orgFromContext(r.Context(), someThing.OrganisationID)
 
 	if !can(r.Context(), org, "admin") {
-		errRes(w, r, http.StatusForbidden, "You cannot create someThings for that organisation", nil)
+		errRes(w, r, http.StatusForbidden, "You cannot view someThings for that organisation", nil)
 		return
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "some-thing.html", someThingPageData{
 		Context:   r.Context(),
-		SomeThing: p,
+		SomeThing: someThing,
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
