@@ -152,6 +152,8 @@ func someThingsHandler(w http.ResponseWriter, r *http.Request) {
 	query.DefaultPageSize = 50
 	query.Paginate(r.Form)
 
+	query.FilterFromForm(r.Form, someThings.AvailableFilters())
+
 	if err := someThings.FindAll(r.Context(), query); err != nil {
 		errRes(w, r, 500, "error fetching someThings", err)
 		return

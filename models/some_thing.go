@@ -192,11 +192,11 @@ func (someThings *SomeThings) FindAll(ctx context.Context, q Query) error {
 }
 
 func (someThings SomeThings) AvailableFilters() Filters {
-	return standardFilters()
+	return someThingFilters()
 }
 
 func someThingFilters() Filters {
-	return Filters{}
+	return standardFilters()
 }
 
 func searchSomeThings(requiredRole Role) func(ByPhrase) string {

@@ -148,6 +148,7 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 	query := models.All{}
 	query.DefaultPageSize = 50
 	query.Paginate(r.Form)
+
 	query.FilterFromForm(r.Form, organisations.AvailableFilters())
 
 	if err := organisations.FindAll(r.Context(), query); err != nil {
