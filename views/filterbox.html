@@ -27,8 +27,9 @@
           >{{.Label}}</option>
       {{ end }}
       {{ if $.Entity.Query.CustomFilters }}
-      {{ range .Entity.Query.CustomFilters }}
+      {{ range $.Entity.Query.CustomFilters }}
       <option
+          value="{{.ID}}"
           disabled
           selected
           >{{.Label}}</option>
@@ -44,7 +45,25 @@
           function(event) {
             const searchParams = new URLSearchParams(window.location.search);
             searchParams.delete('filter');
+
+            {{ if $.Entity.Query.CustomFilters }}
+            {{ range $.Entity.Query.CustomFilters }}
+            searchParams.delete('{{.Key}}');
+            {{ end }}
+            {{ end }}
+
             instance.getValue(true).forEach(function(filterID) {
+              switch (filterID) {
+                {{ if $.Entity.Query.CustomFilters }}
+                {{ range $.Entity.Query.CustomFilters }}
+                case '{{.CustomID}}':
+                  {{ $customKey := .Key }}
+                  {{ range .Values }}
+                      searchParams.append('{{$customKey}}', '{{.}}');
+                  {{ end }}
+                {{ end }}
+                {{ end }}
+              }
               searchParams.append('filter', filterID);
             });
             window.location.search = searchParams.toString();
