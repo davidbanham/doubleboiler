@@ -1,0 +1,19 @@
+{{ define "markdown_box" }}
+<script src="/js/medium-editor.js"></script>
+<link rel="stylesheet" href="/css/medium-editor.min.css">
+<link rel="stylesheet" href="/css/medium-editor-default-theme.min.css">
+{{$id := (print "editable-" .Name "-" uniq) }}
+<div>
+  <label for="{{$id}}" class="mt-1 text-sm text-gray-500">{{.Label}}</label>
+  <div class="mt-1">
+    <textarea rows="4" name="{{.Name}}" id="{{$id}}" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">{{.Content}}</textarea>
+  </div>
+</div>
+<script>
+  new MediumEditor('#{{$id}}', {
+    toolbar: {
+      buttons: [ 'bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'orderedlist' ]
+    },
+  });
+</script>
+{{ end }}
