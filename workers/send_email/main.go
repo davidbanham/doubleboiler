@@ -7,7 +7,6 @@ import (
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"fmt"
-	"log"
 	"strings"
 
 	kewpie "github.com/davidbanham/kewpie_go/v3"
@@ -41,8 +40,6 @@ func (h Handler) Handle(task kewpie.Task) (requeue bool, err error) {
 		util.RollbackTx(ctx)
 		return true, err
 	}
-	wtf := task.Tags.Get("user_id")
-	log.Printf("DEBUG wtf: %+v \n", wtf)
 
 	if task.Tags.Get("user_id") != "" {
 		user := models.User{}
