@@ -22,6 +22,7 @@ func bandname() string {
 
 func getCtx(t *testing.T) context.Context {
 	ctx := context.Background()
+	ctx = config.QUEUE.PrepareContext(ctx)
 	ctx = context.WithValue(ctx, "organisations", models.Organisations{})
 	ctx = context.WithValue(ctx, "organisation_users", models.OrganisationUsers{})
 	tx, err := config.Db.BeginTx(ctx, nil)

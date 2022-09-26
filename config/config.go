@@ -6,6 +6,7 @@ import (
 	"doubleboiler/logger"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -195,16 +196,39 @@ func init() {
 	}
 }
 
-func ReportError(err error) {
+func ReportError(err error, extras ...interface{}) {
 	if REPORT_ERRORS {
+		trace := ""
+		var r *http.Request
+
+		for _, extra := range extras {
+			if extra != nil {
+				switch v := extra.(type) {
+				case *http.Request:
+					switch rid := v.Context().Value("requestID").(type) {
+					case string:
+						trace = rid
+						r = v
+					}
+				case context.Context:
+					switch rid := v.Value("requestID").(type) {
+					case string:
+						trace = rid
+					}
+				}
+			}
+		}
 		if err == nil {
-			logger.Log(context.Background(), logger.Error, "ReportError called with a nil error")
+			log.Println("ERROR ReportError called with a nil error")
 			return
 		}
-		logger.Log(context.Background(), logger.Error, err.Error())
+		log.Println("ERROR", trace, err.Error())
+
 		if ErrorReporter != nil {
 			ErrorReporter.Report(errorreporting.Entry{
 				Error: err,
+				User:  trace,
+				Req:   r,
 			})
 		}
 	}
