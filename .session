@@ -1,0 +1,11 @@
+new-session -d -s Doubleboiler -n Code
+switch-client -t Doubleboiler
+send-keys -t Doubleboiler:Code.0 "make devlogger" ENTER
+splitw
+resize-pane -t 0 -y 5
+neww -n Server
+send-keys -t Doubleboiler:Server.0 "make live_reload" ENTER
+splitw
+send-keys -t Doubleboiler:Server.1 "make tailwind_watcher" ENTER
+selectw -t 0 
+selectp -t 1
