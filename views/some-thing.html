@@ -1,6 +1,6 @@
 {{ template "header" . }}
 
-{{ template "breadcrumbs" dict "Crumbs" (crumbs "SomeThings" "/some-things" .SomeThing.Name "#") }}
+{{ template "breadcrumbs" dict "Context" .Context "Crumbs" (crumbs "SomeThings" "/some-things" .SomeThing.Name "#") }}
 
 {{ $edits := "disabled" }}
 {{ if (can .Context "admin") }}

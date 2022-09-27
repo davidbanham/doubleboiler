@@ -35,33 +35,11 @@
 
   </head>
   {{ template "flashbox" . }}
-  <div class="h-screen flex overflow-hidden bg-gray-100">
-    {{ if loggedIn .Context }}
+  <div class="min-h-screen flex overflow-hidden bg-gray-100">
+    {{ if .Context }}
     {{ template "menu" . }}
+    {{ end }}
     <div class="flex flex-col w-0 flex-1 overflow-hidden">
-      <div class="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
-        <button class="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:bg-gray-100 focus:text-gray-600 md:hidden" aria-label="Open sidebar" onclick="document.getElementById('sidebar').hidden = false">
-          <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-          </svg>
-        </button>
-        <div class="flex-1 px-4 flex justify-between">
-          <div class="flex-1 flex">
-            {{ template "searchbox" }}
-          </div>
-          <div class="ml-4 flex items-center md:ml-6">
-            {{ template "profile-menu" . }}
-          </div>
-        </div>
-      </div>
-      {{ else }}
-      <div class="flex flex-col w-0 flex-1 overflow-hidden">
-        <div class="relative z-10 flex-shrink-0 flex h-16 bg-gray-900 shadow">
-          <a href="{{logoLink .Context}}">
-            <img class="h-8 w-auto mx-1 my-1" src="/img/logo_text_white.min.svg" alt="Doubleboiler">
-          </a>
-        </div>
-      {{ end }}
 
     <main class="flex-1 relative overflow-y-auto focus:outline-none" tabindex="0">
 {{ end }}

@@ -8,6 +8,23 @@
     {{ template "page_head" dict "Title" .Title }}
   </div>
   {{ end }}
+  {{ if loggedIn .Context }}
+  <div class="float-right flex-1 flex flex-row-reverse">
+    <div class="flex items-center pl-4">
+      <button class="px-4 w-16 text-gray-500 focus:outline-none focus:bg-gray-100 focus:text-gray-600" aria-label="Open sidebar" onclick="document.getElementById('sidebar').hidden = false">
+        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+      </button>
+    </div>
+    <div class="ml-4 flex items-center md:ml-6">
+      {{ template "profile-menu" . }}
+    </div>
+    <div class="ml-4 flex items-center md:ml-6">
+      {{ template "searchbox" }}
+    </div>
+  </div>
+  {{ end }}
 </div>
 
 {{ end }}
@@ -27,13 +44,23 @@
         </a>
       </div>
     </li>
+    {{ $path := "" }}
     {{ range . }}
+    {{ if (not (eq .Path "")) }}
+
+    {{ if (eq $path "") }}
+    {{ $path = .Path }}
+    {{ else }}
+    {{ $path = (print $path "/" .Path) }}
+    {{ end }}
+
+    {{ end }}
     <li class="flex">
       <div class="flex items-center">
         <svg class="flex-shrink-0 w-6 h-full text-gray-200" viewBox="0 0 24 44" preserveAspectRatio="none" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
         </svg>
-        <a href="{{.Path}}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">{{.Title}}</a>
+        <a href="{{if (eq .Path "#")}}#{{else}}{{$path}}{{end}}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">{{.Title}}</a>
       </div>
     </li>
     {{ end }}

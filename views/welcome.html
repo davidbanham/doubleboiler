@@ -3,7 +3,7 @@
   <div class="max-w-xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
     <dl class="space-y-10 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
       {{ $orgPath := (print "/organisations/" (activeOrgFromContext .Context).ID) }}
-      {{ template "welcome_item" dict "Path" "/things" "Title" "Things" "Description" "Check some things out" "Icon" "globe-alt" }}
+      {{ template "welcome_item" dict "Path" "/some-things" "Title" "SomeThings" "Description" "Check some things out" "Icon" "globe-alt" }}
       {{ template "welcome_item" dict "Path" $orgPath "Title" "Organisation Settings" "Description" "Customise your organisation" "Icon" "globe-alt" }}
       {{ template "welcome_item" dict "Path" "/changelog" "Title" "Changelog" "Description" "See what's new" "Icon" "globe-alt" }}
     </dl>

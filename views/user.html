@@ -1,9 +1,9 @@
 {{ template "header" . }}
 
 {{ if isAppAdmin .Context }}
-{{ template "breadcrumbs" dict "Crumbs" (crumbs "Users" "/users" .User.Email "#") }}
+{{ template "breadcrumbs" dict "Context" .Context "Crumbs" (crumbs "Users" "/users" .User.Email "#") }}
 {{ else }}
-{{ template "breadcrumbs" dict "Crumbs" (crumbs "Users" "#" .User.Email "#") }}
+{{ template "breadcrumbs" dict "Context" .Context "Crumbs" (crumbs "Users" "#" .User.Email "#") }}
 {{ end }}
 
 <div class="relative bg-white">

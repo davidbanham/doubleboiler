@@ -1,6 +1,6 @@
 {{ template "header" . }}
 
-{{ template "breadcrumbs" dict "Crumbs" (crumbs "Communications" "/communications" .Communication.Subject "#") }}
+{{ template "breadcrumbs" dict "Context" .Context "Crumbs" (crumbs "Communications" "/communications" .Communication.Subject "#") }}
 
 {{ $edits := "disabled" }}
 

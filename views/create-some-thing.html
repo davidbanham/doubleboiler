@@ -1,6 +1,6 @@
 {{ template "header" . }}
 
-{{ template "breadcrumbs" dict "Crumbs" (crumbs "SomeThings" "/some-things" "New" "#") }}
+{{ template "breadcrumbs" dict "Context" .Context "Crumbs" (crumbs "SomeThings" "/some-things" "New" "#") }}
 
 {{ template "page_head" dict "Title" "Create SomeThing" }}
 
