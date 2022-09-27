@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/config"
 	"doubleboiler/copy"
 	"doubleboiler/models"
@@ -76,10 +75,13 @@ func serveResetPassword(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := Tmpl.ExecuteTemplate(w, "reset-password-set-new.html", setNewPasswordPageData{
-			User:    user,
-			Token:   token,
-			Expiry:  expiry,
-			Context: r.Context(),
+			User:   user,
+			Token:  token,
+			Expiry: expiry,
+			basePageData: basePageData{
+				PageTitle: "DoubleBoiler - Reset Password",
+				Context:   r.Context(),
+			},
 		}); err != nil {
 			errRes(w, r, 500, "Error rendering template", err)
 			return
@@ -93,8 +95,8 @@ func serveResetPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 type setNewPasswordPageData struct {
-	User    models.User
-	Token   string
-	Expiry  string
-	Context context.Context
+	basePageData
+	User   models.User
+	Token  string
+	Expiry string
 }

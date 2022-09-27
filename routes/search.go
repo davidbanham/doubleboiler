@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/models"
 	"net/http"
 )
@@ -20,7 +19,7 @@ func init() {
 }
 
 type searchResultPageData struct {
-	Context         context.Context
+	basePageData
 	Phrase          string
 	EntityFilterMap map[string]bool
 	Results         models.SearchResults
@@ -66,7 +65,10 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		Results:         results,
 		Phrase:          r.FormValue("search_field"),
 		EntityFilterMap: query.EntityFilter,
-		Context:         r.Context(),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Search Results",
+			Context:   r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return

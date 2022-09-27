@@ -357,6 +357,7 @@ func checkFormInput(required []string, form url.Values, w http.ResponseWriter, r
 }
 
 type errorPageData struct {
+	basePageData
 	Message string
 	Context context.Context
 }

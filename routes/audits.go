@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/models"
 	"net/http"
 
@@ -19,8 +18,8 @@ func init() {
 }
 
 type auditsPageData struct {
-	Audits  models.Audits
-	Context context.Context
+	basePageData
+	Audits models.Audits
 }
 
 func auditsHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,8 +65,11 @@ func auditsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "audits.html", auditsPageData{
-		Audits:  audits,
-		Context: r.Context(),
+		Audits: audits,
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Audits",
+			Context:   r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return

@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/models"
+	"doubleboiler/util"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -31,7 +31,7 @@ func init() {
 }
 
 type someThingCreationPageData struct {
-	Context context.Context
+	basePageData
 }
 
 func someThingCreationFormHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +47,10 @@ func someThingCreationFormHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "create-some-thing.html", someThingCreationPageData{
-		Context: r.Context(),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Create SomeThing",
+			Context:   r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
@@ -104,8 +107,8 @@ func someThingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type someThingPageData struct {
+	basePageData
 	SomeThing models.SomeThing
-	Context   context.Context
 }
 
 func someThingHandler(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +128,10 @@ func someThingHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "some-thing.html", someThingPageData{
-		Context:   r.Context(),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - SomeThing " + util.FirstFiveChars(someThing.ID),
+			Context:   r.Context(),
+		},
 		SomeThing: someThing,
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
@@ -134,8 +140,8 @@ func someThingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type someThingsPageData struct {
+	basePageData
 	SomeThings models.SomeThings
-	Context    context.Context
 }
 
 func someThingsHandler(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +172,10 @@ func someThingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := Tmpl.ExecuteTemplate(w, "some-things.html", someThingsPageData{
 		SomeThings: someThings,
-		Context:    r.Context(),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - SomeThings",
+			Context:   r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return

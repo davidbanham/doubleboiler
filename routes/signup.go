@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
@@ -49,10 +48,12 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "verified.html", verifyPageData{
-		User:    user,
-		Token:   token,
-		Expiry:  expiry,
-		Context: r.Context(),
+		User:   user,
+		Token:  token,
+		Expiry: expiry,
+		basePageData: basePageData{
+			Context: r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, 500, "Templating error", err)
 		return
@@ -60,13 +61,16 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type signupPageData struct {
-	Context context.Context
+	basePageData
 }
 
 func serveSignup(w http.ResponseWriter, r *http.Request) {
 	if err := Tmpl.ExecuteTemplate(w, "signup.html",
 		signupPageData{
-			Context: r.Context(),
+			basePageData: basePageData{
+				PageTitle: "DoubleBoiler - Sign Up",
+				Context:   r.Context(),
+			},
 		}); err != nil {
 		errRes(w, r, 500, "Templating error", err)
 		return
@@ -81,10 +85,10 @@ func serveSignupSuccessful(w http.ResponseWriter, r *http.Request) {
 }
 
 type verifyPageData struct {
-	User    models.User
-	Token   string
-	Expiry  string
-	Context context.Context
+	basePageData
+	User   models.User
+	Token  string
+	Expiry string
 }
 
 func checkTokenExpiry(expiry string) error {

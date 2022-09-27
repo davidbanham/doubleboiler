@@ -78,7 +78,10 @@ func userImpersonater(w http.ResponseWriter, r *http.Request) {
 
 	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
 		Organisations: relatedOrganisations,
-		Context:       r.Context(),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Welcome",
+			Context:   r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
@@ -259,6 +262,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type usersPageData struct {
+	basePageData
 	Users   models.Users
 	Context context.Context
 }
@@ -341,6 +345,7 @@ func userSettingsRedir(w http.ResponseWriter, r *http.Request) {
 }
 
 type userPageData struct {
+	basePageData
 	Context  context.Context
 	User     models.User
 	OrgsByID map[string]models.Organisation

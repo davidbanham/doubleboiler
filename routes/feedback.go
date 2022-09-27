@@ -11,6 +11,7 @@ import (
 )
 
 type helpPageData struct {
+	basePageData
 	Organisations models.Organisations
 	Email         string
 	Context       context.Context

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/models"
+	"doubleboiler/util"
 	"net/http"
 	"strings"
 
@@ -34,14 +35,17 @@ func init() {
 }
 
 type orgCreationPageData struct {
-	Context context.Context
-	User    models.User
+	basePageData
+	User models.User
 }
 
 func organisationCreationFormHandler(w http.ResponseWriter, r *http.Request) {
 	if err := Tmpl.ExecuteTemplate(w, "create-organisation.html", orgCreationPageData{
-		Context: r.Context(),
-		User:    r.Context().Value("user").(models.User),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Create Organisation",
+			Context:   r.Context(),
+		},
+		User: r.Context().Value("user").(models.User),
 	}); err != nil {
 		errRes(w, r, 500, "Templating error", err)
 		return
@@ -132,8 +136,8 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type organisationsPageData struct {
+	basePageData
 	Organisations models.Organisations
-	Context       context.Context
 }
 
 func organisationsHandler(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +172,10 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := Tmpl.ExecuteTemplate(w, "organisations.html", organisationsPageData{
 		Organisations: filtered,
-		Context:       r.Context(),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Organisations",
+			Context:   r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
@@ -176,7 +183,7 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type organisationPageData struct {
-	Context           context.Context
+	basePageData
 	Organisation      models.Organisation
 	OrganisationUsers models.OrganisationUsers
 	URI               string
@@ -211,8 +218,11 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 		OrganisationUsers: orgUsers,
 		ValidRoles:        models.ValidRoles,
 		ProductName:       config.NAME,
-		Context:           r.Context(),
-		URI:               config.URI,
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Organisation " + util.FirstFiveChars(targetOrg.ID),
+			Context:   r.Context(),
+		},
+		URI: config.URI,
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return

@@ -68,7 +68,9 @@ func servePrivacy(w http.ResponseWriter, r *http.Request) {
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
 	if err := Tmpl.ExecuteTemplate(w, "index.html", marketingPageData{
-		Context: r.Context(),
+		basePageData: basePageData{
+			Context: r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
@@ -77,7 +79,10 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 
 func servePricing(w http.ResponseWriter, r *http.Request) {
 	if err := Tmpl.ExecuteTemplate(w, "pricing.html", marketingPageData{
-		Context: r.Context(),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Pricing",
+			Context:   r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
@@ -88,21 +93,38 @@ func serveFeatureMarketingPage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	if err := Tmpl.ExecuteTemplate(w, "feature_"+vars["name"]+".html", marketingPageData{
-		Context: r.Context(),
+		basePageData: basePageData{
+			Context: r.Context(),
+		},
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
 	}
 }
 
+type basePageData struct {
+	PageTitle string
+	Context   context.Context
+}
+
+func (pd basePageData) Title() string {
+	if pd.PageTitle == "" {
+		return config.NAME
+	}
+	return pd.PageTitle
+}
+
 type welcomePageData struct {
+	basePageData
 	Organisations models.Organisations
-	Context       context.Context
 }
 
 func serveWelcome(w http.ResponseWriter, r *http.Request) {
 	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
-		Context: r.Context(),
+		basePageData: basePageData{
+			Context:   r.Context(),
+			PageTitle: "welcome",
+		},
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
@@ -145,7 +167,7 @@ func serveChangeWatcher(w http.ResponseWriter, r *http.Request) {
 }
 
 type marketingPageData struct {
-	Context context.Context
+	basePageData
 }
 
 func isLoggedIn(ctx context.Context) bool {

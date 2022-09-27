@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/flashes"
 	"doubleboiler/logger"
 	"doubleboiler/models"
@@ -27,8 +26,8 @@ func init() {
 }
 
 type loginPageData struct {
-	Context context.Context
-	Next    string
+	basePageData
+	Next string
 }
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
@@ -51,10 +50,16 @@ func serveLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Tmpl.ExecuteTemplate(w, "login.html", loginPageData{
-		Context: r.Context(),
-		Next:    next,
-	})
+	if err := Tmpl.ExecuteTemplate(w, "login.html", loginPageData{
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Login",
+			Context:   r.Context(),
+		},
+		Next: next,
+	}); err != nil {
+		errRes(w, r, 500, "Problem with template", err)
+		return
+	}
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {

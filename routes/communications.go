@@ -1,10 +1,9 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/models"
+	"doubleboiler/util"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -21,8 +20,8 @@ func init() {
 }
 
 type communicationsPageData struct {
+	basePageData
 	Communications models.Communications
-	Context        context.Context
 	ActiveOrg      models.Organisation
 	Users          models.Users
 }
@@ -75,13 +74,14 @@ func communicationsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("DEBUG users: %+v \n", users)
-
 	if err := Tmpl.ExecuteTemplate(w, "communications.html", communicationsPageData{
 		Communications: communications,
-		Context:        r.Context(),
-		ActiveOrg:      targetOrg,
-		Users:          users,
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Communications",
+			Context:   r.Context(),
+		},
+		ActiveOrg: targetOrg,
+		Users:     users,
 	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
@@ -89,8 +89,8 @@ func communicationsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type communicationPageData struct {
+	basePageData
 	Communication    models.Communication
-	Context          context.Context
 	ActiveOrg        models.Organisation
 	OrganisationUser models.OrganisationUser
 }
@@ -132,8 +132,11 @@ func communicationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "communication.html", communicationPageData{
-		Communication:    communication,
-		Context:          r.Context(),
+		Communication: communication,
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Communication " + util.FirstFiveChars(communication.ID),
+			Context:   r.Context(),
+		},
 		ActiveOrg:        targetOrg,
 		OrganisationUser: orgUser,
 	}); err != nil {

@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"doubleboiler/changelog"
 	"net/http"
 )
@@ -13,7 +12,7 @@ func init() {
 }
 
 type changelogPageData struct {
-	Context context.Context
+	basePageData
 	Changes []changelog.Change
 }
 
@@ -21,7 +20,10 @@ func serveChangelog(w http.ResponseWriter, r *http.Request) {
 	changes := changelog.Changes
 
 	err := Tmpl.ExecuteTemplate(w, "changelog.html", changelogPageData{
-		Context: r.Context(),
+		basePageData: basePageData{
+			PageTitle: "DoubleBoiler - Changelog",
+			Context:   r.Context(),
+		},
 		Changes: changes,
 	})
 	if err != nil {
