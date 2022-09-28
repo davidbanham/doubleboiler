@@ -198,7 +198,7 @@ func (orguser *OrganisationUser) FindByColumn(ctx context.Context, col, val stri
 	FROM organisations_users
 	INNER JOIN users
 	ON organisations_users.user_id = users.id
-	WHERE organisations_users.id = $1`, val).Scan(
+	WHERE organisations_users.`+col+" = $1", val).Scan(
 		&orguser.ID,
 		&orguser.Revision,
 		&orguser.CreatedAt,
