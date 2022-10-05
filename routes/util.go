@@ -554,6 +554,9 @@ func nextFlow(defaultURL string, form url.Values) string {
 		q.Set("flow", form.Get("flow"))
 		ret.RawQuery = q.Encode()
 	}
+	if form.Get("next_fragment") != "" {
+		ret.Fragment = form.Get("next_fragment")
+	}
 	return ret.String()
 }
 
