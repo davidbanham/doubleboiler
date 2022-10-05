@@ -34,7 +34,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !can(r.Context(), targetOrg, "admin") {
-		errRes(w, r, http.StatusForbidden, "You cannot list things for that organisation", nil)
+		errRes(w, r, http.StatusForbidden, "You cannot search for that organisation", nil)
 		return
 	}
 
