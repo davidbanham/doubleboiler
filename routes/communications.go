@@ -63,6 +63,9 @@ func communicationsHandler(w http.ResponseWriter, r *http.Request) {
 	query := models.ByOrg{ID: targetOrg.ID}
 	query.DefaultPageSize = 50
 	query.Paginate(r.Form)
+
+	query.FilterFromForm(r.Form, communications.AvailableFilters(), customFilters...)
+
 	if err := communications.FindAll(r.Context(), query); err != nil {
 		errRes(w, r, 500, "error fetching communications", err)
 		return
