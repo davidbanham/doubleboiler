@@ -57,9 +57,10 @@ func (filters *Filters) FromForm(form url.Values, availableFilters Filters, cust
 	for _, k := range form["custom-filter"] {
 		cf, ok := customFiltersByID[k]
 		if ok {
-			customFilters = append(customFilters, cf)
+			activeFilters = append(activeFilters, cf)
 		}
 	}
 	form.Del("custom-filter")
+	(*filters) = append((*filters), activeFilters...)
 	return form
 }
