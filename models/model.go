@@ -14,7 +14,7 @@ var Searchables []Searchable
 type Searchable struct {
 	Label            string
 	RequiredRole     Role
-	searchFunc       func(ByPhrase, Filters) string
+	searchFunc       func(Criteria) string
 	availableFilters func() Filters
 }
 

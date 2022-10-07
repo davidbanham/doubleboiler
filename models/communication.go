@@ -237,13 +237,18 @@ func communicationFilters() Filters {
 	)
 }
 
-func searchCommunications(requiredRole Role) func(ByPhrase, Filters) string {
-	return func(query ByPhrase, filters Filters) string {
-		if query.User.Admin || query.Roles.Can(requiredRole.Name) {
-			return `SELECT
+func searchCommunications(requiredRole Role) func(Criteria) string {
+	return func(criteria Criteria) string {
+		switch v := criteria.Query.(type) {
+		default:
+			return ""
+		case ByPhrase:
+			if v.User.Admin || v.Roles.Can(requiredRole.Name) {
+				return `SELECT
 				text 'Communication' AS entity_type, text 'communications' AS uri_path, id AS id, subject AS label, ts_rank_cd(ts, query) AS rank
 				FROM
 				communications, plainto_tsquery('english', $2) query WHERE organisation_id = $1 AND query @@ ts`
+			}
 		}
 		return ""
 	}

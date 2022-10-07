@@ -343,12 +343,17 @@ func HashPassword(rawpassword string) (string, error) {
 	return string(hash), err
 }
 
-func searchUsers(query ByPhrase, filters Filters) string {
-	if query.User.Admin {
-		return `SELECT
+func searchUsers(criteria Criteria) string {
+	switch v := criteria.Query.(type) {
+	default:
+		return ""
+	case ByPhrase:
+		if v.User.Admin {
+			return `SELECT
 			text 'User' AS entity_type, text 'users' AS uri_path, id AS id, email AS label, 1 AS rank FROM
 			users WHERE email = $2`
-	} else {
-		return ""
+		} else {
+			return ""
+		}
 	}
 }

@@ -37,7 +37,7 @@ func (results *SearchResults) FindAll(ctx context.Context, criteria Criteria) er
 			include := len(v.EntityFilter) == 0 || v.EntityFilter[entity.Label]
 
 			if include {
-				parts = append(parts, entity.searchFunc(v, Filters{}))
+				parts = append(parts, entity.searchFunc(criteria))
 			}
 		}
 		filteredParts := []string{}

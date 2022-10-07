@@ -199,13 +199,18 @@ func someThingFilters() Filters {
 	return standardFilters()
 }
 
-func searchSomeThings(requiredRole Role) func(ByPhrase, Filters) string {
-	return func(query ByPhrase, filters Filters) string {
-		if query.User.Admin || query.Roles.Can(requiredRole.Name) {
-			return `SELECT
-		text 'SomeThing' AS entity_type, text 'some_things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
-FROM
-		some_things, plainto_tsquery('english', $2) query ` + filters.Query() + ` AND organisation_id = $1 AND query @@ ts`
+func searchSomeThings(requiredRole Role) func(Criteria) string {
+	return func(criteria Criteria) string {
+		switch v := criteria.Query.(type) {
+		default:
+			return ""
+		case ByPhrase:
+			if v.User.Admin || v.Roles.Can(requiredRole.Name) {
+				return `SELECT
+					text 'SomeThing' AS entity_type, text 'some_things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
+			FROM
+					some_things, plainto_tsquery('english', $2) query ` + criteria.Filters.Query() + ` AND organisation_id = $1 AND query @@ ts`
+			}
 		}
 		return ""
 	}
