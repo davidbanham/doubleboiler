@@ -115,19 +115,19 @@ func (communication *Communication) FindByColumn(ctx context.Context, col, val s
 }
 
 type Communications struct {
-	Data  []Communication
-	Query Query
+	Data []Communication
+	baseModel
 }
 
-func (communications *Communications) FindAll(ctx context.Context, q Query) error {
-	communications.Query = q
+func (communications *Communications) FindAll(ctx context.Context, criteria Criteria) error {
+	communications.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch v := q.(type) {
+	switch v := criteria.Query.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByUser:
@@ -139,9 +139,9 @@ func (communications *Communications) FindAll(ctx context.Context, q Query) erro
 		channel,
 		subject,
 		created_at
-		FROM communications `+filterQuery(v)+`
+		FROM communications `+criteria.Filters.Query()+`
 		AND user_id = $1
-		ORDER BY created_at DESC`, v.Pagination(), v.ID)
+		ORDER BY created_at DESC`, criteria.Pagination.PaginationQuery(), v.ID)
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
 		communications.id,
@@ -153,11 +153,11 @@ func (communications *Communications) FindAll(ctx context.Context, q Query) erro
 		communications.created_at
 		FROM communications
 		LEFT JOIN organisations_users ON communications.user_id = organisations_users.user_id
-		`+filterQuery(v)+`
+		`+criteria.Filters.Query()+`
 		AND organisations_users.organisation_id = $1
 		OR organisations_users.organisation_id IS NULL
 		ORDER BY communications.created_at DESC
-		`+v.Pagination(), v.ID)
+		`+criteria.Pagination.PaginationQuery(), v.ID)
 	case All:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id,
@@ -167,8 +167,8 @@ func (communications *Communications) FindAll(ctx context.Context, q Query) erro
 		channel,
 		subject,
 		created_at
-		FROM communications `+filterQuery(v)+`
-		ORDER BY created_at DESC`+v.Pagination())
+		FROM communications `+criteria.Filters.Query()+`
+		ORDER BY created_at DESC`+criteria.Pagination.PaginationQuery())
 	}
 	if err != nil {
 		return err
@@ -203,7 +203,11 @@ func (this Communications) Users(ctx context.Context) (Users, error) {
 	}
 
 	users := Users{}
-	if err := users.FindAll(ctx, ByIDs{IDs: util.Uniq(userIDs)}); err != nil {
+	if err := users.FindAll(ctx, Criteria{
+		Query:      ByIDs{IDs: util.Uniq(userIDs)},
+		Filters:    Filters{},
+		Pagination: Pagination{},
+	}); err != nil {
 		return Users{}, err
 	}
 
@@ -233,8 +237,8 @@ func communicationFilters() Filters {
 	)
 }
 
-func searchCommunications(requiredRole Role) func(ByPhrase) string {
-	return func(query ByPhrase) string {
+func searchCommunications(requiredRole Role) func(ByPhrase, Filters) string {
+	return func(query ByPhrase, filters Filters) string {
 		if query.User.Admin || query.Roles.Can(requiredRole.Name) {
 			return `SELECT
 				text 'Communication' AS entity_type, text 'communications' AS uri_path, id AS id, subject AS label, ts_rank_cd(ts, query) AS rank

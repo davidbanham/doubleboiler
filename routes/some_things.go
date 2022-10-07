@@ -159,13 +159,15 @@ func someThingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	someThings := models.SomeThings{}
 
-	query := models.ByOrg{ID: targetOrg.ID}
-	query.DefaultPageSize = 50
-	query.Paginate(r.Form)
+	criteria := models.Criteria{
+		Query: models.ByOrg{ID: targetOrg.ID},
+	}
+	criteria.Pagination.DefaultPageSize = 50
+	criteria.Pagination.Paginate(r.Form)
 
-	query.FilterFromForm(r.Form, someThings.AvailableFilters())
+	criteria.Filters.FromForm(r.Form, someThings.AvailableFilters())
 
-	if err := someThings.FindAll(r.Context(), query); err != nil {
+	if err := someThings.FindAll(r.Context(), criteria); err != nil {
 		errRes(w, r, 500, "error fetching someThings", err)
 		return
 	}

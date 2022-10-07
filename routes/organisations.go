@@ -149,13 +149,15 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 
 	organisations := models.Organisations{}
 
-	query := models.All{}
-	query.DefaultPageSize = 50
-	query.Paginate(r.Form)
+	criteria := models.Criteria{
+		Query: models.All{},
+	}
+	criteria.Pagination.DefaultPageSize = 50
+	criteria.Pagination.Paginate(r.Form)
 
-	query.FilterFromForm(r.Form, organisations.AvailableFilters())
+	criteria.Filters.FromForm(r.Form, organisations.AvailableFilters())
 
-	if err := organisations.FindAll(r.Context(), query); err != nil {
+	if err := organisations.FindAll(r.Context(), criteria); err != nil {
 		errRes(w, r, 500, "error fetching organisations", err)
 		return
 	}
@@ -168,7 +170,7 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	filtered.Query = query
+	filtered.Criteria = criteria
 
 	if err := Tmpl.ExecuteTemplate(w, "organisations.html", organisationsPageData{
 		Organisations: filtered,
@@ -208,7 +210,7 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 
 	orgUsers := models.OrganisationUsers{}
 
-	if err := orgUsers.FindAll(r.Context(), models.ByOrg{ID: targetOrg.ID}); err != nil {
+	if err := orgUsers.FindAll(r.Context(), models.Criteria{Query: models.ByOrg{ID: targetOrg.ID}}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Error looking up organisation users", err)
 		return
 	}

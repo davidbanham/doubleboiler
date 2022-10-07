@@ -225,19 +225,19 @@ func (orguser OrganisationUser) FullName() string {
 }
 
 type OrganisationUsers struct {
-	Data  []OrganisationUser
-	Query Query
+	Data []OrganisationUser
+	baseModel
 }
 
-func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, q Query) error {
-	organisationusers.Query = q
+func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, criteria Criteria) error {
+	organisationusers.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch v := q.(type) {
+	switch v := criteria.Query.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:

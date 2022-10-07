@@ -116,8 +116,8 @@ func (org *Organisation) FindByID(ctx context.Context, id string) error {
 }
 
 type Organisations struct {
-	Data  []Organisation
-	Query Query
+	Data []Organisation
+	baseModel
 }
 
 func (this Organisations) ByID() map[string]Organisation {
@@ -128,15 +128,15 @@ func (this Organisations) ByID() map[string]Organisation {
 	return ret
 }
 
-func (organisations *Organisations) FindAll(ctx context.Context, q Query) error {
-	organisations.Query = q
+func (organisations *Organisations) FindAll(ctx context.Context, criteria Criteria) error {
+	organisations.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch v := q.(type) {
+	switch v := criteria.Query.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
@@ -148,8 +148,8 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 		name,
 		country
 		FROM organisations
-		`+filterQuery(v)+`
-		ORDER BY name`+v.Pagination())
+		`+criteria.Filters.Query()+`
+		ORDER BY name`+criteria.Pagination.PaginationQuery())
 		if err != nil {
 			return err
 		}
@@ -166,9 +166,9 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 		FROM organisations
 		JOIN organisations_users
 		ON organisations_users.organisation_id = organisations.id
-		`+filterQuery(v)+`
+		`+criteria.Filters.Query()+`
 		AND organisations_users.user_id = $1
-		ORDER BY name`+v.Pagination(), v.ID)
+		ORDER BY name`+criteria.Pagination.PaginationQuery(), v.ID)
 		if err != nil {
 			return err
 		}
@@ -193,8 +193,8 @@ func (organisations *Organisations) FindAll(ctx context.Context, q Query) error 
 
 	return err
 }
-func searchOrganisations(requiredRole Role) func(ByPhrase) string {
-	return func(query ByPhrase) string {
+func searchOrganisations(requiredRole Role) func(ByPhrase, Filters) string {
+	return func(query ByPhrase, filters Filters) string {
 		if query.User.Admin || query.Roles.Can(requiredRole.Name) {
 			return `SELECT
 		text 'Organisation' AS entity_type, text 'organisations' AS uri_path, id AS id, name AS label, ts_rank_cd(ts, query) AS rank

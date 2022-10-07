@@ -8,7 +8,6 @@ import (
 	"doubleboiler/flashes"
 	"doubleboiler/util"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -247,8 +246,8 @@ func (user User) HasEmail() bool {
 }
 
 type Users struct {
-	Data  []User
-	Query Query
+	Data []User
+	baseModel
 }
 
 func (this Users) ByID() map[string]User {
@@ -259,15 +258,15 @@ func (this Users) ByID() map[string]User {
 	return ret
 }
 
-func (users *Users) FindAll(ctx context.Context, q Query) error {
-	users.Query = q
+func (users *Users) FindAll(ctx context.Context, criteria Criteria) error {
+	users.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch v := q.(type) {
+	switch v := criteria.Query.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case All:
@@ -281,8 +280,8 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		verification_email_sent,
 		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
 		FROM users
-		`+filterQuery(v)+`
-		ORDER BY email`+v.Pagination())
+		`+criteria.Filters.Query()+`
+		ORDER BY email`+criteria.Pagination.PaginationQuery())
 	case ByIDs:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id,
@@ -294,9 +293,9 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		verification_email_sent,
 		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
 		FROM users
-		`+filterQuery(v)+`
+		`+criteria.Filters.Query()+`
 		AND id = ANY ($1)
-		ORDER BY email`+v.Pagination(), pq.Array(v.IDs))
+		ORDER BY email`+criteria.Pagination.PaginationQuery(), pq.Array(v.IDs))
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
 		id,
@@ -308,9 +307,9 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		verification_email_sent,
 		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
 		FROM users
-		`+filterQuery(v)+`
+		`+criteria.Filters.Query()+`
 		AND id IN (SELECT user_id FROM organisations_users WHERE organisation_id = $1)
-		ORDER BY email`+v.Pagination(), v.ID)
+		ORDER BY email`+criteria.Pagination.PaginationQuery(), v.ID)
 	}
 
 	if err != nil {
@@ -336,7 +335,6 @@ func (users *Users) FindAll(ctx context.Context, q Query) error {
 		}
 		(*users).Data = append((*users).Data, user)
 	}
-	log.Printf("DEBUG users.Data: %+v \n", users.Data)
 	return err
 }
 
@@ -345,7 +343,7 @@ func HashPassword(rawpassword string) (string, error) {
 	return string(hash), err
 }
 
-func searchUsers(query ByPhrase) string {
+func searchUsers(query ByPhrase, filters Filters) string {
 	if query.User.Admin {
 		return `SELECT
 			text 'User' AS entity_type, text 'users' AS uri_path, id AS id, email AS label, 1 AS rank FROM

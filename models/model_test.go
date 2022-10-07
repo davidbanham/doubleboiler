@@ -169,7 +169,9 @@ func TestFindAll(t *testing.T) {
 			}
 
 			found := m.blank()
-			err := found.FindAll(ctx, All{})
+			err := found.FindAll(ctx, Criteria{
+				Query: All{},
+			})
 			assert.Nil(t, err)
 
 			matched := 0
@@ -201,7 +203,7 @@ type auditableModel interface {
 }
 
 type models interface {
-	FindAll(context.Context, Query) error
+	FindAll(context.Context, Criteria) error
 	Iter() <-chan model
 	tablename() string
 	blank() models

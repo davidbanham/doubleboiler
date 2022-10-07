@@ -118,8 +118,8 @@ func (someThing *SomeThing) FindByColumn(ctx context.Context, col, val string) e
 }
 
 type SomeThings struct {
-	Data  []SomeThing
-	Query Query
+	Data []SomeThing
+	baseModel
 }
 
 func (this SomeThings) ByID() map[string]SomeThing {
@@ -130,15 +130,15 @@ func (this SomeThings) ByID() map[string]SomeThing {
 	return ret
 }
 
-func (someThings *SomeThings) FindAll(ctx context.Context, q Query) error {
-	someThings.Query = q
+func (someThings *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
+	someThings.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch v := q.(type) {
+	switch v := criteria.Query.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByOrg:
@@ -151,9 +151,9 @@ func (someThings *SomeThings) FindAll(ctx context.Context, q Query) error {
 			description,
 			organisation_id
 		FROM some_things
-		`+filterQuery(v)+`
+		`+criteria.Filters.Query()+`
 		AND organisation_id = $1
-		ORDER BY name`+v.Pagination(), v.ID)
+		ORDER BY name`+criteria.Pagination.PaginationQuery(), v.ID)
 	case All:
 		rows, err = db.QueryContext(ctx, `SELECT
 			id,
@@ -164,8 +164,8 @@ func (someThings *SomeThings) FindAll(ctx context.Context, q Query) error {
 			description,
 			organisation_id
 		FROM some_things
-		`+filterQuery(v)+`
-		ORDER BY name`+v.Pagination())
+		`+criteria.Filters.Query()+`
+		ORDER BY name`+criteria.Pagination.PaginationQuery())
 	}
 	if err != nil {
 		return err
@@ -199,13 +199,13 @@ func someThingFilters() Filters {
 	return standardFilters()
 }
 
-func searchSomeThings(requiredRole Role) func(ByPhrase) string {
-	return func(query ByPhrase) string {
+func searchSomeThings(requiredRole Role) func(ByPhrase, Filters) string {
+	return func(query ByPhrase, filters Filters) string {
 		if query.User.Admin || query.Roles.Can(requiredRole.Name) {
 			return `SELECT
 		text 'SomeThing' AS entity_type, text 'some_things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
 FROM
-		some_things, plainto_tsquery('english', $2) query ` + filterQuery(query) + ` AND organisation_id = $1 AND query @@ ts`
+		some_things, plainto_tsquery('english', $2) query ` + filters.Query() + ` AND organisation_id = $1 AND query @@ ts`
 		}
 		return ""
 	}

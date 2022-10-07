@@ -38,21 +38,18 @@ func auditsHandler(w http.ResponseWriter, r *http.Request) {
 
 	audits := models.Audits{}
 
-	var query models.Query
+	var criteria models.Criteria
 
 	if vars["id"] != "" {
-		q := models.ByEntityID{EntityID: vars["id"]}
-		q.DefaultPageSize = 50
-		q.Paginate(r.Form)
-		query = q
+		criteria.Query = models.ByEntityID{EntityID: vars["id"]}
 	} else {
-		q := models.ByOrg{ID: targetOrg.ID}
-		q.DefaultPageSize = 50
-		q.Paginate(r.Form)
-		query = q
+		criteria.Query = models.ByOrg{ID: targetOrg.ID}
 	}
 
-	if err := audits.FindAll(r.Context(), query); err != nil {
+	criteria.Pagination.DefaultPageSize = 50
+	criteria.Pagination.Paginate(r.Form)
+
+	if err := audits.FindAll(r.Context(), criteria); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "error fetching audits", err)
 		return
 	}

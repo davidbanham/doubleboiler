@@ -16,19 +16,19 @@ type SearchResult struct {
 }
 
 type SearchResults struct {
-	Data  []SearchResult
-	Query Query
+	Data []SearchResult
+	baseModel
 }
 
-func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
-	results.Query = q
+func (results *SearchResults) FindAll(ctx context.Context, criteria Criteria) error {
+	results.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch v := q.(type) {
+	switch v := criteria.Query.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByPhrase:
@@ -37,7 +37,7 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 			include := len(v.EntityFilter) == 0 || v.EntityFilter[entity.Label]
 
 			if include {
-				parts = append(parts, entity.searchFunc(v))
+				parts = append(parts, entity.searchFunc(v, Filters{}))
 			}
 		}
 		filteredParts := []string{}
@@ -54,7 +54,7 @@ func (results *SearchResults) FindAll(ctx context.Context, q Query) error {
 
 		query := strings.Join(filteredParts, " UNION ALL ")
 
-		query += " ORDER BY rank DESC " + q.Pagination()
+		query += " ORDER BY rank DESC " + criteria.Pagination.PaginationQuery()
 
 		rows, err = db.QueryContext(ctx, query, v.OrgID, v.Phrase)
 	}

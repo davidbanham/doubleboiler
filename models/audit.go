@@ -27,36 +27,36 @@ type Audit struct {
 }
 
 type Audits struct {
-	Data  []Audit
-	Query Query
+	Data []Audit
+	baseModel
 }
 
-func (audits *Audits) FindAll(ctx context.Context, q Query) error {
-	audits.Query = q
+func (audits *Audits) FindAll(ctx context.Context, criteria Criteria) error {
+	audits.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch v := q.(type) {
+	switch v := criteria.Query.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
 	case ByEntityID:
 		rows, err = db.QueryContext(ctx, `SELECT
 		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at', users.email,
 		lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
-		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text WHERE entity_id = $1 ORDER BY stamp DESC`+v.Pagination(), v.EntityID)
+		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text WHERE entity_id = $1 ORDER BY stamp DESC`+criteria.Pagination.PaginationQuery(), v.EntityID)
 	case ByOrg:
 		rows, err = db.QueryContext(ctx, `SELECT
 		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at', users.email,
 		lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
-		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text WHERE organisation_id = $1 ORDER BY stamp DESC`+v.Pagination(), v.ID)
+		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text WHERE organisation_id = $1 ORDER BY stamp DESC`+criteria.Pagination.PaginationQuery(), v.ID)
 	case All:
 		rows, err = db.QueryContext(ctx, `SELECT
 		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at', users.email,
 		lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
-		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text ORDER BY stamp DESC`+v.Pagination())
+		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text ORDER BY stamp DESC`+criteria.Pagination.PaginationQuery())
 	}
 	if err != nil {
 		return err

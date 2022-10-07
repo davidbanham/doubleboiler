@@ -30,3 +30,11 @@ type ByIDs struct {
 	IDs []string
 	queryBase
 }
+type ByItem struct {
+	ID string
+	queryBase
+}
+type ByGroup struct {
+	ID string
+	queryBase
+}

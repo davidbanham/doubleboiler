@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 )
 
@@ -15,12 +14,12 @@ var Searchables []Searchable
 type Searchable struct {
 	Label            string
 	RequiredRole     Role
-	searchFunc       func(ByPhrase) string
+	searchFunc       func(ByPhrase, Filters) string
 	availableFilters func() Filters
 }
 
-type Filterable struct {
-	AvailableFilters func() Filters
+type baseModel struct {
+	Criteria Criteria
 }
 
 type ClientSafeError struct {
@@ -109,16 +108,4 @@ func currentUser(ctx context.Context) string {
 
 func auditQuery(ctx context.Context, action, tableName, entityID, organisationID string) string {
 	return fmt.Sprintf("WITH audit_entry AS (INSERT INTO audit_log (entity_id, organisation_id, table_name, action, user_id, old_row_data) VALUES ('%s', '%s', '%s', '%s', '%s', (SELECT to_jsonb(%s) - 'ts' FROM %s WHERE id = '%s')))", entityID, organisationID, tableName, action, currentUser(ctx), tableName, tableName, entityID)
-}
-
-func filterQuery(q Query) string {
-	filters := append(q.ActiveFilters(), q.CustomFilters()...)
-	if len(filters) == 0 {
-		return " WHERE true = true "
-	}
-	fragments := []string{}
-	for _, filter := range filters {
-		fragments = append(fragments, filter.query())
-	}
-	return " WHERE " + strings.Join(fragments, " AND ")
 }

@@ -18,7 +18,14 @@ func TestSearchResults(t *testing.T) {
 	assert.Nil(t, fix.Save(ctx))
 
 	results := SearchResults{}
-	assert.Nil(t, results.FindAll(ctx, ByPhrase{OrgID: fix.OrganisationID, Phrase: fix.Name, User: User{Admin: true}}))
+	assert.Nil(t, results.FindAll(ctx,
+		Criteria{
+			Query: ByPhrase{
+				OrgID:  fix.OrganisationID,
+				Phrase: fix.Name,
+				User:   User{Admin: true},
+			},
+		}))
 	assert.GreaterOrEqual(t, len(results.Data), 1)
 	assert.Equal(t, fix.ID, results.Data[0].ID)
 	assert.Equal(t, "some_things", results.Data[0].Path)
@@ -42,7 +49,13 @@ func TestEntityFilteredSearchResults(t *testing.T) {
 	assert.Nil(t, fix.Save(ctx))
 
 	results := SearchResults{}
-	assert.Nil(t, results.FindAll(ctx, ByPhrase{OrgID: fix.OrganisationID, Phrase: uniq, User: User{Admin: true}}))
+	assert.Nil(t, results.FindAll(ctx, Criteria{
+		Query: ByPhrase{
+			OrgID:  fix.OrganisationID,
+			Phrase: uniq,
+			User:   User{Admin: true},
+		},
+	}))
 	assert.Equal(t, 2, len(results.Data))
 
 	found := false
@@ -57,7 +70,14 @@ func TestEntityFilteredSearchResults(t *testing.T) {
 	filter := map[string]bool{
 		"SomeThings": true,
 	}
-	assert.Nil(t, filteredResults.FindAll(ctx, ByPhrase{OrgID: fix.OrganisationID, Phrase: uniq, EntityFilter: filter, User: User{Admin: true}}))
+	assert.Nil(t, filteredResults.FindAll(ctx, Criteria{
+		Query: ByPhrase{
+			OrgID:        fix.OrganisationID,
+			Phrase:       uniq,
+			EntityFilter: filter,
+			User:         User{Admin: true},
+		},
+	}))
 	assert.Equal(t, 1, len(filteredResults.Data))
 	assert.Equal(t, fix.ID, filteredResults.Data[0].ID)
 
@@ -75,7 +95,13 @@ func TestAdminSearch(t *testing.T) {
 	assert.Nil(t, fix.Save(ctx))
 
 	results := SearchResults{}
-	assert.Nil(t, results.FindAll(ctx, ByPhrase{OrgID: fix.OrganisationID, Phrase: fix.Name, User: User{Admin: true}}))
+	assert.Nil(t, results.FindAll(ctx, Criteria{
+		Query: ByPhrase{
+			OrgID:  fix.OrganisationID,
+			Phrase: fix.Name,
+			User:   User{Admin: true},
+		},
+	}))
 	assert.GreaterOrEqual(t, len(results.Data), 1)
 	assert.Equal(t, fix.ID, results.Data[0].ID)
 	assert.Equal(t, "some_things", results.Data[0].Path)
@@ -99,23 +125,27 @@ func TestRequiredRoleSearchResults(t *testing.T) {
 	assert.Nil(t, fix.Save(ctx))
 
 	results := SearchResults{}
-	assert.Nil(t, results.FindAll(ctx, ByPhrase{
-		OrgID:  fix.OrganisationID,
-		Phrase: uniq,
-		Roles: Roles{
-			Role{
-				Name: "dummy",
+	assert.Nil(t, results.FindAll(ctx, Criteria{
+		Query: ByPhrase{
+			OrgID:  fix.OrganisationID,
+			Phrase: uniq,
+			Roles: Roles{
+				Role{
+					Name: "dummy",
+				},
 			},
 		},
 	}))
 	assert.Equal(t, 0, len(results.Data))
 
 	adminResults := SearchResults{}
-	assert.Nil(t, adminResults.FindAll(ctx, ByPhrase{
-		OrgID:  fix.OrganisationID,
-		Phrase: uniq,
-		Roles: Roles{
-			ValidRoles["admin"],
+	assert.Nil(t, adminResults.FindAll(ctx, Criteria{
+		Query: ByPhrase{
+			OrgID:  fix.OrganisationID,
+			Phrase: uniq,
+			Roles: Roles{
+				ValidRoles["admin"],
+			},
 		},
 	}))
 	assert.Equal(t, 2, len(adminResults.Data))

@@ -38,6 +38,7 @@ func standardFilters() Filters {
 }
 
 type HasProp struct {
+	filterBase
 	key   string
 	value string
 	id    string
@@ -57,10 +58,15 @@ func (this HasProp) ID() string {
 }
 
 type Custom struct {
+	filterBase
 	Key         string
 	Values      []string
 	CustomID    string
 	CustomLabel string
+}
+
+func (this Custom) IsCustom() bool {
+	return true
 }
 
 func (this Custom) query() string {
@@ -80,6 +86,7 @@ func (this Custom) ID() string {
 }
 
 type UpdatedWithin struct {
+	filterBase
 	interval string
 	id       string
 	label    string
@@ -98,6 +105,7 @@ func (this UpdatedWithin) ID() string {
 }
 
 type UpdatedAfter struct {
+	filterBase
 	TS    time.Time
 	id    string
 	label string
@@ -116,6 +124,7 @@ func (this UpdatedAfter) ID() string {
 }
 
 type UpdatedBefore struct {
+	filterBase
 	TS    time.Time
 	id    string
 	label string
@@ -134,6 +143,7 @@ func (this UpdatedBefore) ID() string {
 }
 
 type CreatedWithin struct {
+	filterBase
 	interval string
 	id       string
 	label    string
@@ -152,6 +162,7 @@ func (this CreatedWithin) ID() string {
 }
 
 type CreatedAfter struct {
+	filterBase
 	TS    time.Time
 	id    string
 	label string
@@ -170,6 +181,7 @@ func (this CreatedAfter) ID() string {
 }
 
 type CreatedBefore struct {
+	filterBase
 	TS    time.Time
 	id    string
 	label string

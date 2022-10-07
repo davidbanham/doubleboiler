@@ -47,16 +47,18 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		Roles:        orgUserFromContext(r.Context(), targetOrg).Roles,
 		EntityFilter: map[string]bool{},
 	}
+
 	for _, label := range r.Form["entity-filter"] {
 		if label != "" && searchableWhitelist[label].Label == label {
 			query.EntityFilter[label] = true
 		}
 	}
+	criteria := models.Criteria{Query: query}
 
-	query.DefaultPageSize = 50
-	query.Paginate(r.Form)
+	criteria.Pagination.DefaultPageSize = 50
+	criteria.Pagination.Paginate(r.Form)
 
-	if err := results.FindAll(r.Context(), query); err != nil {
+	if err := results.FindAll(r.Context(), criteria); err != nil {
 		errRes(w, r, 500, "error fetching results", err)
 		return
 	}

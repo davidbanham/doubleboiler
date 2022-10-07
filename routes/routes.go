@@ -123,7 +123,7 @@ func serveWelcome(w http.ResponseWriter, r *http.Request) {
 	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
 		basePageData: basePageData{
 			Context:   r.Context(),
-			PageTitle: "welcome",
+			PageTitle: "DoubleBoiler - Welcome",
 		},
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
