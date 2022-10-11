@@ -2,7 +2,7 @@ export AWS_ACCESS_KEY_ID=key_goes_here
 export AWS_SECRET_ACCESS_KEY=secret_goes_here
 
 export GOOGLE_PROJECT_ID=project_id_goes_here_for_pubsub
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials
+export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/local_dev/dummy_google_credentials.json
 
 export GOOGLE_PUBSUB_AUDIENCE=doubleboiler
 export DB_URI=postgres://doubleboiler:wut@localhost:5432/doubleboiler_test?sslmode=disable
