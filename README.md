@@ -16,9 +16,10 @@ To generate new logos you'll need inkscape, scour, and convert installed
 # cp .envrc_example .envrc
 # direnv allow
 # make .db_init
+# make migrate
 # make logos_to_paths
 # make rummage < seed/seed_user.up.sql
-# make live_reload
+# make devlogger & make live_reload
 ```
 
 Now login with your seeded admin email address and the password `notasecret`
