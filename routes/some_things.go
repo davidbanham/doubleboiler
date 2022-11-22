@@ -114,8 +114,7 @@ type someThingPageData struct {
 func someThingHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	someThing := models.SomeThing{}
-	err := someThing.FindByID(r.Context(), vars["id"])
-	if err != nil {
+	if err := someThing.FindByID(r.Context(), vars["id"]); err != nil {
 		errRes(w, r, 500, "A database error has occurred", err)
 		return
 	}

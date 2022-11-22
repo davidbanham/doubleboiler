@@ -1,8 +1,17 @@
 {{ define "markdown_box" }}
+
+{{$id := selectorSafe (print "editable-" .Name "-" uniq) }}
+
+{{ if eq .Editable false }}
+<label for="{{$id}}" class="mt-1 text-sm text-gray-500">{{.Label}}</label>
+<p id="{{$id}}" class="mt-4 prose prose-l text-gray-500">{{noescape .Content}}</p>
+{{ else }}
+
+
 <script src="/js/medium-editor.js"></script>
 <link rel="stylesheet" href="/css/medium-editor.min.css">
 <link rel="stylesheet" href="/css/medium-editor-default-theme.min.css">
-{{$id := (print "editable-" .Name "-" uniq) }}
+
 <div>
   <label for="{{$id}}" class="mt-1 text-sm text-gray-500">{{.Label}}</label>
   <div class="mt-1">
@@ -10,10 +19,14 @@
   </div>
 </div>
 <script>
-  new MediumEditor('#{{$id}}', {
-    toolbar: {
-      buttons: [ 'bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'orderedlist' ]
-    },
-  });
+  (function() {
+    new MediumEditor('#{{$id}}', {
+      toolbar: {
+        buttons: [ 'bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'orderedlist' ]
+      },
+      imageDragging: false,
+    });
+  })();
 </script>
+{{ end }}
 {{ end }}

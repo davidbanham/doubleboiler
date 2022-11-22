@@ -321,6 +321,9 @@ func init() {
 			}
 			return false
 		},
+		"selectorSafe": func(in string) string {
+			return strings.ReplaceAll(in, ".", "-")
+		},
 	}
 
 	Tmpl = template.Must(template.New("main").Funcs(templateFuncMap).ParseGlob(getPath() + "/*"))
