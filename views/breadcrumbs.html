@@ -1,17 +1,17 @@
 {{ define "breadcrumbs" }}
-<div class="sticky z-10 top-0 border-t border-b border-gray-200 bg-white flex-1 flex justify-between">
-  <div class="flex-1 flex">
+<div class="print:hidden w-full fixed z-10 top-0 border-t border-b border-gray-200 bg-white flex-1 flex justify-between h-12">
+  <div class="flex sm:pl-1">
     {{ template "crumbs" .Crumbs }}
   </div>
   {{ if .Title }}
-  <div class="flex-1 flex">
+  <div class="flex">
     {{ template "page_head" dict "Title" .Title }}
   </div>
   {{ end }}
   {{ if loggedIn .Context }}
-  <div class="float-right flex-1 flex flex-row-reverse">
+  <div class="print:hidden fixed right-0 h-11 bg-white flex flex-row-reverse">
     <div class="flex items-center pl-4">
-      <button class="px-4 w-16 text-gray-500 focus:outline-none focus:bg-gray-100 focus:text-gray-600" aria-label="Open sidebar" onclick="document.getElementById('sidebar').hidden = false">
+    <button class="py-2 px-2 sm:ml-2 text-gray-500 focus:outline-none focus:bg-gray-100 focus:text-gray-600" aria-label="Open sidebar" onclick="document.getElementById('sidebar').classList.remove('hidden')">
         <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
         </svg>
@@ -20,11 +20,13 @@
     <div class="ml-4 flex items-center md:ml-6">
       {{ template "profile-menu" . }}
     </div>
-    <div class="ml-4 flex items-center md:ml-6">
+    <div class="-mt-1 ml-4 sm:flex items-center md:ml-6 hidden">
       {{ template "searchbox" }}
     </div>
   </div>
   {{ end }}
+</div>
+<div class="print:hidden w-full relative h-12">
 </div>
 
 {{ end }}

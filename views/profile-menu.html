@@ -13,11 +13,15 @@
     </script>
   </div>
   <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg" id="user-menu-flyout" hidden>
-    <div class="py-1 rounded-md bg-white shadow-xs" role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
-      <a href="/users/{{(user $.Context).ID}}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition ease-in-out duration-150" role="menuitem">Your Profile</a>
-
-      <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition ease-in-out duration-150" role="menuitem">Sign out</a>
+    <div class="py-1 rounded-md bg-white shadow-xs text-gray-700 px-4 hover:bg-gray-100 transition ease-in-out duration-150" role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
+      {{ template "profile-items" . }}
     </div>
   </div>
 </div>
+{{ end }}
+
+{{ define "profile-items" }}
+<a href="/users/{{(user $.Context).ID}}" class="block py-2 text-sm" role="menuitem">Your Profile</a>
+
+<a href="/logout" class="block py-2 text-sm" role="menuitem">Sign out</a>
 {{ end }}
