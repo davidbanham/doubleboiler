@@ -4,7 +4,7 @@ doubleboiler
 .migrate_installed
 .db_init
 node_modules
-./assets/css/main.css
+assets/css/main.css
 bin
 ca-certificates.crt
 production.env
