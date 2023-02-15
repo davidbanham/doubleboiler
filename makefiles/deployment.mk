@@ -10,6 +10,10 @@ servicename = $(brand)-$(name)-$(stage)
 .PHONY: production
 production: areyousure test demand_clean build stage_production ca-certificates.crt docker_image_build registry_push cloud_run_deploy
 
+local_dev/gcloud_docker_auth_configured: ${GOOGLE_APPLICATION_CREDENTIALS}
+	gcloud auth configure-docker
+	touch local_dev/gcloud_docker_auth_configured
+
 .PHONY: staging
 staging: test demand_clean build stage_staging docker_image_build registry_push cloud_run_deploy
 
@@ -49,8 +53,8 @@ docker_image_build:
 	docker tag $(name):latest gcr.io/$(project)/$(prefix)$(name):$(tag)
 
 .PHONY: registry_push
-registry_push:
-	gcloud docker -- push gcr.io/$(project)/$(prefix)$(name):$(tag)
+registry_push: local_dev/gcloud_docker_auth_configured
+	docker push gcr.io/$(project)/$(prefix)$(name):$(tag)
 
 .PHONY: cloud_run_deploy
 cloud_run_deploy: service_route
