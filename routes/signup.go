@@ -97,7 +97,7 @@ func checkTokenExpiry(expiry string) error {
 		return errors.New("Invalid expiry string: " + expiry)
 	}
 	if parsed.Before(time.Now()) {
-		return errors.New("Token is expired")
+		return models.ClientSafeError{"That token is expired. Please generate a new password reset email."}
 	}
 	return nil
 }

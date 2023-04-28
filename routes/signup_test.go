@@ -184,7 +184,7 @@ func TestVerificationHandlerExpiredToken(t *testing.T) {
 	verifyHandler(rr, req)
 
 	assert.Equal(t, http.StatusForbidden, rr.Code)
-	assert.Contains(t, rr.Body.String(), "Token is expired")
+	assert.Contains(t, rr.Body.String(), "token is expired")
 
 	u := models.User{}
 	u.FindByID(ctx, u.ID)

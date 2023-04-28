@@ -63,10 +63,15 @@ func serveResetPassword(w http.ResponseWriter, r *http.Request) {
 	token := qs.Get("token")
 
 	if token != "" {
+		expiry := r.FormValue("expiry")
+		if err := checkTokenExpiry(expiry); err != nil {
+			errRes(w, r, 500, "Error checking token expiry", err)
+			return
+		}
+
 		// No need to actually check token validity here since there's nothing sensitive on this page
 		// Token validity will be checked when the POST to /users is made
 		uid := qs.Get("uid")
-		expiry := qs.Get("expiry")
 
 		user := models.User{}
 		if err := user.FindByID(r.Context(), uid); err != nil {

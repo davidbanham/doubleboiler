@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"doubleboiler/config"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"net/http"
@@ -30,7 +31,7 @@ func loginMiddleware(h http.Handler) http.Handler {
 					}
 					expiry := r.FormValue("expiry")
 					if err := checkTokenExpiry(expiry); err != nil {
-						redirToLogin(w, r)
+						errRes(w, r, 500, "Error checking token expiry", err)
 						return
 					}
 					expectedToken := util.CalcToken(user.Email, expiry)
@@ -46,6 +47,8 @@ func loginMiddleware(h http.Handler) http.Handler {
 						cookie := http.Cookie{
 							Path:     "/",
 							Name:     "doubleboiler-user",
+							Domain:   config.DOMAIN,
+							SameSite: http.SameSiteLaxMode,
 							Value:    encoded,
 							Expires:  expiration,
 							Secure:   true,
