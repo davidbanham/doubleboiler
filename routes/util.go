@@ -10,7 +10,6 @@ import (
 	"doubleboiler/logger"
 	"doubleboiler/models"
 	"doubleboiler/util"
-	"doubleboiler/views"
 	"errors"
 	"fmt"
 	"html/template"
@@ -22,6 +21,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/davidbanham/doubleboiler/views"
+	"github.com/davidbanham/doubleboiler/views/components"
 
 	"github.com/davidbanham/english_conjoin"
 	"github.com/davidbanham/heroicons"
@@ -44,7 +46,7 @@ type Templater struct {
 
 func init() {
 	Tmpl.tmpl = map[string]*template.Template{}
-	Tmpl.root = template.Must(template.New("components").Funcs(templateFuncMap).ParseFS(views.TmplFS, "components/*"))
+	Tmpl.root = template.Must(template.New("components").Funcs(templateFuncMap).ParseFS(components.FS, "*"))
 	if err := heroicons.Extend(Tmpl.root); err != nil {
 		log.Fatal(err)
 	}
