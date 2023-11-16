@@ -1,0 +1,26 @@
+{{ template "base.html" . }}
+
+{{ define "topbar" }}
+&nbsp;
+{{ end }}
+
+{{ define "content" }}
+<div class="flex flex-col gap-y-6">
+  <h2 class="font-extrabold text-gray-900">
+    Thanks!
+  </h2>
+  <div>
+    {{ if .Text }}
+    {{ .Text }}
+    {{ else }}
+    We'll be in touch soon!
+    {{ end }}
+  </div>
+</div>
+<script>
+  const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.get('clear_session_cache')) {
+    window.sessionStorage.clear();
+  };
+</script>
+{{ end }}

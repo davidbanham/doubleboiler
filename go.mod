@@ -1,6 +1,6 @@
 module doubleboiler
 
-go 1.13
+go 1.16
 
 require (
 	cloud.google.com/go/compute v1.10.0 // indirect
@@ -11,6 +11,7 @@ require (
 	github.com/davidbanham/bandname_go v0.0.0-20180317100912-bb6893a85259
 	github.com/davidbanham/certcache v0.0.0-20180228104134-93d5ff2ba3a1
 	github.com/davidbanham/english_conjoin v1.0.1
+	github.com/davidbanham/heroicons v0.0.6
 	github.com/davidbanham/human_duration v1.3.0
 	github.com/davidbanham/kewpie_go/v3 v3.2.5
 	github.com/davidbanham/notifications v1.2.15
@@ -29,9 +30,8 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/lib/pq v1.10.7
 	github.com/satori/go.uuid v1.2.0
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b
-	golang.org/x/mod v0.5.0 // indirect
 	golang.org/x/net v0.0.0-20221004154528-8021a29435af // indirect
 	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1 // indirect
 	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0 // indirect

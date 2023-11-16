@@ -1,0 +1,44 @@
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="/css/inter.css">
+    <link rel="stylesheet" href="/css/main.css">
+  </head>
+  <body>
+    <div class="z-50 fixed w-full h-full top-0 left-0 bg-white">
+      <div class="w-fit bg-white mx-auto mt-16  flex flex-col gap-2">
+      <h3 class="text-sm font-medium text-red-800">
+        Oh no! An error has occurred.
+      </h3>
+      <ul class="list-disc pl-5 space-y-1">
+        {{range breakLines .Message}}
+        <li>
+          {{.}}
+        </li>
+        {{end}}
+      </ul>
+      </div>
+    </div>
+
+    {{ if isLocal }}
+    <script type="text/javascript">
+      (function() {
+        const connectWs = function(retrigger) {
+          var conn = new WebSocket("wss://"+location.host+"/change-watcher");
+          conn.onclose = function(evt) {
+            connectWs(true);
+          };
+          conn.onmessage = function(evt) {
+            window.location = window.location;
+          };
+          conn.onopen = function(evt) {
+            if (retrigger) {
+              window.location = window.location;
+            }
+          };
+        };
+        connectWs();
+      })();
+    </script>
+    {{ end }}
+  </body>
+</html>

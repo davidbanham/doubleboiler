@@ -1,0 +1,12 @@
+{{ define "date" }}
+{{ $id := uniq }}
+<span title="{{isoTime .}}"id="{{$id}}">{{ humanTime . }}</span>
+  <script>
+    (function() {
+      const el = document.getElementById('{{$id}}');
+      const dt = luxon.DateTime.fromISO("{{ isoTime . }}");
+      el.innerText = dt.toFormat("MMMM dd yyyy");
+      el.title = dt.toFormat("fff");
+    })();
+  </script>
+{{ end }}

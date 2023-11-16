@@ -1,0 +1,18 @@
+{{ template "base.html" . }}
+
+{{ define "breadcrumbs" }}
+{{ template "crumbs" crumbs "Create Organisation" "#" }}
+{{ end }}
+
+{{ define "content" }}
+<form action="/organisations" method="post" class="grid grid-cols-1 gap-y-6">
+  <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+  {{ template "input" dict "Type" "text" "Label" "Name" "Name" "name" "Required" true "Placeholder" "Name" }}
+  {{ template "countryselector" dict "SelectedCountry" "" }}
+  <div>
+    <button type="submit" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+      Submit
+    </button>
+  </div>
+</form>
+{{ end }}

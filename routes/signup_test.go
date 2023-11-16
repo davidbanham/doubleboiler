@@ -66,7 +66,7 @@ func TestSignupFlowDuplicateEmail(t *testing.T) {
 		"password":    {bandname()},
 		"next":        {"signup"},
 		"orgname":     {bandname()},
-		"orgcountry":  {"Australia"},
+		"country":     {"Australia"},
 		"orgcurrency": {"AUD"},
 		"terms":       {"agreed"},
 	}
@@ -107,8 +107,7 @@ func TestVerificationHandlerValid(t *testing.T) {
 	verifyHandler(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	assert.Contains(t, rr.Body.String(), "Just set a password")
-	assert.Contains(t, rr.Body.String(), "Submit")
+	assert.Contains(t, rr.Body.String(), "Just choose your password")
 
 	u := models.User{}
 	u.FindByID(ctx, fix.ID)
@@ -236,7 +235,6 @@ func TestServeSignup(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Email", "Email not found")
 	assert.Contains(t, rr.Body.String(), "orgname")
-	assert.Contains(t, rr.Body.String(), "next")
 
 	closeTx(t, ctx)
 }

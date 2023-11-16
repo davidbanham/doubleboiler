@@ -1,0 +1,34 @@
+{{ define "entitypicker" }}
+{{ $uniqID := uniq }}
+{{ $selectedMap := .SelectedElems.ByID }}
+<label for="{{$uniqID}}" class="block text-sm font-medium text-gray-700">{{.Title}}</label>
+<div class="flex mt-1 text-sm text-gray-900">
+  <div class="w-full">
+    <select autocomplete="off" id="{{$uniqID}}" name="{{.Name}}" {{ if .Multiple }}multiple{{ end }}>
+      <option
+          value=""
+          >Select {{.Title}}</option>
+      {{ range .Elems.Data }}
+      <option
+          value="{{.ID}}"
+          {{ if (and $.Multiple $selectedMap) }}
+            {{ if eq (index $selectedMap .ID).ID .ID }} selected {{ end }}
+          {{ else if $.Selected }}
+            {{ if eq $.Selected.ID .ID}} selected {{ end }}
+          {{ end }}
+          >{{.Name}}</option>
+      {{ end }}
+    </select>
+  </div>
+
+  <button type="submit" class="max-h-12 grow-0 mt-0 ml-2 inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    {{ heroIcon "outline/check-circle" }}
+  </button>
+</div>
+<script>
+  (function(){
+    const elem = document.getElementsById('{{$uniqID}}');
+    new Choices(elem, {});
+  })()
+</script>
+{{ end }}

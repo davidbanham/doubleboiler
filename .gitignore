@@ -10,3 +10,4 @@ ca-certificates.crt
 production.env
 staging.env
 development.env
+local_dev/gcloud_docker_auth_configured

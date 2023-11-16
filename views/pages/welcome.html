@@ -1,0 +1,33 @@
+{{ template "base.html" . }}
+
+{{ define "content" }}
+
+<div class="py-12 bg-white">
+  <div class="max-w-xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+    <dl class="space-y-10 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
+      {{ template "welcome_item" dict "Path" "/some-things" "Title" "SomeThings" "Description" "Check some things out" "Icon" "outline/globe-alt" }}
+      {{ template "welcome_item" dict "Path" "/organisation-settings" "Title" "Organisation Settings" "Description" "Customise your organisation" "Icon" "outline/globe-alt" }}
+      {{ template "welcome_item" dict "Path" "/changelog" "Title" "Changelog" "Description" "See what's new" "Icon" "outline/globe-alt" }}
+    </dl>
+  </div>
+</div>
+
+{{ end }}
+
+{{ define "welcome_item" }}
+<div>
+  <a href="{{.Path}}">
+    <div class="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+      {{ heroIcon .Icon }}
+    </div>
+    <div class="mt-5">
+      <dt class="text-lg leading-6 font-medium text-gray-900">
+      {{.Title}}
+      </dt>
+      <dd class="mt-2 text-base text-gray-500">
+      {{.Description}}
+      </dd>
+    </div>
+  </a>
+</div>
+{{ end }}

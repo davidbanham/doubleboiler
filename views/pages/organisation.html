@@ -1,0 +1,145 @@
+{{ template "base.html" . }}
+
+{{ define "breadcrumbs" }}
+{{ template "crumbs" crumbs "Organisations" "/organisations" .Organisation.Name "#" }}
+{{ end }}
+
+{{ define "content" }}
+
+{{ $edits := "disabled" }}
+{{ if (can .Context "admin") }}
+{{ $edits = "" }}
+{{ end }}
+
+<div class="flex flex-col gap-y-6">
+  <form action="/organisation-users" method="post" class="flex gap-1 rounded-lg shadow p-4">
+    <input type="hidden" name="csrf" value="{{csrf $.Context}}"></input>
+    <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
+    {{ template "input" dict "Type" "email" "Label" "Invite New User" "Name" "email" "Required" true "Placeholder" "Email Address" }}
+    <div class="self-end p-1">
+      <button type="submit" class="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        {{ heroIcon "outline/plus" }}
+      </button>
+    </div>
+  </form>
+
+  <ul role="list" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+    {{range .OrganisationUsers.Data}}
+    {{ $ou := . }}
+    <li class="col-span-1 rounded-lg shadow divide-y divide-gray-200">
+      <div class="w-full flex items-center justify-between p-4 space-x-6">
+        <div class="flex-1 truncate">
+          <form
+              id="ou-{{.ID}}"
+              action="/organisation-users/{{.ID}}" 
+              hx-boost
+              hx-swap="outerhtml"
+              hx-select="#ou-{{.ID}}"
+              hx-target="#ou-{{.ID}}"
+              hx-trigger="submit,change delay:1s,keyup delay:1s,mouseup delay:1s"
+              hx-indicator=".spinner"
+              hx-replace-url="false"
+              hx-post="/organisation-users/{{.ID}}"
+              action="/organisation-users/{{.ID}}"
+              method="post"
+              class="flex flex-col gap-1">
+            <div class="flex items-center mb-3 gap-2">
+              <input type="hidden" name="csrf" value="{{csrf $.Context}}"></input>
+              <input type="hidden" name="id" value="{{.ID}}"></input>
+              <input type="hidden" name="email" value="{{.Email}}"></input>
+              <input type="hidden" name="organisationID" value="{{$.Organisation.ID}}"></input>
+              {{ template "input" dict "Type" "text" "Label" "Name" "Name" "name" "Required" true "Placeholder" "Name" "Value" .Name "HideLabel" true }}
+              {{ template "input" dict "Type" "text" "Label" "Family Name" "Name" "family_name" "Required" true "Placeholder" "Family Name" "Value" .FamilyName "HideLabel" true }}
+              <div class="self-end p-1">
+                <button type="submit" class="inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  <div class="spinner fancy">
+                    {{ heroIcon "solid/arrow-right" }}
+                  </div>
+                  <div class="spinner">
+                    {{ heroIcon "solid/arrow-path" }}
+                  </div>
+                </button>
+              </div>
+            </div>
+            <h3 class="text-gray-900 text-sm font-medium truncate">{{.Email}}</h3>
+            {{ range $.ValidRoles }}
+            {{ template "toggle" dict "Label" .Label "Selected" ($ou.Roles.Can .Name) "Key" "roles" "Value" .Name "AutoSubmit" true }}
+            {{ end }}
+          </form>
+          <div class="mt-2 flex justify-between gap-1">
+            <div class="mt-1 text-gray-500 text-sm truncate">Added {{humanDate .CreatedAt}}</div>
+            <a href="/communications?org-user-id={{$ou.ID}}" class="mt-1 text-gray-500 text-sm truncate flex gap-1">
+              Communications
+              {{ heroIcon "mini/arrow-top-right-on-square" }}
+            </a>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="-mt-px flex divide-x divide-gray-200">
+          <div class="w-0 flex-1 flex">
+            <div class="relative -mr-px w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-bl-lg hover:text-gray-500">
+              <form action="/organisation-users/{{.ID}}/delete" method="post">
+                <input type="hidden" name="csrf" value="{{csrf $.Context}}"></input>
+                {{ $modalid := uniq }}
+                <button data-modaltrigger="{{$modalid}}" type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Remove
+                </button>
+                {{ template "confirm_modal" dict "Title" "Remove admin user" "ButtonText" "Confirm" "ID" $modalid "Text" .Email}}
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
+    {{ end }}
+  </ul>
+
+  <form action="/organisations/{{.Organisation.ID}}" method="post" class="flex flex-col gap-y-6 rounded-lg shadow p-4">
+    <div class="mt-5 md:col-span-1">
+      <h3 class="text-lg font-medium leading-6 text-gray-900">Organisation Information</h3>
+    </div>
+
+    <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+    <input type="hidden" name="id" value="{{.Organisation.ID}}"></input>
+    <input type="hidden" name="revision" value="{{.Organisation.Revision}}"></input>
+    {{range .OrganisationUsers.Data}}
+    <input type="hidden" name="users.id" value="{{.ID}}"></input>
+    <input type="hidden" name="users.revision" value="{{.Revision}}"></input>
+    <input type="hidden" name="users.userid" value="{{.UserID}}"></input>
+    <input type="hidden" name="users.organisationid" value="{{.OrganisationID}}"></input>
+    {{end}}
+
+    <div class="grid grid-cols-2 gap-6">
+      <div class="col-span-2 sm:col-span-1">
+        <h3 class="text-md font-medium leading-6 text-gray-900">Created</h3>
+        <p class="mt-1 text-sm text-gray-500">
+        {{ template "time" .Organisation.CreatedAt }}
+        </p>
+      </div>
+      <div class="col-span-2 sm:col-span-1">
+        <h3 class="text-md font-medium leading-6 text-gray-900">Last Updated</h3>
+        <p class="mt-1 text-sm text-gray-500">
+        {{ template "time" .Organisation.UpdatedAt }}
+        </p>
+      </div>
+      <div class="col-span-2 sm:col-span-1">
+        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+        <input value="{{.Organisation.Name}}" type="text" name="name" id="name" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+      </div>
+
+      <div class="col-span-2 sm:col-span-1">
+        <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
+        <select id="country" name="country" autocomplete="country" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          {{ template "countries" .Organisation.Country}}
+        </select>
+      </div>
+    </div>
+
+    <div class="col-span-2">
+      <button class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Save</button>
+    </div>
+  </form>
+</div>
+
+{{ end }}

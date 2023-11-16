@@ -1,0 +1,14 @@
+{{ define "feature_help" }}
+{{ $modalid := uniq }}
+
+<button
+    type="button"
+    data-modaltrigger="{{$modalid}}"
+    class="w-6 h-6 inline-flex items-center border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+    title="Feature help: {{.Title}}">
+  {{ template "heroicons/mini/question-mark-circle" dict "Classes" "h-6 w-6" }}
+</button>
+
+{{ template "blank-modal" dict "Icon" "question-mark-circle" "Title" .Title "Text" .Text "ID" $modalid }}
+
+{{ end }}

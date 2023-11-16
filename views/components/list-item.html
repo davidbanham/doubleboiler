@@ -1,0 +1,12 @@
+{{ define "list-item" }}
+<li>
+  <a href="{{.URI}}" class="block hover:bg-gray-50">
+    <div class="px-4 py-4 sm:px-6 flex items-center justify-between">
+      <div class="truncate">
+        {{.Label}}
+      </div>
+      {{ .Secondary }}
+    </div>
+  </a>
+</li>
+{{ end }}

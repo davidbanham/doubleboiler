@@ -1,0 +1,47 @@
+{{ define "slide-panel" }}
+<div id="slide-panel" class="text-sm min-w-1/4 shrink-0 bg-white p-4 fixed top-11 right-0 shadow-lg rounded-bl-md transition-transform duration-100 ease-in-out translate-x-full flex flex-col gap-2 pr-32 md:pr-4 md:top-0 md:left-0 md:relative md:shadow-none md:translate-x-0">
+  {{ block "slide-panel-contents" . }}
+  {{ end }}
+</div>
+
+<div class="fixed top-12 right-0 h-14 md:hidden transition-transform duration-100 ease-in-out" id="slide-panel-opener">
+  <button
+      type="button"
+      class="inline-flex items-center py-3 px-1 border border-transparent rounded-bl-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      title="Open Sidebar">
+    <!-- Heroicon name: chevron-double-left -->
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+    </svg>
+  </button>
+</div>
+<div class="fixed right-0 top-12 h-14 hidden md:hidden" id="slide-panel-closer">
+  <button
+      type="button"
+      class="inline-flex items-center py-3 px-1 border border-transparent rounded-bl-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      title="Close Sidebar">
+    <!-- Heroicon name: chevron-double-right -->
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
+    </svg>
+  </button>
+</div>
+<script>
+  (function() {
+    const panel = document.getElementById('slide-panel');
+    const panelOpen = document.getElementById('slide-panel-opener');
+    const panelClose = document.getElementById('slide-panel-closer');
+
+    panelOpen.addEventListener('click', function() {
+      panelOpen.classList.add('hidden');
+      panel.classList.remove('translate-x-full');
+      panelClose.classList.remove('hidden');
+    });
+    panelClose.addEventListener('click', function() {
+      panelOpen.classList.remove('hidden');
+      panel.classList.add('translate-x-full');
+      panelClose.classList.add('hidden');
+    });
+  })();
+</script>
+{{ end }}

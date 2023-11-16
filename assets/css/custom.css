@@ -8,3 +8,26 @@
   text-decoration: none;
   color: black;
 }
+
+div.spinner {
+  display: none;
+  opacity: 0;
+  transition: opacity 500ms ease-out 2s;
+}
+
+div.spinner.fancy {
+  display: inline;
+  opacity: 1;
+}
+
+div.htmx-request.spinner {
+  display: inline;
+  opacity: 1;
+  transition: opacity 0s ease-out 0s;
+}
+
+div.htmx-request.spinner.fancy {
+  display: none;
+  opacity: 0;
+  transition: opacity 0s ease-out 0s;
+}

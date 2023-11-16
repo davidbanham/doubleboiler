@@ -74,6 +74,8 @@ func organisationUserCreateOrUpdateHandler(w http.ResponseWriter, r *http.Reques
 				Name: role,
 			})
 		}
+		ou.Name = r.FormValue("name")
+		ou.FamilyName = r.FormValue("family_name")
 	} else {
 		email := strings.ToLower(r.FormValue("email"))
 		user := models.User{}
@@ -106,6 +108,8 @@ func organisationUserCreateOrUpdateHandler(w http.ResponseWriter, r *http.Reques
 			org.ID,
 			models.Roles{},
 		)
+		ou.Name = r.FormValue("name")
+		ou.FamilyName = r.FormValue("family_name")
 	}
 
 	if err := ou.Save(r.Context()); err != nil {

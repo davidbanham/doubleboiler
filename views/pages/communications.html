@@ -1,0 +1,21 @@
+{{ template "base.html" . }}
+
+{{ define "breadcrumbs" }}
+{{ template "crumbs" crumbs "Communications" "#" }}
+{{ end }}
+
+{{ define "content" }}
+<ul class="text-sm divide-y divide-gray-200 text-indigo-700">
+  <li>
+    {{ template "searchbox" dict "EntityFilter" "Communications" }}
+  </li>
+  <li class="mt-3 mb-0">
+    {{ template "filterbox" dict "Entity" .Communications "Context" .Context }}
+  </li>
+  {{ range .Communications.Data }}
+  {{ template "list-item" dict "URI" (print "/communications/" .ID) "Label" (print .Channel " - " .Subject) "Secondary" (subComponent "time" .Sent) }}
+  {{ end }}
+</ul>
+{{ template "pagination" .Communications }}
+
+{{ end }}

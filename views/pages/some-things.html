@@ -1,0 +1,28 @@
+{{ template "base.html" . }}
+
+{{ define "breadcrumbs" }}
+{{ template "crumbs" crumbs "SomeThings" "#" }}
+{{ end }}
+
+{{ define "content" }}
+<ul class="text-sm divide-y divide-gray-200">
+  <li>
+    {{ template "searchbox" dict "EntityFilter" "SomeThings" }}
+  </li>
+  <li class="mt-3 mb-0">
+    {{ template "filterbox" dict "Entity" .SomeThings "Context" .Context }}
+  </li>
+  {{ if eq (len .SomeThings.Data) 0 }}
+  {{ template "list-item" dict "URI" "/create-some-thing" "Label" "There's nothing here!" }}
+  {{ end }}
+
+  {{ range .SomeThings.Data }}
+  {{ template "list-item" dict "URI" (print "/some-things/" .ID) "Label" .Name }}
+  {{ end }}
+</ul>
+{{ template "pagination" .SomeThings }}
+
+{{ if (can .Context "admin") }}
+{{ template "create_button" dict "Path" "/create-some-thing" "Text" "Create SomeThing" }}
+{{ end }}
+{{ end }}

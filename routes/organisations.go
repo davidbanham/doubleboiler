@@ -29,6 +29,10 @@ func init() {
 		Methods("GET").
 		HandlerFunc(organisationHandler)
 
+	r.Path("/organisation-settings").
+		Methods("GET").
+		HandlerFunc(organisationSettingsHandler)
+
 	r.Path("/organisations/{id}").
 		Methods("POST").
 		HandlerFunc(organisationCreateOrUpdateHandler)
@@ -229,6 +233,12 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 		errRes(w, r, http.StatusInternalServerError, "Templating error", err)
 		return
 	}
+}
+
+func organisationSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	targetOrg := activeOrgFromContext(r.Context())
+	http.Redirect(w, r, "/organisations/"+targetOrg.ID, 302)
+	return
 }
 
 func copySampleOrgData(ctx context.Context, target models.Organisation) error {

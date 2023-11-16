@@ -1,0 +1,39 @@
+{{ template "base.html" . }}
+
+{{ define "breadcrumbs" }}
+{{ template "crumbs" crumbs "Users" "/users" .User.Email "#" }}
+{{ end }}
+
+{{ define "content" }}
+
+{{ $edits := "disabled" }}
+{{ if (can .Context "admin") }}
+{{ $edits = "" }}
+{{ end }}
+
+<form action="/users/{{.User.ID}}" method="post" class="flex flex-col gap-y-6">
+  <input type="hidden" name="id" value="{{.User.ID}}"></input>
+  <input type="hidden" name="revision" value="{{.User.Revision}}"></input>
+  <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
+  <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
+  {{ template "input" dict "Type" "text" "Label" "email" "Name" "email" "Required" true "Placeholder" "Email Address" "Value" .User.Email }}
+  <div>
+    <button type="submit" class="justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+      Save
+    </button>
+  </div>
+</form>
+
+{{ end }}
+
+{{ define "slide-panel-contents" }}
+{{ subComponent "side-info" (dict "Label" "Created" "Value" (subComponent "time" .User.CreatedAt)) }}
+{{ subComponent "side-info" (dict "Label" "Updated At" "Value" (subComponent "time" .User.UpdatedAt)) }}
+{{ if (can .Context "admin") }}
+{{ template "side-link" dict "Path" (print "/audits/" .User.ID) "Label" "Audit Log" }}
+{{ end }}
+{{ end }}
+
+{{ define "context-menu" }}
+{{ template "slide-panel" . }}
+{{ end }}

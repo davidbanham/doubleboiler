@@ -1,0 +1,28 @@
+{{ template "base.html" . }}
+
+{{ define "breadcrumbs" }}
+{{ template "crumbs" crumbs "Users" "#" }}
+{{ end }}
+
+{{ define "content" }}
+<ul class="text-sm divide-y divide-gray-200">
+  <li>
+    {{ template "searchbox" dict "EntityFilter" "Users" }}
+  </li>
+  <li class="mt-3 mb-0">
+    {{ template "filterbox" dict "Entity" .Users "Context" .Context }}
+  </li>
+  {{ if eq (len .Users.Data) 0 }}
+  {{ template "list-item" dict "URI" "/create-user" "Label" "There's nothing here!" }}
+  {{ end }}
+
+  {{ range .Users.Data }}
+  {{ template "list-item" dict "URI" (print "/users/" .ID) "Label" .Email }}
+  {{ end }}
+</ul>
+{{ template "pagination" .Users }}
+
+{{ if (can .Context "admin") }}
+{{ template "create_button" dict "Path" "/create-user" "Text" "Create User" }}
+{{ end }}
+{{ end }}

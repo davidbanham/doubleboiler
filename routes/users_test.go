@@ -25,7 +25,7 @@ func TestUserCreateOrUpdateHandler(t *testing.T) {
 		"email":       {bandEmail()},
 		"password":    {bandname()},
 		"orgname":     {bandname()},
-		"orgcountry":  {"Australia"},
+		"country":     {"Australia"},
 		"orgcurrency": {"AUD"},
 		"terms":       {"agreed"},
 	}

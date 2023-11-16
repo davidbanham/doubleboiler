@@ -1,9 +1,0 @@
-{{ template "header" . }}
-
-{{if eq .Text ""}}
-{{ template "success" dict "Header" "Thanks!" "Text" "We'll be in touch soon" }}
-{{else}}
-{{ template "success" dict "Header" "Thanks!" "Text" .Text }}
-{{end}}
-
-{{ template "footer" . }}

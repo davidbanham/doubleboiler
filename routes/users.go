@@ -167,6 +167,12 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			user.Email = r.FormValue("email")
 		}
 		if r.FormValue("password") != "" {
+			if r.FormValue("confirm-password") != "" {
+				if r.FormValue("confirm-password") != r.FormValue("password") {
+					errRes(w, r, http.StatusBadRequest, "Submitted passwords do not match", nil)
+					return
+				}
+			}
 			hash, err := models.HashPassword(r.FormValue("password"))
 			if err != nil {
 				errRes(w, r, 500, "Error creating password hash.", err)
@@ -229,7 +235,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orgname := r.FormValue("orgname")
-	orgcountry := r.FormValue("orgcountry")
+	orgcountry := r.FormValue("country")
 	orgcurrency := r.FormValue("currency")
 	createdOrg := models.Organisation{}
 	if orgname != "" {
