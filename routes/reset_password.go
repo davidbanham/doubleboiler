@@ -32,10 +32,9 @@ func passwordResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expiry := util.CalcExpiry(1)
-	token := util.CalcToken(user.Email, expiry)
-	escaped := url.QueryEscape(token)
-	resetUrl := fmt.Sprintf("%s/reset-password?expiry=%s&uid=%s&token=%s", config.URI, expiry, user.ID, escaped)
+	token := util.CalcToken(config.SECRET, 1, user.Email)
+	escaped := url.QueryEscape(token.String())
+	resetUrl := fmt.Sprintf("%s/reset-password?expiry=%s&uid=%s&token=%s", config.URI, token.ExpiryString(), user.ID, escaped)
 
 	emailHTML, emailText := copy.PasswordResetEmail(resetUrl)
 
@@ -51,7 +50,7 @@ func passwordResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := Tmpl.ExecuteTemplate(w, "reset-password-confirm.html", nil); err != nil {
+	if err := Tmpl.ExecuteTemplate(w, "reset-password-confirm.html", basePageData{Context: r.Context()}); err != nil {
 		errRes(w, r, 500, "Error rendering template", err)
 		return
 	}
@@ -92,7 +91,9 @@ func serveResetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		if err := Tmpl.ExecuteTemplate(w, "reset-password.html", nil); err != nil {
+		if err := Tmpl.ExecuteTemplate(w, "reset-password.html", basePageData{
+			Context: r.Context(),
+		}); err != nil {
 			errRes(w, r, 500, "Error rendering template", err)
 			return
 		}

@@ -105,9 +105,7 @@ func TestCommunicationRevisionChange(t *testing.T) {
 	user.Save(ctx)
 
 	fix := communicationFixture(user, org)
-	defaultRev := fix.Revision
 	assert.Nil(t, fix.Save(ctx))
-	assert.Equal(t, defaultRev, fix.Revision)
 	firstRev := fix.Revision
 	assert.Nil(t, fix.Save(ctx))
 	assert.NotEqual(t, firstRev, fix.Revision)

@@ -6,25 +6,18 @@
 
 {{ define "content" }}
 
-{{ $edits := "disabled" }}
-{{ if (can .Context "admin") }}
-{{ $edits = "" }}
-{{ end }}
-
-<form action="/some-things/{{.SomeThing.ID}}" method="post" class="flex flex-col gap-y-6">
+<form action="/some-things/{{.SomeThing.ID}}" method="post" class="p-4 flex flex-col gap-y-6">
   <input type="hidden" name="id" value="{{.SomeThing.ID}}"></input>
   <input type="hidden" name="revision" value="{{.SomeThing.Revision}}"></input>
   <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
   <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
   {{ template "input" dict "Type" "text" "Label" "Name" "Name" "name" "Required" true "Placeholder" "Name" "Value" .SomeThing.Name }}
   {{ template "input" dict "Type" "text" "Label" "Description" "Name" "description" "Required" true "Placeholder" "Description" "Value" .SomeThing.Description }}
-  {{ if (can .Context "admin") }}
   <div>
     <button type="submit" class="justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
       Save
     </button>
   </div>
-  {{ end }}
 </form>
 
 {{ end }}

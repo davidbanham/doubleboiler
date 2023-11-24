@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"doubleboiler/config"
 	"doubleboiler/util"
 	"fmt"
 	"net/http"
@@ -70,10 +71,9 @@ func TestServeResetPasswordWithToken(t *testing.T) {
 	err := fix.Save(ctx)
 	assert.Nil(t, err)
 
-	expiry := util.CalcExpiry(1)
-	token := util.CalcToken(fix.Email, expiry)
-	escaped := url.QueryEscape(token)
-	req, err := http.NewRequest("GET", fmt.Sprintf("/reset-password?expiry=%s&uid=%s&token=%s", expiry, fix.ID, escaped), nil)
+	token := util.CalcToken(config.SECRET, 1, fix.Email)
+	escaped := url.QueryEscape(token.String())
+	req, err := http.NewRequest("GET", fmt.Sprintf("/reset-password?expiry=%s&uid=%s&token=%s", token.ExpiryString(), fix.ID, escaped), nil)
 	req = req.WithContext(ctx)
 
 	assert.Nil(t, err)

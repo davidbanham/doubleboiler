@@ -43,7 +43,7 @@ func init() {
 
 func userImpersonater(w http.ResponseWriter, r *http.Request) {
 	loggedInUser := r.Context().Value("user").(models.User)
-	if !loggedInUser.Admin {
+	if !loggedInUser.SuperAdmin {
 		errRes(w, r, 403, "You are not an admin", nil)
 		return
 	}
@@ -173,7 +173,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
-			hash, err := models.HashPassword(r.FormValue("password"))
+			hash, err := util.HashPassword(r.FormValue("password"))
 			if err != nil {
 				errRes(w, r, 500, "Error creating password hash.", err)
 				return
@@ -194,23 +194,18 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	untypedUser := r.Context().Value("user")
 	if untypedUser != nil {
 		loggedInUser := untypedUser.(models.User)
-		if loggedInUser.Admin || user.ID == loggedInUser.ID {
+		if loggedInUser.SuperAdmin || user.ID == loggedInUser.ID {
 			savePermitted = true
 		}
 	}
 
 	if r.FormValue("token") != "" {
-		expiry := r.FormValue("expiry")
-		if err := checkTokenExpiry(expiry); err != nil {
-			errRes(w, r, 400, "Your invitation has expired. Please use the password reset function of the login form", err)
+		if err := util.CheckToken(config.SECRET, r.FormValue("expiry"), user.Email, r.FormValue("token")); err != nil {
+			errRes(w, r, http.StatusUnauthorized, "Invalid token", err)
 			return
-		}
-
-		expectedToken := util.CalcToken(user.Email, expiry)
-		if r.FormValue("token") == expectedToken {
+		} else {
 			savePermitted = true
 		}
-
 	}
 
 	if savePermitted {
@@ -275,7 +270,7 @@ type usersPageData struct {
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
 	loggedInUser := r.Context().Value("user").(models.User)
-	if !loggedInUser.Admin {
+	if !loggedInUser.SuperAdmin {
 		errRes(w, r, http.StatusForbidden, "Only application admins may list users", nil)
 		return
 	}
@@ -322,7 +317,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	loggedInUser := r.Context().Value("user").(models.User)
-	if loggedInUser.ID != vars["id"] && !loggedInUser.Admin {
+	if loggedInUser.ID != vars["id"] && !loggedInUser.SuperAdmin {
 		errRes(w, r, http.StatusForbidden, "You are not authorized to view this user", nil)
 		return
 	}

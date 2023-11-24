@@ -26,15 +26,12 @@ rename: recase_brand
 
 .PHONY: logos_to_paths
 logos_to_paths:
-	cp ./assets/img/logo_text_src.svg ./assets/img/logo_text.svg
-	inkscape ./assets/img/logo_text.svg --verb EditSelectAll --verb SelectionUnGroup --verb EditSelectAll --verb ObjectToPath --verb FileSave --verb FileQuit
+	inkscape ./assets/img/logo_text_src.svg --actions "select-all;selection-ungroup;select-all;object-to-path"  --export-filename ./assets/img/logo_text.svg
 	scour -i assets/img/logo.svg -o assets/img/logo.min.svg
-	cp ./assets/img/logo_src.svg ./assets/img/logo.svg
-	inkscape ./assets/img/logo.svg --verb EditSelectAll --verb SelectionUnGroup --verb EditSelectAll --verb ObjectToPath --verb FileSave --verb FileQuit
-	scour -i assets/img/logo_text.svg -o assets/img/logo_text.min.svg
-	cp ./assets/img/logo_text_white_src.svg ./assets/img/logo_text_white.svg
-	inkscape ./assets/img/logo_text_white.svg --verb EditSelectAll --verb SelectionUnGroup --verb EditSelectAll --verb ObjectToPath --verb FileSave --verb FileQuit
+	inkscape ./assets/img/logo_text_white_src.svg --actions "select-all;selection-ungroup;select-all;object-to-path"  --export-filename ./assets/img/logo_text_white.svg
 	scour -i assets/img/logo_text_white.svg -o assets/img/logo_text_white.min.svg
+	inkscape ./assets/img/logo_src.svg --actions "select-all;selection-ungroup;select-all;object-to-path"  --export-filename ./assets/img/logo.svg
+	scour -i assets/img/logo_text.svg -o assets/img/logo_text.min.svg
 	convert ./assets/img/logo_text.svg ./assets/img/logo_text.png
 	convert ./assets/img/logo.svg ./assets/img/logo.png
 	convert ./assets/img/logo_text_white.svg ./assets/img/logo_text_white.png

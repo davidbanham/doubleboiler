@@ -168,10 +168,9 @@ func sendOrgAdditionEmail(ctx context.Context, user models.User, org models.Orga
 }
 
 func sendOrgInviteEmail(ctx context.Context, user models.User, org models.Organisation) error {
-	expiry := util.CalcExpiry(30)
-	token := util.CalcToken(user.Email, expiry)
-	escaped := url.QueryEscape(token)
-	verificationUrl := fmt.Sprintf("%s/verify?expiry=%s&uid=%s&token=%s", config.URI, expiry, user.ID, escaped)
+	token := util.CalcToken(config.SECRET, 30, user.Email)
+	escaped := url.QueryEscape(token.String())
+	verificationUrl := fmt.Sprintf("%s/verify?expiry=%s&uid=%s&token=%s", config.URI, token.ExpiryString(), user.ID, escaped)
 
 	emailHTML, emailText := copy.OrgInviteEmail(org.Name, verificationUrl)
 

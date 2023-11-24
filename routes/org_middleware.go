@@ -23,7 +23,7 @@ func orgMiddleware(h http.Handler) http.Handler {
 
 			criteria := models.Criteria{}
 
-			if user.Admin {
+			if user.SuperAdmin {
 				criteria.Query = models.All{}
 			} else {
 				criteria.Query = models.OrganisationsContainingUser{

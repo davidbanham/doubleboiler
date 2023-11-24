@@ -5,7 +5,8 @@ CREATE TABLE communications (
   user_id UUID REFERENCES users (id),
   channel text NOT NULL default '',
   subject text NOT NULL default '',
-  created_at TIMESTAMPTZ NOT NULL default NOW()
+  created_at TIMESTAMPTZ NOT NULL default NOW(),
+  updated_at TIMESTAMPTZ NOT NULL default NOW()
 );
 
 CREATE INDEX communications_user_id ON communications (user_id);

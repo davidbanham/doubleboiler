@@ -1,0 +1,111 @@
+{{ define "menu" }}
+<div class="hidden" id="sidebar">
+  <div class="fixed inset-0 flex z-40">
+    <div class="sidebar-closer fixed inset-0">
+      <div class="absolute inset-0 bg-gray-600 opacity-75"></div>
+    </div>
+    <div class="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-gray-800">
+      <div class="absolute top-0 right-0 -mr-14 p-1">
+        <button class="sidebar-closer flex items-center justify-center h-12 w-12 rounded-full focus:outline-none focus:bg-gray-600" aria-label="Close sidebar">
+          <svg class="h-6 w-6 text-white" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex-shrink-0 flex items-center px-4">
+        <a href="{{logoLink .Context}}">
+          <img class="h-8 w-auto" src="/img/logo_text_white.min.svg" alt="Doubleboiler">
+        </a>
+      </div>
+      <div class="mt-5 flex-1 h-0 overflow-y-auto">
+        <nav class="px-2 space-y-1">
+          <!--
+          {{ block "orgpicker" . }}
+          {{ if (orgsFromContext .Context).Data }}
+          {{ $orgPickerID := uniq }}
+          <div class="mx-1">
+            <select id="{{$orgPickerID}}" class="choices-picker orgpicker" name="organisationid">
+              {{ range (orgsFromContext .Context).Data }}
+              <option
+                  value="{{.ID}}"
+                  {{ if eq (activeOrgFromContext $.Context).ID .ID}} selected {{ end }}
+                  >{{.Name}}</option>
+              {{ end }}
+            </select>
+            <script>
+              (function(){
+                const elem = document.getElementById('{{$orgPickerID}}');
+                new Choices(elem, {});
+                elem.addEventListener("click", function(e) {
+                  var searchParams = new URLSearchParams(window.location.search);
+                  searchParams.set('organisationID', elem.value);
+                  window.location.search = searchParams.toString();
+                });
+              })()
+            </script>
+          </div>
+          {{ end }}
+          {{ end }}
+          <a href="/welcome" class="group flex items-center px-2 py-2 text-sm leading-5 font-medium text-white rounded-md bg-gray-900 focus:outline-none focus:bg-gray-700 transition ease-in-out duration-150">
+            Dashboard
+          </a>
+          -->
+        </nav>
+      </div>
+    </div>
+    <div class="flex-shrink-0 w-14">
+      <!-- Dummy element to force sidebar to shrink to fit close icon -->
+    </div>
+  </div>
+  <script>
+    (function() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.addEventListener('hide', function() {
+        sidebar.classList.add('hidden')
+      });
+      sidebar.addEventListener('show', function() {
+        sidebar.classList.remove('hidden');
+        let keylistener = document.addEventListener('keydown', (e) => {
+          if (e.key == 'Escape') {
+            sidebar.dispatchEvent(new CustomEvent('hide'));
+          }
+        });
+        let remover = sidebar.addEventListener('hide', function() {
+          document.removeEventListener('keydown', keylistener);
+          sidebar.removeEventListener('hide', remover);
+        });
+      });
+      document.addEventListener("DOMContentLoaded", function() {
+        Array.prototype.filter.call(document.getElementsByClassName('sidebar-closer'), function(el) {
+          el.addEventListener('click', function() {
+            sidebar.dispatchEvent(new CustomEvent('hide'));
+          });
+        });
+        Array.prototype.filter.call(document.getElementsByClassName('sidebar-opener'), function(el) {
+          el.addEventListener('click', function() {
+            sidebar.dispatchEvent(new CustomEvent('show'))
+          });
+        });
+      });
+    })();
+  </script>
+</div>
+
+<!-- Static sidebar for desktop -->
+<div class="hidden md:flex md:flex-shrink-0">
+  <div class="flex flex-col w-64">
+    <div class="flex flex-col h-0 flex-1">
+      <div class="flex items-center h-16 flex-shrink-0 px-4 bg-gray-900">
+        <a href="{{logoLink .Context}}">
+          <img class="h-8 w-auto" src="/img/logo_text_white.min.svg" alt="Doubleboiler">
+        </a>
+      </div>
+      <div class="flex-1 flex flex-col overflow-y-auto">
+        <nav class="flex-1 px-2 py-4 bg-gray-800 space-y-1">
+          {{ template "menu-items" . }}
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}

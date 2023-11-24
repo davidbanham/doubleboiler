@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"doubleboiler/config"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"fmt"
@@ -95,11 +96,10 @@ func TestVerificationHandlerValid(t *testing.T) {
 	fix, _ := userFixture(ctx, t)
 
 	// Simulate verification URL click
-	expiry := util.CalcExpiry(1)
-	token := util.CalcToken(fix.Email, expiry)
-	escaped := url.QueryEscape(token)
+	token := util.CalcToken(config.SECRET, 1, fix.Email)
+	escaped := url.QueryEscape(token.String())
 
-	target := fmt.Sprintf("/verify?expiry=%s&uid=%s&token=%s", expiry, fix.ID, escaped)
+	target := fmt.Sprintf("/verify?expiry=%s&uid=%s&token=%s", token.ExpiryString(), fix.ID, escaped)
 	req := httptest.NewRequest("GET", target, nil)
 	req = req.WithContext(ctx)
 
@@ -155,7 +155,7 @@ func TestVerificationHandlerInvalidToken(t *testing.T) {
 	rr := httptest.NewRecorder()
 	verifyHandler(rr, req)
 
-	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Invalid token")
 
 	u := models.User{}
@@ -170,11 +170,10 @@ func TestVerificationHandlerExpiredToken(t *testing.T) {
 	ctx := getCtx(t)
 
 	fix, _ := userFixture(ctx, t)
-	expiry := util.CalcExpiry(-1)
-	token := util.CalcToken(fix.Email, expiry)
-	escaped := url.QueryEscape(token)
+	token := util.CalcToken(config.SECRET, -1, fix.Email)
+	escaped := url.QueryEscape(token.String())
 
-	target := fmt.Sprintf("/verify?expiry=%s&uid=%s&token=%s", expiry, fix.ID, escaped)
+	target := fmt.Sprintf("/verify?expiry=%s&uid=%s&token=%s", token.ExpiryString(), fix.ID, escaped)
 
 	req := httptest.NewRequest("GET", target, nil)
 	req = req.WithContext(ctx)
@@ -182,8 +181,8 @@ func TestVerificationHandlerExpiredToken(t *testing.T) {
 	rr := httptest.NewRecorder()
 	verifyHandler(rr, req)
 
-	assert.Equal(t, http.StatusForbidden, rr.Code)
-	assert.Contains(t, rr.Body.String(), "token is expired")
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid token")
 
 	u := models.User{}
 	u.FindByID(ctx, u.ID)
@@ -197,11 +196,10 @@ func TestVerificationHandlerInvalidExpiry(t *testing.T) {
 	ctx := getCtx(t)
 
 	fix, _ := userFixture(ctx, t)
-	expiry := "hackhackhack"
-	token := util.CalcToken(fix.Email, expiry)
-	escaped := url.QueryEscape(token)
+	token := util.CalcToken(config.SECRET, 1, fix.Email)
+	escaped := url.QueryEscape(token.String())
 
-	target := fmt.Sprintf("/verify?expiry=%s&uid=%s&token=%s", expiry, fix.ID, escaped)
+	target := fmt.Sprintf("/verify?expiry=%s&uid=%s&token=%s", "hackhackhack", fix.ID, escaped)
 
 	req := httptest.NewRequest("GET", target, nil)
 	req = req.WithContext(ctx)
@@ -209,8 +207,8 @@ func TestVerificationHandlerInvalidExpiry(t *testing.T) {
 	rr := httptest.NewRecorder()
 	verifyHandler(rr, req)
 
-	assert.Equal(t, http.StatusForbidden, rr.Code)
-	assert.Contains(t, rr.Body.String(), "Invalid expiry string")
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid token")
 
 	u := models.User{}
 	u.FindByID(ctx, u.ID)

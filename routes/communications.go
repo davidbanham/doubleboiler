@@ -48,14 +48,22 @@ func communicationsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		cf := models.Custom{
-			Key:         "user_id",
-			Values:      []string{orgUser.UserID},
+		userFilter := models.Custom{
+			Col:    "user_id",
+			Values: []string{orgUser.UserID},
+		}
+		orgFilter := models.Custom{
+			Col:    "organisation_id",
+			Values: []string{orgUser.OrganisationID},
+		}
+		orgUserFilter := models.FilterSet{
+			IsAnd:       true,
+			Filters:     models.Filters{&userFilter, &orgFilter},
 			CustomID:    fmt.Sprintf("orguser-is-%s", orgUser.ID),
 			CustomLabel: orgUser.FullName(),
 		}
-		customFilters = append(customFilters, cf)
-		r.Form.Add("custom-filter", cf.CustomID)
+		customFilters = append(customFilters, &orgUserFilter)
+		r.Form.Add("custom-filter", orgUserFilter.CustomID)
 	}
 
 	communications := models.Communications{}

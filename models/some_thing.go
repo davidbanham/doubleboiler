@@ -3,20 +3,14 @@ package models
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
+	"github.com/davidbanham/scum/search"
 	uuid "github.com/satori/go.uuid"
 )
 
 func init() {
-	requiredRole := ValidRoles["admin"]
-	Searchables = append(Searchables, Searchable{
-		Label:            "SomeThings",
-		RequiredRole:     requiredRole,
-		searchFunc:       searchSomeThings(requiredRole),
-		availableFilters: someThingFilters,
-	})
+	SearchTargets = append(SearchTargets, (SomeThings{}).Searchable())
 }
 
 type SomeThing struct {
@@ -29,97 +23,88 @@ type SomeThing struct {
 	Revision       string
 }
 
-func (someThing *SomeThing) New(name, description, organisationID string) {
-	someThing.ID = uuid.NewV4().String()
-	someThing.Name = name
-	someThing.Description = description
-	someThing.OrganisationID = organisationID
-	someThing.CreatedAt = time.Now()
-	someThing.UpdatedAt = time.Now()
+var someThingCols = []string{
+	"organisation_id",
+	"name",
+	"description",
 }
 
-func (someThing *SomeThing) auditQuery(ctx context.Context, action string) string {
-	return auditQuery(ctx, action, "some_things", someThing.ID, someThing.OrganisationID)
+func (this *SomeThing) New(name, description, organisationID string) {
+	this.ID = uuid.NewV4().String()
+	this.Name = name
+	this.Description = description
+	this.OrganisationID = organisationID
+	this.CreatedAt = time.Now()
+	this.UpdatedAt = time.Now()
 }
 
-func (someThing *SomeThing) Save(ctx context.Context) error {
-	db := ctx.Value("tx").(Querier)
+func (this *SomeThing) FindByColumn(ctx context.Context, col, val string) error {
+	props := []any{
+		&this.Revision,
+		&this.ID,
+		&this.CreatedAt,
+		&this.UpdatedAt,
+		&this.OrganisationID,
+		&this.Name,
+		&this.Description,
+	}
 
-	newRev := uuid.NewV4().String()
+	return StandardFindByColumn(ctx, "some_things", someThingCols, col, val, props)
+}
 
-	result, err := db.ExecContext(ctx, someThing.auditQuery(ctx, "U")+`INSERT INTO some_things (
-		updated_at,
-		id,
-		revision,
-		name,
-		description,
-		organisation_id
-	) VALUES (
-		now(), $1, $3, $4, $5, $6
-	) ON CONFLICT (id) DO UPDATE SET (
-		updated_at,
-		revision,
-		name,
-		description,
-		organisation_id
-	) = (
-		now(), $3, $4, $5, $6
-	) WHERE some_things.revision = $2`,
-		someThing.ID,
-		someThing.Revision,
-		newRev,
+func (this *SomeThing) FindByID(ctx context.Context, id string) error {
+	return this.FindByColumn(ctx, "id", id)
+}
+
+func (someThing SomeThing) Props() []any {
+	return []any{
+		someThing.OrganisationID,
 		someThing.Name,
 		someThing.Description,
-		someThing.OrganisationID,
-	)
-	if err != nil {
-		return err
 	}
-	num, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if num == 0 {
-		return ErrWrongRev
-	}
-
-	someThing.Revision = newRev
-
-	return nil
 }
 
-func (someThing *SomeThing) FindByID(ctx context.Context, id string) error {
-	return someThing.FindByColumn(ctx, "id", id)
+func (this *SomeThing) auditQuery(ctx context.Context, action string) string {
+	return auditQuery(ctx, action, "some_things", this.ID, this.OrganisationID)
 }
 
-func (someThing *SomeThing) FindByColumn(ctx context.Context, col, val string) error {
-	db := ctx.Value("tx").(Querier)
+func (this *SomeThing) Save(ctx context.Context) error {
+	props := []any{
+		this.Revision,
+		this.ID,
+		this.OrganisationID,
+		this.Name,
+		this.Description,
+	}
 
-	return db.QueryRowContext(ctx, `SELECT
-	id,
-	revision,
-	created_at,
-	updated_at,
-	name,
-	description,
-	organisation_id
-	FROM some_things
-	WHERE `+col+` = $1
-	`, val).Scan(
-		&someThing.ID,
-		&someThing.Revision,
-		&someThing.CreatedAt,
-		&someThing.UpdatedAt,
-		&someThing.Name,
-		&someThing.Description,
-		&someThing.OrganisationID,
-	)
+	newRev, err := StandardSave(ctx, "some_things", someThingCols, this.auditQuery(ctx, "U"), props)
+	if err == nil {
+		this.Revision = newRev
+	}
+	return err
+}
+
+func (this SomeThing) Label() string {
+	return this.Name
 }
 
 type SomeThings struct {
-	Data []SomeThing
-	baseModel
+	Data     []SomeThing
+	Criteria Criteria
+}
+
+func (SomeThings) AvailableFilters() Filters {
+	return standardFilters("some_things")
+}
+
+func (SomeThings) Searchable() Searchable {
+	return Searchable{
+		EntityType: "SomeThing",
+		Label:      "name || ' - ' || description",
+		Path:       "some-things",
+		Tablename:  "some_things",
+		Permitted:  search.BasicRoleCheck("admin"),
+	}
 }
 
 func (this SomeThings) ByID() map[string]SomeThing {
@@ -130,42 +115,24 @@ func (this SomeThings) ByID() map[string]SomeThing {
 	return ret
 }
 
-func (someThings *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
-	someThings.Criteria = criteria
+func (this *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
+	this.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
+	cols := append([]string{
+		"revision",
+		"id",
+		"created_at",
+		"updated_at",
+	}, someThingCols...)
+
 	switch v := criteria.Query.(type) {
-	default:
-		return fmt.Errorf("Unknown query")
-	case ByOrg:
-		rows, err = db.QueryContext(ctx, `SELECT
-			id,
-			revision,
-			created_at,
-			updated_at,
-			name,
-			description,
-			organisation_id
-		FROM some_things
-		`+criteria.Filters.Query()+`
-		AND organisation_id = $1
-		ORDER BY name`+criteria.Pagination.PaginationQuery(), v.ID)
-	case All:
-		rows, err = db.QueryContext(ctx, `SELECT
-			id,
-			revision,
-			created_at,
-			updated_at,
-			name,
-			description,
-			organisation_id
-		FROM some_things
-		`+criteria.Filters.Query()+`
-		ORDER BY name`+criteria.Pagination.PaginationQuery())
+	case Query:
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "some_things", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
 	}
 	if err != nil {
 		return err
@@ -174,44 +141,18 @@ func (someThings *SomeThings) FindAll(ctx context.Context, criteria Criteria) er
 
 	for rows.Next() {
 		someThing := SomeThing{}
-		err = rows.Scan(
-			&someThing.ID,
+		if err := rows.Scan(
 			&someThing.Revision,
+			&someThing.ID,
 			&someThing.CreatedAt,
 			&someThing.UpdatedAt,
+			&someThing.OrganisationID,
 			&someThing.Name,
 			&someThing.Description,
-			&someThing.OrganisationID,
-		)
-		if err != nil {
+		); err != nil {
 			return err
 		}
-		(*someThings).Data = append((*someThings).Data, someThing)
+		(*this).Data = append((*this).Data, someThing)
 	}
 	return err
-}
-
-func (someThings SomeThings) AvailableFilters() Filters {
-	return someThingFilters()
-}
-
-func someThingFilters() Filters {
-	return standardFilters()
-}
-
-func searchSomeThings(requiredRole Role) func(Criteria) string {
-	return func(criteria Criteria) string {
-		switch v := criteria.Query.(type) {
-		default:
-			return ""
-		case ByPhrase:
-			if v.User.Admin || v.Roles.Can(requiredRole.Name) {
-				return `SELECT
-					text 'SomeThing' AS entity_type, text 'some_things' AS uri_path, id AS id, name || ' - ' || description AS label, ts_rank_cd(ts, query) AS rank
-			FROM
-					some_things, plainto_tsquery('english', $2) query ` + criteria.Filters.Query() + ` AND organisation_id = $1 AND query @@ ts`
-			}
-		}
-		return ""
-	}
 }

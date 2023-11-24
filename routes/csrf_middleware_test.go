@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"doubleboiler/config"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"net/http"
@@ -44,7 +45,7 @@ func TestCSRFMiddleware(t *testing.T) {
 	rr = httptest.NewRecorder()
 	values := url.Values{
 		"csrf": {
-			util.CalcToken(userFix.ID, ""),
+			util.CalcToken(config.SECRET, 0, userFix.ID).String(),
 		},
 	}
 	req, err = http.NewRequest("POST", "/stuff", strings.NewReader(values.Encode()))

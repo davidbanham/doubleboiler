@@ -6,11 +6,6 @@
 
 {{ define "content" }}
 
-{{ $edits := "disabled" }}
-{{ if (can .Context "admin") }}
-{{ $edits = "" }}
-{{ end }}
-
 <form action="/users/{{.User.ID}}" method="post" class="flex flex-col gap-y-6">
   <input type="hidden" name="id" value="{{.User.ID}}"></input>
   <input type="hidden" name="revision" value="{{.User.Revision}}"></input>

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/models"
+	"doubleboiler/views"
 	"fmt"
 	"testing"
 
@@ -63,4 +64,10 @@ func closeTx(t *testing.T, ctx context.Context) {
 		t.Log(fmt.Errorf("Unknown db type"))
 		t.FailNow()
 	}
+}
+
+func TestTmplParse(t *testing.T) {
+	plate, err := views.Tmpl(templateFuncMap)
+	assert.Nil(t, err)
+	assert.Nil(t, plate.FillCache())
 }

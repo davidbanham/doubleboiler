@@ -4,39 +4,38 @@ import (
 	"context"
 	"database/sql"
 	"doubleboiler/util"
-	"fmt"
+	"log"
 	"time"
 
+	"github.com/davidbanham/scum/search"
 	uuid "github.com/satori/go.uuid"
 )
-
-func init() {
-	requiredRole := ValidRoles["admin"]
-	Searchables = append(Searchables, Searchable{
-		Label:            "Communications",
-		RequiredRole:     requiredRole,
-		searchFunc:       searchCommunications(requiredRole),
-		availableFilters: communicationFilters,
-	})
-}
 
 type Communication struct {
 	ID             string
 	Revision       string
 	OrganisationID string
+	Sent           time.Time
+	UpdatedAt      time.Time
 	UserID         sql.NullString
 	Channel        string
 	Subject        string
-	Sent           time.Time
 }
 
-func (communication *Communication) New(organisationID, channel, subject string) {
-	communication.ID = uuid.NewV4().String()
-	communication.Revision = uuid.NewV4().String()
-	communication.OrganisationID = organisationID
-	communication.Channel = channel
-	communication.Subject = subject
-	communication.Sent = time.Now()
+var communicationCols = []string{
+	"organisation_id",
+	"user_id",
+	"channel",
+	"subject",
+}
+
+func (this *Communication) New(organisationID, channel, subject string) {
+	this.ID = uuid.NewV4().String()
+	this.Revision = uuid.NewV4().String()
+	this.OrganisationID = organisationID
+	this.Channel = channel
+	this.Subject = subject
+	this.Sent = time.Now()
 }
 
 func LogUserCommunication(ctx context.Context, organisationID string, user User, channel, subject string) error {
@@ -53,122 +52,105 @@ func (communication *Communication) auditQuery(ctx context.Context, action strin
 	return auditQuery(ctx, action, "communications", communication.ID, communication.OrganisationID)
 }
 
-func (communication *Communication) Save(ctx context.Context) error {
-	db := ctx.Value("tx").(Querier)
+func (this *Communication) Save(ctx context.Context) error {
+	props := []any{
+		this.Revision,
+		this.ID,
+		this.OrganisationID,
+		this.UserID,
+		this.Channel,
+		this.Subject,
+	}
 
-	row := db.QueryRowContext(ctx, communication.auditQuery(ctx, "U")+`INSERT INTO communications (
-		id,
-		revision,
-		organisation_id,
-		user_id,
-		channel,
-		subject,
-		created_at
-	) VALUES (
-		$1, $2, $4, $5, $6, $7, $8
-	) ON CONFLICT (revision) DO UPDATE SET (
-		revision,
-		organisation_id,
-		user_id,
-		channel,
-		subject,
-		created_at
-	) = (
-		$3, $4, $5, $6, $7, $8
-	) RETURNING revision`,
-		communication.ID,
-		communication.Revision,
-		uuid.NewV4().String(),
-		communication.OrganisationID,
-		communication.UserID,
-		communication.Channel,
-		communication.Subject,
-		communication.Sent,
-	)
-	return row.Scan(&communication.Revision)
+	newRev, err := StandardSave(ctx, "communications", communicationCols, this.auditQuery(ctx, "U"), props)
+	if err == nil {
+		this.Revision = newRev
+	}
+	return err
 }
 
 func (communication *Communication) FindByID(ctx context.Context, id string) error {
 	return communication.FindByColumn(ctx, "id", id)
 }
 
-func (communication *Communication) FindByColumn(ctx context.Context, col, val string) error {
-	db := ctx.Value("tx").(Querier)
+func (this *Communication) FindByColumn(ctx context.Context, col, val string) error {
+	props := []any{
+		&this.Revision,
+		&this.ID,
+		&this.Sent,
+		&this.UpdatedAt,
+		&this.OrganisationID,
+		&this.UserID,
+		&this.Channel,
+		&this.Subject,
+	}
 
-	return db.QueryRowContext(ctx, `SELECT
-	id,
-	revision,
-	organisation_id,
-	user_id,
-	channel,
-	subject,
-	created_at
-	FROM communications WHERE `+col+` = $1`, val).Scan(
-		&communication.ID,
-		&communication.Revision,
-		&communication.OrganisationID,
-		&communication.UserID,
-		&communication.Channel,
-		&communication.Subject,
-		&communication.Sent,
-	)
+	return StandardFindByColumn(ctx, "communications", communicationCols, col, val, props)
 }
 
 type Communications struct {
-	Data []Communication
-	baseModel
+	Data     []Communication
+	Criteria Criteria
 }
 
-func (communications *Communications) FindAll(ctx context.Context, criteria Criteria) error {
-	communications.Criteria = criteria
+func (Communications) AvailableFilters() Filters {
+	sentBetween := CreatedBetween{}
+	if err := sentBetween.Hydrate(DateFilterOpts{
+		Label: "Sent Between",
+		ID:    "created-between",
+		Table: "communications",
+		Col:   "created_at",
+		Period: util.Period{
+			Start: time.Now().Add(-24 * time.Hour),
+			End:   time.Now(),
+		},
+	}); err != nil {
+		log.Fatal(err)
+	}
+	viaEmail := HasProp{}
+	if err := viaEmail.Hydrate(HasPropOpts{
+		Label: "Email",
+		ID:    "communication-via-email",
+		Table: "communications",
+		Col:   "channel",
+		Value: "email",
+	}); err != nil {
+		log.Fatal(err)
+	}
+	return Filters{
+		&sentBetween,
+		&viaEmail,
+	}
+}
+
+func (Communications) Searchable() Searchable {
+	return Searchable{
+		EntityType: "Communication",
+		Label:      "subject",
+		Path:       "communications",
+		Tablename:  "communications",
+		Permitted:  search.BasicRoleCheck("admin"),
+	}
+}
+
+func (this *Communications) FindAll(ctx context.Context, criteria Criteria) error {
+	this.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
+	cols := append([]string{
+		"revision",
+		"id",
+		"created_at",
+		"updated_at",
+	}, communicationCols...)
+
 	switch v := criteria.Query.(type) {
-	default:
-		return fmt.Errorf("Unknown query")
-	case ByUser:
-		rows, err = db.QueryContext(ctx, `SELECT
-		id,
-		revision,
-		organisation_id,
-		user_id,
-		channel,
-		subject,
-		created_at
-		FROM communications `+criteria.Filters.Query()+`
-		AND user_id = $1
-		ORDER BY created_at DESC`, criteria.Pagination.PaginationQuery(), v.ID)
-	case ByOrg:
-		rows, err = db.QueryContext(ctx, `SELECT
-		communications.id,
-		communications.revision,
-		communications.organisation_id,
-		communications.user_id,
-		communications.channel,
-		communications.subject,
-		communications.created_at
-		FROM communications
-		LEFT JOIN organisations_users ON communications.user_id = organisations_users.user_id
-		`+criteria.Filters.Query()+`
-		AND organisations_users.organisation_id = $1
-		OR organisations_users.organisation_id IS NULL
-		ORDER BY communications.created_at DESC
-		`+criteria.Pagination.PaginationQuery(), v.ID)
-	case All:
-		rows, err = db.QueryContext(ctx, `SELECT
-		id,
-		revision,
-		organisation_id,
-		user_id,
-		channel,
-		subject,
-		created_at
-		FROM communications `+criteria.Filters.Query()+`
-		ORDER BY created_at DESC`+criteria.Pagination.PaginationQuery())
+	case Query:
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "communications", criteria.Filters, criteria.Pagination, "subject"), v.Args()...)
 	}
 	if err != nil {
 		return err
@@ -177,19 +159,19 @@ func (communications *Communications) FindAll(ctx context.Context, criteria Crit
 
 	for rows.Next() {
 		communication := Communication{}
-		err = rows.Scan(
-			&communication.ID,
+		if err := rows.Scan(
 			&communication.Revision,
+			&communication.ID,
+			&communication.Sent,
+			&communication.UpdatedAt,
 			&communication.OrganisationID,
 			&communication.UserID,
 			&communication.Channel,
 			&communication.Subject,
-			&communication.Sent,
-		)
-		if err != nil {
+		); err != nil {
 			return err
 		}
-		(*communications).Data = append((*communications).Data, communication)
+		(*this).Data = append((*this).Data, communication)
 	}
 	return err
 }
@@ -212,44 +194,4 @@ func (this Communications) Users(ctx context.Context) (Users, error) {
 	}
 
 	return users, nil
-}
-
-func (communications Communications) AvailableFilters() Filters {
-	return communicationFilters()
-}
-
-func communicationFilters() Filters {
-	return append(standardFilters(),
-		HasProp{
-			key:   "channel",
-			value: "email",
-			label: "Via Email",
-			id:    "communication-via-email",
-		},
-		CreatedAfter{
-			label: "Sent After",
-			id:    "communication-sent-after",
-		},
-		CreatedBefore{
-			label: "Sent Before",
-			id:    "communication-sent-before",
-		},
-	)
-}
-
-func searchCommunications(requiredRole Role) func(Criteria) string {
-	return func(criteria Criteria) string {
-		switch v := criteria.Query.(type) {
-		default:
-			return ""
-		case ByPhrase:
-			if v.User.Admin || v.Roles.Can(requiredRole.Name) {
-				return `SELECT
-				text 'Communication' AS entity_type, text 'communications' AS uri_path, id AS id, subject AS label, ts_rank_cd(ts, query) AS rank
-				FROM
-				communications, plainto_tsquery('english', $2) query WHERE organisation_id = $1 AND query @@ ts`
-			}
-		}
-		return ""
-	}
 }

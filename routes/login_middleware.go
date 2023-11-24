@@ -29,35 +29,33 @@ func loginMiddleware(h http.Handler) http.Handler {
 						errRes(w, r, 403, "Invalid user", err)
 						return
 					}
-					expiry := r.FormValue("expiry")
-					if err := checkTokenExpiry(expiry); err != nil {
-						errRes(w, r, 500, "Error checking token expiry", err)
+
+					if err := util.CheckToken(config.SECRET, r.FormValue("expiry"), user.Email, r.FormValue("token")); err != nil {
+						errRes(w, r, http.StatusUnauthorized, "Invalid token", err)
 						return
 					}
-					expectedToken := util.CalcToken(user.Email, expiry)
-					if r.FormValue("token") == expectedToken {
-						expiration := time.Now().Add(30 * 24 * time.Hour)
-						encoded, err := secureCookie.Encode("doubleboiler-user", map[string]string{
-							"ID": user.ID,
-						})
-						if err != nil {
-							errRes(w, r, 500, "Error encoding cookie", nil)
-							return
-						}
-						cookie := http.Cookie{
-							Path:     "/",
-							Name:     "doubleboiler-user",
-							Domain:   config.DOMAIN,
-							SameSite: http.SameSiteLaxMode,
-							Value:    encoded,
-							Expires:  expiration,
-							Secure:   true,
-							HttpOnly: true,
-						}
-						http.SetCookie(w, &cookie)
-						h.ServeHTTP(w, r)
+
+					expiration := time.Now().Add(30 * 24 * time.Hour)
+					encoded, err := secureCookie.Encode("doubleboiler-user", map[string]string{
+						"ID": user.ID,
+					})
+					if err != nil {
+						errRes(w, r, 500, "Error encoding cookie", nil)
 						return
 					}
+					cookie := http.Cookie{
+						Path:     "/",
+						Name:     "doubleboiler-user",
+						Domain:   config.DOMAIN,
+						SameSite: http.SameSiteLaxMode,
+						Value:    encoded,
+						Expires:  expiration,
+						Secure:   true,
+						HttpOnly: true,
+					}
+					http.SetCookie(w, &cookie)
+					h.ServeHTTP(w, r)
+					return
 				}
 			}
 		}

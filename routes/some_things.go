@@ -17,7 +17,7 @@ func init() {
 		Methods("POST").
 		HandlerFunc(someThingCreateOrUpdateHandler)
 
-	r.Path("/create-some-thing").
+	r.Path("/some-things/create").
 		Methods("GET").
 		HandlerFunc(someThingCreationFormHandler)
 
@@ -164,7 +164,10 @@ func someThingsHandler(w http.ResponseWriter, r *http.Request) {
 	criteria.Pagination.DefaultPageSize = 50
 	criteria.Pagination.Paginate(r.Form)
 
-	criteria.Filters.FromForm(r.Form, someThings.AvailableFilters())
+	if err := criteria.Filters.FromForm(r.Form, someThings.AvailableFilters()); err != nil {
+		errRes(w, r, http.StatusBadRequest, "error interpreting filters", err)
+		return
+	}
 
 	if err := someThings.FindAll(r.Context(), criteria); err != nil {
 		errRes(w, r, 500, "error fetching someThings", err)

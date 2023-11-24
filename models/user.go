@@ -8,29 +8,22 @@ import (
 	"doubleboiler/flashes"
 	"doubleboiler/util"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 	"time"
 
 	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/davidbanham/notifications"
-	"github.com/lib/pq"
+	"github.com/davidbanham/scum/search"
 	uuid "github.com/satori/go.uuid"
-	"golang.org/x/crypto/bcrypt"
 )
-
-func init() {
-	Searchables = append(Searchables, Searchable{
-		Label:      "Users",
-		searchFunc: searchUsers,
-	})
-}
 
 type User struct {
 	ID                    string
 	Email                 string
 	Password              string
-	Admin                 bool
+	SuperAdmin            bool
 	Verified              bool
 	VerificationEmailSent bool
 	Revision              string
@@ -40,8 +33,16 @@ type User struct {
 	Flashes               flashes.Flashes
 }
 
+var userCols = []string{
+	"email",
+	"password",
+	"admin",
+	"verified",
+	"verification_email_sent",
+}
+
 func (user *User) New(email, rawpassword string) {
-	hash, _ := HashPassword(rawpassword)
+	hash, _ := util.HashPassword(rawpassword)
 	user.ID = uuid.NewV4().String()
 	user.Email = strings.ToLower(email)
 	user.Password = string(hash)
@@ -79,111 +80,45 @@ func (user *User) FetchFlashes(ctx context.Context) error {
 	return db.QueryRowContext(ctx, `SELECT flashes FROM users WHERE id = $1`, user.ID).Scan(&user.Flashes)
 }
 
-func (users Users) AvailableFilters() Filters {
-	return userFilters()
-}
-
-func userFilters() Filters {
-	return append(standardFilters(),
-		HasProp{
-			key:   "verification_email_sent",
-			value: "true",
-			label: "Has Been Invited",
-			id:    "user-has-been-invited",
-		},
-		HasProp{
-			key:   "verified",
-			value: "true",
-			label: "Has Accepted Invite",
-			id:    "user-is-verified",
-		},
-	)
-}
-
-func (user *User) Save(ctx context.Context) error {
-	db := ctx.Value("tx").(Querier)
-
-	newRev := uuid.NewV4().String()
-
-	result, err := db.ExecContext(ctx, user.auditQuery(ctx, "U")+`INSERT INTO users (
-		updated_at,
-		id,
-		revision,
-		email,
-		password,
-		verified,
-		verification_email_sent
-	) VALUES (
-		now(), $1, $3, $4, $5, $6, $7
-	) ON CONFLICT (id) DO UPDATE SET (
-		updated_at,
-		revision,
-		email,
-		password,
-		verified,
-		verification_email_sent
-	) = (
-		now(), $3, $4, $5, $6, $7
-	) WHERE users.revision = $2`,
-		user.ID,
-		user.Revision,
-		newRev,
-		strings.ToLower(user.Email),
-		user.Password,
-		user.Verified,
-		user.VerificationEmailSent,
-	)
-	if err != nil {
-		return err
-	}
-	num, err := result.RowsAffected()
-	if err != nil {
-		return err
+func (this *User) Save(ctx context.Context) error {
+	props := []any{
+		this.Revision,
+		this.ID,
+		this.Email,
+		this.Password,
+		this.SuperAdmin,
+		this.Verified,
+		this.VerificationEmailSent,
 	}
 
-	if num == 0 {
-		return ErrWrongRev
+	newRev, err := StandardSave(ctx, "users", userCols, this.auditQuery(ctx, "U"), props)
+	if err == nil {
+		this.Revision = newRev
 	}
-
-	user.Revision = newRev
-
-	return nil
+	return err
 }
 
 func (user *User) FindByID(ctx context.Context, id string) error {
 	return user.FindByColumn(ctx, "id", id)
 }
 
-func (user *User) FindByColumn(ctx context.Context, col, val string) error {
-	db := ctx.Value("tx").(Querier)
-
-	err := db.QueryRowContext(ctx, `SELECT
-		id,
-		revision,
-		created_at,
-		updated_at,
-		email,
-		password,
-		admin,
-		verified,
-		verification_email_sent,
-		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
-	FROM users WHERE `+col+" = $1", val).Scan(&user.ID,
-		&user.Revision,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-		&user.Email,
-		&user.Password,
-		&user.Admin,
-		&user.Verified,
-		&user.VerificationEmailSent,
-		&user.HasFlashes,
-	)
-	if err != nil {
-		return err
+func (this *User) FindByColumn(ctx context.Context, col, val string) error {
+	props := []any{
+		&this.Revision,
+		&this.ID,
+		&this.CreatedAt,
+		&this.UpdatedAt,
+		&this.Email,
+		&this.Password,
+		&this.SuperAdmin,
+		&this.Verified,
+		&this.VerificationEmailSent,
+		&this.HasFlashes,
 	}
 
-	return nil
+	cols := append(userCols, "(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes")
+
+	return StandardFindByColumn(ctx, "users", cols, col, val, props)
 }
 
 func (user *User) SendVerificationEmail(ctx context.Context, org Organisation) error {
@@ -191,10 +126,9 @@ func (user *User) SendVerificationEmail(ctx context.Context, org Organisation) e
 		return nil
 	}
 
-	expiry := util.CalcExpiry(365)
-	token := util.CalcToken(user.Email, expiry)
-	escaped := url.QueryEscape(token)
-	verificationUrl := fmt.Sprintf("%s/verify?expiry=%s&uid=%s&token=%s", config.URI, expiry, user.ID, escaped)
+	token := util.CalcToken(user.Email, 365, config.SECRET)
+	escaped := url.QueryEscape(token.String())
+	verificationUrl := fmt.Sprintf("%s/verify?expiry=%s&uid=%s&token=%s", config.URI, token.ExpiryString(), user.ID, escaped)
 	emailHTML, emailText := copy.VerificationEmail(verificationUrl, org.Name)
 
 	subject := []string{}
@@ -245,9 +179,51 @@ func (user User) HasEmail() bool {
 	return true
 }
 
+func (user User) Avatar() string {
+	return fmt.Sprintf("https://secure.gravatar.com/avatar/%s?s=70&d=mp", util.Hash(user.Email))
+}
+
+func (user User) Label() string {
+	return user.Email
+}
+
 type Users struct {
-	Data []User
-	baseModel
+	Data     []User
+	Criteria Criteria
+}
+
+func (users Users) AvailableFilters() Filters {
+	viaEmail := HasProp{}
+	if err := viaEmail.Hydrate(HasPropOpts{
+		Label: "Has Been Invited",
+		ID:    "user-has-been-invited",
+		Table: "users",
+		Col:   "verification_email_sent",
+		Value: "true",
+	}); err != nil {
+		log.Fatal(err)
+	}
+	verified := HasProp{}
+	if err := verified.Hydrate(HasPropOpts{
+		Label: "Has Accepted Invite",
+		ID:    "user-is-verified",
+		Table: "users",
+		Col:   "verified",
+		Value: "true",
+	}); err != nil {
+		log.Fatal(err)
+	}
+	return append(standardFilters("users"), &viaEmail, &verified)
+}
+
+func (Users) Searchable() Searchable {
+	return Searchable{
+		EntityType: "User",
+		Label:      "email",
+		Path:       "users",
+		Tablename:  "users",
+		Permitted:  search.BasicRoleCheck("superadmin"),
+	}
 }
 
 func (this Users) ByID() map[string]User {
@@ -258,60 +234,25 @@ func (this Users) ByID() map[string]User {
 	return ret
 }
 
-func (users *Users) FindAll(ctx context.Context, criteria Criteria) error {
-	users.Criteria = criteria
+func (this *Users) FindAll(ctx context.Context, criteria Criteria) error {
+	this.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
-	switch v := criteria.Query.(type) {
-	default:
-		return fmt.Errorf("Unknown query")
-	case All:
-		rows, err = db.QueryContext(ctx, `SELECT
-		id,
-		revision,
-		email,
-		password,
-		admin,
-		verified,
-		verification_email_sent,
-		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
-		FROM users
-		`+criteria.Filters.Query()+`
-		ORDER BY email`+criteria.Pagination.PaginationQuery())
-	case ByIDs:
-		rows, err = db.QueryContext(ctx, `SELECT
-		id,
-		revision,
-		email,
-		password,
-		admin,
-		verified,
-		verification_email_sent,
-		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
-		FROM users
-		`+criteria.Filters.Query()+`
-		AND id = ANY ($1)
-		ORDER BY email`+criteria.Pagination.PaginationQuery(), pq.Array(v.IDs))
-	case ByOrg:
-		rows, err = db.QueryContext(ctx, `SELECT
-		id,
-		revision,
-		email,
-		password,
-		admin,
-		verified,
-		verification_email_sent,
-		(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes
-		FROM users
-		`+criteria.Filters.Query()+`
-		AND id IN (SELECT user_id FROM organisations_users WHERE organisation_id = $1)
-		ORDER BY email`+criteria.Pagination.PaginationQuery(), v.ID)
-	}
+	cols := append(append([]string{
+		"revision",
+		"id",
+		"created_at",
+		"updated_at",
+	}, userCols...), "(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes")
 
+	switch v := criteria.Query.(type) {
+	case Query:
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "users", criteria.Filters, criteria.Pagination, "email"), v.Args()...)
+	}
 	if err != nil {
 		return err
 	}
@@ -319,41 +260,22 @@ func (users *Users) FindAll(ctx context.Context, criteria Criteria) error {
 
 	for rows.Next() {
 		user := User{}
-
-		err = rows.Scan(
-			&user.ID,
+		if err := rows.Scan(
 			&user.Revision,
+			&user.ID,
+			&user.CreatedAt,
+			&user.UpdatedAt,
 			&user.Email,
 			&user.Password,
-			&user.Admin,
+			&user.SuperAdmin,
 			&user.Verified,
 			&user.VerificationEmailSent,
 			&user.HasFlashes,
-		)
-		if err != nil {
+		); err != nil {
 			return err
 		}
-		(*users).Data = append((*users).Data, user)
+		(*this).Data = append((*this).Data, user)
 	}
+
 	return err
-}
-
-func HashPassword(rawpassword string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(rawpassword), 10)
-	return string(hash), err
-}
-
-func searchUsers(criteria Criteria) string {
-	switch v := criteria.Query.(type) {
-	default:
-		return ""
-	case ByPhrase:
-		if v.User.Admin {
-			return `SELECT
-			text 'User' AS entity_type, text 'users' AS uri_path, id AS id, email AS label, 1 AS rank FROM
-			users WHERE email = $2`
-		} else {
-			return ""
-		}
-	}
 }

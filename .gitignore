@@ -1,3 +1,4 @@
+go.work
 .envrc
 google_credentials.json
 doubleboiler

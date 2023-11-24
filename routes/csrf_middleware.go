@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"doubleboiler/config"
 	"doubleboiler/logger"
 	"doubleboiler/models"
 	"doubleboiler/util"
@@ -25,16 +26,16 @@ func csrfMiddleware(h http.Handler) http.Handler {
 
 		u = unconv.(models.User)
 
-		expectedToken := util.CalcToken(u.ID, "")
-
 		r.ParseMultipartForm(128 << 20)
 		r.ParseForm()
-		if r.FormValue("csrf") == expectedToken {
+
+		if err := util.CheckToken(config.SECRET, "", u.ID, r.FormValue("csrf")); err == nil {
 			h.ServeHTTP(w, r)
 			return
+		} else {
+			logger.Log(r.Context(), logger.Warning, "invalid csrf token - recieved", r.FormValue("csrf"), "for user", u.Email, u.ID)
+			errRes(w, r, 403, "Invalid csrf token. Please log out, close all tabs of this system and log back in.", err)
+			return
 		}
-		logger.Log(r.Context(), logger.Warning, "expected csrf token", expectedToken, "recieved", r.FormValue("csrf"), "for user", u.Email, u.ID)
-		errRes(w, r, 403, "Invalid csrf token. Please log out, close all tabs of this system and log back in.", nil)
-		return
 	})
 }

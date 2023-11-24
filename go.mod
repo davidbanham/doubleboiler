@@ -1,9 +1,5 @@
 module doubleboiler
 
-replace github.com/davidbanham/doubleboiler/views => ./views
-
-replace github.com/davidbanham/doubleboiler/views/components => ./views/components
-
 go 1.21.3
 
 require (
@@ -11,21 +7,15 @@ require (
 	cloud.google.com/go/storage v1.35.1
 	github.com/davidbanham/bandname_go v0.0.0-20180317100912-bb6893a85259
 	github.com/davidbanham/certcache v0.0.0-20180228104134-93d5ff2ba3a1
-	github.com/davidbanham/doubleboiler/views v0.0.0-20231116044302-af731e8e6529
-	github.com/davidbanham/doubleboiler/views/components v0.0.0-00010101000000-000000000000
-	github.com/davidbanham/english_conjoin v1.0.1
-	github.com/davidbanham/heroicons v0.0.6
-	github.com/davidbanham/human_duration v1.4.0
 	github.com/davidbanham/kewpie_go/v3 v3.3.0
 	github.com/davidbanham/notifications v1.2.15
 	github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244
+	github.com/davidbanham/scum v0.0.1
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gorilla/websocket v1.5.1
-	github.com/iancoleman/strcase v0.2.0
-	github.com/kylelemons/godebug v1.1.0
 	github.com/lib/pq v1.10.9
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.8.4
@@ -40,8 +30,10 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.5 // indirect
 	github.com/aws/aws-sdk-go v1.47.12 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/cockroachdb/cockroach-go/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davidbanham/heroicons v0.0.6 // indirect
 	github.com/davidbanham/marcel v0.0.14 // indirect
 	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -52,10 +44,14 @@ require (
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
+	github.com/gorilla/css v1.0.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	go.opencensus.io v0.24.0 // indirect

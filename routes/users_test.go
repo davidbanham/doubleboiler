@@ -81,7 +81,7 @@ func TestUsersHandler(t *testing.T) {
 	ctx := getCtx(t)
 
 	fixture, _ := userFixture(ctx, t)
-	fixture.Admin = true
+	fixture.SuperAdmin = true
 
 	req, err := http.NewRequest("GET", "/users", nil)
 	req = req.WithContext(ctx)

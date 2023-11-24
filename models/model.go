@@ -2,97 +2,36 @@ package models
 
 import (
 	"context"
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"sync"
+
+	scummodel "github.com/davidbanham/scum/model"
+	scumquery "github.com/davidbanham/scum/query"
+	scumsearch "github.com/davidbanham/scum/search"
+	scumutil "github.com/davidbanham/scum/util"
 )
 
-var Searchables []Searchable
-
-type Searchable struct {
-	Label            string
-	RequiredRole     Role
-	searchFunc       func(Criteria) string
-	availableFilters func() Filters
+type Criteria struct {
+	Query      interface{}
+	Filters    Filters
+	Pagination Pagination
 }
 
-type baseModel struct {
-	Criteria Criteria
-}
+type Searchables = scumsearch.Searchables
+type Searchable = scumsearch.Searchable
+type SearchQuery = scumsearch.SearchQuery
 
-type ClientSafeError struct {
-	Message string
-}
+var SearchTargets = Searchables{}
 
-func (err ClientSafeError) ClientSafeMessage() string {
-	return err.Message
-}
+type Querier = scummodel.Querier
 
-func (err ClientSafeError) Error() string {
-	return err.Message
-}
+type Query = scumquery.Query
 
-// For example
-var ErrRelationships = ClientSafeError{Message: "This entity has active relationships"}
-var ErrOrgLive = ClientSafeError{Message: "This action is not permitted once an organisation is live"}
-var ErrWrongRev = ClientSafeError{Message: "This record has been changed by another request since you loaded it. Review the changes by going back and refreshing, and try again if appropriate."}
+var StandardSave = scummodel.StandardSave
+var StandardFindByColumn = scummodel.FindByColumn
 
-func Parallelize(functions ...func() error) (errors []error) {
-	var waitGroup sync.WaitGroup
-	mux := &sync.Mutex{}
-	waitGroup.Add(len(functions))
+type ClientSafeError = scumutil.ClientSafeError
 
-	defer waitGroup.Wait()
-
-	for _, function := range functions {
-		// We can't do this with a transaction, but it should be safe with a standard read
-		//go func(copy func() error) {
-		func(copy func() error) {
-			defer waitGroup.Done()
-			err := copy()
-			if err != nil {
-				mux.Lock()
-				errors = append(errors, err)
-				mux.Unlock()
-			}
-		}(function)
-	}
-	return
-}
-
-type StringMap map[string]string
-
-func (p StringMap) Value() (driver.Value, error) {
-	j, err := json.Marshal(p)
-	return j, err
-}
-
-func (p *StringMap) Scan(src interface{}) error {
-	source, ok := src.([]byte)
-	if !ok {
-		return errors.New("Type assertion .([]byte) failed.")
-	}
-
-	return json.Unmarshal(source, p)
-}
-
-type IntMap map[string]int
-
-func (p IntMap) Value() (driver.Value, error) {
-	j, err := json.Marshal(p)
-	return j, err
-}
-
-func (p *IntMap) Scan(src interface{}) error {
-	source, ok := src.([]byte)
-	if !ok {
-		return errors.New("Type assertion .([]byte) failed.")
-	}
-
-	return json.Unmarshal(source, p)
-}
+var ErrWrongRev = scummodel.ErrWrongRev
 
 func currentUser(ctx context.Context) string {
 	if ctx == nil {

@@ -3,20 +3,13 @@ package models
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"doubleboiler/util"
+	"strings"
 	"time"
 
+	"github.com/davidbanham/scum/search"
 	uuid "github.com/satori/go.uuid"
 )
-
-func init() {
-	requiredRole := ValidRoles["admin"]
-	Searchables = append(Searchables, Searchable{
-		Label:        "Organisations",
-		RequiredRole: requiredRole,
-		searchFunc:   searchOrganisations(requiredRole),
-	})
-}
 
 type Organisation struct {
 	ID        string
@@ -27,97 +20,80 @@ type Organisation struct {
 	UpdatedAt time.Time
 }
 
-func (org *Organisation) New(name, country string) {
-	org.ID = uuid.NewV4().String()
-	org.Name = name
-	org.Country = country
-	org.CreatedAt = time.Now()
-	org.UpdatedAt = time.Now()
+var organisationCols = []string{
+	"name",
+	"country",
+}
+
+func (this *Organisation) New(name, country string) {
+	this.ID = uuid.NewV4().String()
+	this.Name = name
+	this.Country = country
+	this.CreatedAt = time.Now()
+	this.UpdatedAt = time.Now()
 }
 
 func (org *Organisation) auditQuery(ctx context.Context, action string) string {
 	return auditQuery(ctx, action, "organisations", org.ID, org.ID)
 }
 
-func (organisations Organisations) AvailableFilters() Filters {
-	return organisationFilters()
+func (this Organisation) Props() []any {
+	return []any{}
 }
 
-func organisationFilters() Filters {
-	return standardFilters()
-}
-
-func (org *Organisation) Save(ctx context.Context) error {
-	db := ctx.Value("tx").(Querier)
-
-	newRev := uuid.NewV4().String()
-
-	result, err := db.ExecContext(ctx, org.auditQuery(ctx, "U")+`INSERT INTO organisations (
-		updated_at,
-		id,
-		revision,
-		name,
-		country
-	) VALUES (
-		now(), $1, $3, $4, $5
-	) ON CONFLICT (id) DO UPDATE SET (
-		updated_at,
-		revision,
-		name,
-		country
-	) = (
-		now(), $3, $4, $5
-	) WHERE organisations.revision = $2`,
-		org.ID,
-		org.Revision,
-		newRev,
-		org.Name,
-		org.Country,
-	)
-	if err != nil {
-		return err
-	}
-	num, err := result.RowsAffected()
-	if err != nil {
-		return err
+func (this *Organisation) Save(ctx context.Context) error {
+	props := []any{
+		this.Revision,
+		this.ID,
+		this.Name,
+		this.Country,
 	}
 
-	if num == 0 {
-		return ErrWrongRev
+	newRev, err := StandardSave(ctx, "organisations", organisationCols, this.auditQuery(ctx, "U"), props)
+	if err == nil {
+		this.Revision = newRev
+	}
+	return err
+}
+
+func (this *Organisation) FindByColumn(ctx context.Context, col, val string) error {
+	props := []any{
+		&this.Revision,
+		&this.ID,
+		&this.CreatedAt,
+		&this.UpdatedAt,
+		&this.Name,
+		&this.Country,
 	}
 
-	org.Revision = newRev
-
-	return nil
+	return StandardFindByColumn(ctx, "organisations", organisationCols, col, val, props)
 }
 
-func (org *Organisation) FindByColumn(ctx context.Context, col, val string) error {
-	db := ctx.Value("tx").(Querier)
-
-	return db.QueryRowContext(ctx, `SELECT
-	id,
-	revision,
-	created_at,
-	updated_at,
-	name,
-	country
-	FROM organisations WHERE `+col+` = $1`, val).Scan(
-		&org.ID,
-		&org.Revision,
-		&org.CreatedAt,
-		&org.UpdatedAt,
-		&org.Name,
-		&org.Country,
-	)
+func (this *Organisation) FindByID(ctx context.Context, id string) error {
+	return this.FindByColumn(ctx, "id", id)
 }
 
-func (org *Organisation) FindByID(ctx context.Context, id string) error {
-	return org.FindByColumn(ctx, "id", id)
+func (this Organisation) Label() string {
+	return this.Name
 }
 
 type Organisations struct {
-	Data []Organisation
-	baseModel
+	Data     []Organisation
+	Criteria Criteria
+}
+
+func (Organisations) AvailableFilters() Filters {
+	return standardFilters("organisations")
+}
+
+func (Organisations) Searchable() Searchable {
+	return Searchable{
+		EntityType: "Organisation",
+		Label:      "name",
+		Path:       "organisations",
+		Tablename:  "organisations",
+		Permitted:  search.BasicRoleCheck("admin"),
+	}
 }
 
 func (this Organisations) ByID() map[string]Organisation {
@@ -128,41 +104,28 @@ func (this Organisations) ByID() map[string]Organisation {
 	return ret
 }
 
-func (organisations *Organisations) FindAll(ctx context.Context, criteria Criteria) error {
-	organisations.Criteria = criteria
+func (this *Organisations) FindAll(ctx context.Context, criteria Criteria) error {
+	this.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
+	cols := util.Prefix(append([]string{
+		"id",
+		"revision",
+		"created_at",
+		"updated_at",
+	}, organisationCols...), "organisations.")
+
 	switch v := criteria.Query.(type) {
-	default:
-		return fmt.Errorf("Unknown query")
-	case All:
-		rows, err = db.QueryContext(ctx, `SELECT
-		id,
-		revision,
-		created_at,
-		updated_at,
-		name,
-		country
-		FROM organisations
-		`+criteria.Filters.Query()+`
-		ORDER BY name`+criteria.Pagination.PaginationQuery())
-		if err != nil {
-			return err
-		}
-		defer rows.Close()
+	case Query:
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
 	case OrganisationsContainingUser:
 		rows, err = db.QueryContext(ctx, `
 		SELECT
-		organisations.id,
-			organisations.revision,
-			organisations.created_at,
-			organisations.updated_at,
-			organisations.name,
-			organisations.country
+		`+strings.Join(cols, ",")+`
 		FROM organisations
 		JOIN organisations_users
 		ON organisations_users.organisation_id = organisations.id
@@ -172,8 +135,12 @@ func (organisations *Organisations) FindAll(ctx context.Context, criteria Criter
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
 	}
+
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
 
 	for rows.Next() {
 		org := Organisation{}
@@ -188,24 +155,8 @@ func (organisations *Organisations) FindAll(ctx context.Context, criteria Criter
 			return err
 		}
 
-		(*organisations).Data = append((*organisations).Data, org)
+		(*this).Data = append((*this).Data, org)
 	}
 
 	return err
-}
-func searchOrganisations(requiredRole Role) func(Criteria) string {
-	return func(criteria Criteria) string {
-		switch v := criteria.Query.(type) {
-		default:
-			return ""
-		case ByPhrase:
-			if v.User.Admin || v.Roles.Can(requiredRole.Name) {
-				return `SELECT
-			text 'Organisation' AS entity_type, text 'organisations' AS uri_path, id AS id, name AS label, ts_rank_cd(ts, query) AS rank
-	FROM
-			organisations, plainto_tsquery('english', $2) query WHERE id = $1 AND query @@ ts`
-			}
-		}
-		return ""
-	}
 }

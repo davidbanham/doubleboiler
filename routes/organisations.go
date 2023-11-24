@@ -13,17 +13,21 @@ import (
 )
 
 func init() {
-	r.Path("/create-organisation").
-		Methods("GET").
-		HandlerFunc(organisationCreationFormHandler)
-
 	r.Path("/organisations").
+		Methods("POST").
+		HandlerFunc(organisationCreateOrUpdateHandler)
+
+	r.Path("/organisations/{id}").
 		Methods("POST").
 		HandlerFunc(organisationCreateOrUpdateHandler)
 
 	r.Path("/organisations").
 		Methods("GET").
 		HandlerFunc(organisationsHandler)
+
+	r.Path("/organisations/create").
+		Methods("GET").
+		HandlerFunc(organisationCreationFormHandler)
 
 	r.Path("/organisations/{id}").
 		Methods("GET").
@@ -32,10 +36,6 @@ func init() {
 	r.Path("/organisation-settings").
 		Methods("GET").
 		HandlerFunc(organisationSettingsHandler)
-
-	r.Path("/organisations/{id}").
-		Methods("POST").
-		HandlerFunc(organisationCreateOrUpdateHandler)
 }
 
 type orgCreationPageData struct {

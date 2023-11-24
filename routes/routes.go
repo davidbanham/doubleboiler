@@ -5,6 +5,8 @@ import (
 	"doubleboiler/config"
 	"doubleboiler/logger"
 	"doubleboiler/models"
+	"doubleboiler/views"
+	"log"
 	"net/http"
 	"os"
 
@@ -17,8 +19,16 @@ import (
 )
 
 var r = mux.NewRouter()
+var Tmpl views.Templater
 
 func Init() (h http.Handler) {
+	t, err := views.Tmpl(templateFuncMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Tmpl = t
+
 	h = csrfMiddleware(r)
 	h = formParsingMiddleware(h)
 	h = orgMiddleware(h)

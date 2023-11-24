@@ -11,18 +11,13 @@ func init() {
 	r.Path("/search").
 		Methods("GET").
 		HandlerFunc(searchHandler)
-
-	searchableWhitelist = map[string]models.Searchable{}
-	for _, searchable := range models.Searchables {
-		searchableWhitelist[searchable.Label] = searchable
-	}
 }
 
 type searchResultPageData struct {
 	basePageData
-	Phrase          string
-	EntityFilterMap map[string]bool
-	Results         models.SearchResults
+	Phrase           string
+	EntitiesIncluded []string
+	Results          models.SearchResults
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -41,32 +36,37 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	results := models.SearchResults{}
 
 	query := models.ByPhrase{
-		OrgID:        targetOrg.ID,
-		Phrase:       r.FormValue("search_field"),
-		User:         userFromContext(r.Context()),
-		Roles:        orgUserFromContext(r.Context(), targetOrg).Roles,
-		EntityFilter: map[string]bool{},
+		OrganisationID: targetOrg.ID,
+		Phrase:         r.FormValue("search_field"),
 	}
 
-	for _, label := range r.Form["entity-filter"] {
-		if label != "" && searchableWhitelist[label].Label == label {
-			query.EntityFilter[label] = true
-		}
+	entities := []string{}
+	targets := models.SearchTargets
+	if len(r.Form["entity-filter"]) != 0 {
+		targets = targets.FilterByTableNames(r.Form["entity-filter"])
 	}
-	criteria := models.Criteria{Query: query}
+	for _, target := range targets {
+		entities = append(entities, target.Tablename)
+	}
 
-	criteria.Pagination.DefaultPageSize = 50
+	criteria := models.SearchCriteria{
+		Entities: entities,
+		Query:    query,
+		Pagination: models.Pagination{
+			DefaultPageSize: 50,
+		},
+	}
+
 	criteria.Pagination.Paginate(r.Form)
+	roles := orgUserFromContext(r.Context(), targetOrg).Roles
 
-	if err := results.FindAll(r.Context(), criteria); err != nil {
+	if err := results.FindAll(r.Context(), roles, criteria, models.SearchTargets); err != nil {
 		errRes(w, r, 500, "error fetching results", err)
 		return
 	}
 
 	if err := Tmpl.ExecuteTemplate(w, "searchresults.html", searchResultPageData{
-		Results:         results,
-		Phrase:          r.FormValue("search_field"),
-		EntityFilterMap: query.EntityFilter,
+		Results: results,
 		basePageData: basePageData{
 			PageTitle: "DoubleBoiler - Search Results",
 			Context:   r.Context(),

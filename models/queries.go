@@ -1,40 +1,24 @@
 package models
 
-type All struct{ queryBase }
+import (
+	scumquery "github.com/davidbanham/scum/query"
+)
+
+type All = scumquery.All
+type ByOrg = scumquery.ByOrg
+type ByUser = scumquery.ByUser
+type ByIDs = scumquery.ByIDs
+
 type OrganisationsContainingUser struct {
 	ID string
-	queryBase
 }
-type ByOrg struct {
-	ID string
-	queryBase
-}
-type ByCol struct{ queryBase }
-type ByUser struct {
-	ID string
-	queryBase
-}
-type ByPhrase struct {
-	Phrase       string
-	OrgID        string
-	User         User
-	Roles        Roles
-	EntityFilter map[string]bool
-	queryBase
-}
+
 type ByEntityID struct {
 	EntityID string
-	queryBase
-}
-type ByIDs struct {
-	IDs []string
-	queryBase
 }
 type ByItem struct {
 	ID string
-	queryBase
 }
 type ByGroup struct {
 	ID string
-	queryBase
 }

@@ -1,62 +1,59 @@
 package models
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
-	"fmt"
-	"strings"
+	"doubleboiler/util"
 	"time"
 
-	"github.com/kylelemons/godebug/diff"
+	"github.com/davidbanham/scum/query"
 )
 
 type Audit struct {
-	ID             string
-	EntityID       string
-	OrganisationID string
-	TableName      string
-	Stamp          time.Time
-	UserID         string
-	UserName       string
-	Action         string
-	OldRowData     string
-	NewRowData     string
-	Diff           string
+	ID              string
+	EntityID        string
+	OrganisationID  string
+	TableName       string
+	Stamp           time.Time
+	UserID          string
+	UserName        string
+	Action          string
+	OldRowData      string
+	maybeOldRowData sql.NullString
+	NewRowData      string
+	maybeNewRowData sql.NullString
+	Diff            string
 }
 
 type Audits struct {
-	Data []Audit
-	baseModel
+	Data     []Audit
+	Criteria Criteria
 }
 
-func (audits *Audits) FindAll(ctx context.Context, criteria Criteria) error {
-	audits.Criteria = criteria
+func (this *Audits) FindAll(ctx context.Context, criteria Criteria) error {
+	this.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
 
 	var rows *sql.Rows
 	var err error
 
+	cols := append([]string{
+		"audit_log.id",
+		"entity_id",
+		"organisation_id",
+		"table_name",
+		"stamp",
+		"user_id",
+		"action",
+		"old_row_data - 'revision' - 'updated_at'",
+		"users.email",
+		"lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data",
+	})
+
 	switch v := criteria.Query.(type) {
-	default:
-		return fmt.Errorf("Unknown query")
-	case ByEntityID:
-		rows, err = db.QueryContext(ctx, `SELECT
-		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at', users.email,
-		lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
-		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text WHERE entity_id = $1 ORDER BY stamp DESC`+criteria.Pagination.PaginationQuery(), v.EntityID)
-	case ByOrg:
-		rows, err = db.QueryContext(ctx, `SELECT
-		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at', users.email,
-		lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
-		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text WHERE organisation_id = $1 ORDER BY stamp DESC`+criteria.Pagination.PaginationQuery(), v.ID)
-	case All:
-		rows, err = db.QueryContext(ctx, `SELECT
-		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at', users.email,
-		lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
-		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text ORDER BY stamp DESC`+criteria.Pagination.PaginationQuery())
+	case query.Query:
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "audit_log LEFT JOIN users ON audit_log.user_id = users.id::text", criteria.Filters, criteria.Pagination, "stamp"), v.Args()...)
 	}
 	if err != nil {
 		return err
@@ -65,8 +62,6 @@ func (audits *Audits) FindAll(ctx context.Context, criteria Criteria) error {
 
 	for rows.Next() {
 		audit := Audit{}
-		maybeNewRowData := sql.NullString{}
-		maybeOldRowData := sql.NullString{}
 		maybeUserName := sql.NullString{}
 		if err := rows.Scan(
 			&audit.ID,
@@ -76,26 +71,30 @@ func (audits *Audits) FindAll(ctx context.Context, criteria Criteria) error {
 			&audit.Stamp,
 			&audit.UserID,
 			&audit.Action,
-			&maybeOldRowData,
+			&audit.maybeOldRowData,
 			&maybeUserName,
-			&maybeNewRowData,
+			&audit.maybeNewRowData,
 		); err != nil {
 			return err
 		}
 		audit.OldRowData = "{}"
-		if maybeOldRowData.Valid {
-			audit.OldRowData = maybeOldRowData.String
+		if audit.maybeOldRowData.Valid {
+			audit.OldRowData = audit.maybeOldRowData.String
 		}
 		audit.NewRowData = "{}"
-		if maybeNewRowData.Valid {
-			audit.NewRowData = maybeNewRowData.String
+		if audit.maybeNewRowData.Valid {
+			audit.NewRowData = audit.maybeNewRowData.String
 		}
 		audit.UserName = audit.UserID
 		if maybeUserName.Valid {
 			audit.UserName = maybeUserName.String
 		}
 
-		if !maybeNewRowData.Valid && audit.Action != "D" {
+		(*this).Data = append((*this).Data, audit)
+	}
+
+	for i, audit := range (*this).Data {
+		if !audit.maybeNewRowData.Valid && audit.Action != "D" {
 			if err := db.QueryRowContext(ctx, `SELECT to_jsonb(`+audit.TableName+`) - 'ts' - 'revision' - 'updated_at' FROM `+audit.TableName+` WHERE id = $1`, audit.EntityID).Scan(&audit.NewRowData); err != nil && err != sql.ErrNoRows {
 				return err
 			}
@@ -103,52 +102,16 @@ func (audits *Audits) FindAll(ctx context.Context, criteria Criteria) error {
 
 		if audit.Action == "D" {
 			audit.Diff = "Deleted"
-		} else if maybeOldRowData.Valid {
-			audit.OldRowData = prettyJsonString(audit.OldRowData)
-			audit.NewRowData = prettyJsonString(audit.NewRowData)
+		} else if audit.maybeOldRowData.Valid {
+			audit.OldRowData = util.PrettyJsonString(audit.OldRowData)
+			audit.NewRowData = util.PrettyJsonString(audit.NewRowData)
 
-			audit.Diff = diffOnly(diff.Diff(audit.OldRowData, audit.NewRowData))
-
+			audit.Diff = util.DiffOnly(audit.OldRowData, audit.NewRowData)
 		} else {
 			audit.Diff = "Created"
 		}
 
-		(*audits).Data = append((*audits).Data, audit)
+		(*this).Data[i] = audit
 	}
 	return err
-}
-
-func prettyJsonString(input string) string {
-	var out bytes.Buffer
-	json.Indent(&out, []byte(input), "", "  ")
-	return out.String()
-}
-
-func diffOnly(input string) string {
-	parts := strings.Split(input, "\n")
-	relevant := []string{}
-	for _, part := range parts {
-		if strings.Index(part, "+") == 0 || strings.Index(part, "-") == 0 {
-			if string(part[len(part)-1]) == "," {
-				relevant = append(relevant, part[1:len(part)-1])
-			} else {
-				relevant = append(relevant, part[1:])
-			}
-		}
-	}
-	pairs := []string{}
-	hold := ""
-	for _, part := range relevant {
-		if hold == "" {
-			hold = part
-		} else {
-			sep := strings.Index(part, ":")
-			pairs = append(pairs, fmt.Sprintf("%s -> %s", hold, part[sep+1:]))
-			hold = ""
-		}
-	}
-	if hold != "" {
-		pairs = append(pairs, hold)
-	}
-	return strings.Join(pairs, " ")
 }

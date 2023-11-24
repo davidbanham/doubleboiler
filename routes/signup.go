@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"doubleboiler/config"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
@@ -28,11 +29,6 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	token := qs.Get("token")
 	expiry := qs.Get("expiry")
 
-	if err := checkTokenExpiry(expiry); err != nil {
-		errRes(w, r, 403, "Your invite token is invalid. "+err.Error(), err)
-		return
-	}
-
 	user := models.User{}
 	user.FindByID(r.Context(), uid)
 
@@ -41,9 +37,8 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expectedToken := util.CalcToken(user.Email, expiry)
-	if token != expectedToken {
-		errRes(w, r, 403, "Invalid token", nil)
+	if err := util.CheckToken(config.SECRET, expiry, user.Email, token); err != nil {
+		errRes(w, r, http.StatusUnauthorized, "Invalid token", err)
 		return
 	}
 

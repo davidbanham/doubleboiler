@@ -34,7 +34,7 @@ func TestOrganisationCreateOrUpdateHandler(t *testing.T) {
 
 	u := models.User{}
 	u.New(bandEmail(), bandname())
-	u.Admin = true
+	u.SuperAdmin = true
 	assert.Nil(t, u.Save(ctx))
 
 	ctx = context.WithValue(ctx, "user", u)

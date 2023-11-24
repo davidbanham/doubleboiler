@@ -3,9 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
+	"doubleboiler/util"
 	"fmt"
 	"time"
 
@@ -25,77 +23,12 @@ type OrganisationUser struct {
 	UpdatedAt      time.Time
 }
 
-var ValidRoles = map[string]Role{
-	"admin":    adminRole,
-	"teamlead": teamleadRole,
-}
-
-var adminRole = Role{
-	Name:    "admin",
-	Label:   "Admin",
-	implies: Roles{teamleadRole},
-}
-
-var teamleadRole = Role{
-	Name:    "teamlead",
-	Label:   "Team Lead",
-	implies: Roles{},
-}
-
-type Roles []Role
-
-func (roles Roles) Value() (driver.Value, error) {
-	return json.Marshal(roles)
-}
-
-func (roles *Roles) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
-	}
-
-	return json.Unmarshal(b, &roles)
-}
-
-func (roles Roles) Can(name string) bool {
-	for _, role := range roles {
-		if role.Can(name) {
-			return true
-		}
-	}
-	return false
-}
-
-type Role struct {
-	Name    string
-	Label   string
-	implies Roles
-}
-
-func (this *Role) Can(role string) bool {
-	if role == this.Name {
-		return true
-	}
-	this.implies = ValidRoles[this.Name].implies
-	for _, sub := range this.implies {
-		if sub.Can(role) {
-			return true
-		}
-	}
-	return false
-}
-
-func (this Role) Implications() []string {
-	ret := []string{}
-	for name, _ := range ValidRoles {
-		if name == this.Name {
-			continue
-		}
-		if this.Can(name) {
-			ret = append(ret, name)
-		}
-	}
-	return ret
+var organisationUserCols = []string{
+	"user_id",
+	"organisation_id",
+	"roles",
+	"name",
+	"family_name",
 }
 
 func (orguser *OrganisationUser) New(userID, organisationID string, roles Roles) {
@@ -120,97 +53,49 @@ func (orguser OrganisationUser) checkRolesAreValid() error {
 	return nil
 }
 
-func (orguser *OrganisationUser) Save(ctx context.Context) error {
-	db := ctx.Value("tx").(Querier)
-
-	if err := orguser.checkRolesAreValid(); err != nil {
+func (this *OrganisationUser) Save(ctx context.Context) error {
+	if err := this.checkRolesAreValid(); err != nil {
 		return err
 	}
 
-	newRev := uuid.NewV4().String()
-
-	result, err := db.ExecContext(ctx, orguser.auditQuery(ctx, "U")+`INSERT INTO organisations_users (
-		updated_at,
-		id,
-		revision,
-		user_id,
-		organisation_id,
-		roles,
-		name,
-		family_name
-	) VALUES (
-		now(), $1, $3, $4, $5, $6, $7, $8
-	) ON CONFLICT (id) DO UPDATE SET (
-		updated_at,
-		revision,
-		user_id,
-		organisation_id,
-		roles,
-		name,
-		family_name
-	) = (
-		now(), $3, $4, $5, $6, $7, $8
-	) WHERE organisations_users.revision = $2`,
-		orguser.ID,
-		orguser.Revision,
-		newRev,
-		orguser.UserID,
-		orguser.OrganisationID,
-		orguser.Roles,
-		orguser.Name,
-		orguser.FamilyName,
-	)
-	if err != nil {
-		return nil
-	}
-	num, err := result.RowsAffected()
-	if err != nil {
-		return err
+	props := []any{
+		this.Revision,
+		this.ID,
+		this.UserID,
+		this.OrganisationID,
+		this.Roles,
+		this.Name,
+		this.FamilyName,
 	}
 
-	if num == 0 {
-		return ErrWrongRev
+	newRev, err := StandardSave(ctx, "organisations_users", organisationUserCols, this.auditQuery(ctx, "U"), props)
+	if err == nil {
+		this.Revision = newRev
+	}
+	return err
+}
+
+func (this *OrganisationUser) FindByColumn(ctx context.Context, col, val string) error {
+	props := []any{
+		&this.Revision,
+		&this.ID,
+		&this.CreatedAt,
+		&this.UpdatedAt,
+		&this.UserID,
+		&this.OrganisationID,
+		&this.Roles,
+		&this.Name,
+		&this.FamilyName,
+		&this.Email,
 	}
 
-	orguser.Revision = newRev
+	cols := append(organisationUserCols, "(SELECT email FROM users WHERE id = user_id)")
 
-	return nil
+	return StandardFindByColumn(ctx, "organisations_users", cols, col, val, props)
 }
 
 func (orguser *OrganisationUser) FindByID(ctx context.Context, id string) error {
 	return orguser.FindByColumn(ctx, "id", id)
-}
-
-func (orguser *OrganisationUser) FindByColumn(ctx context.Context, col, val string) error {
-	db := ctx.Value("tx").(Querier)
-
-	err := db.QueryRowContext(ctx, `SELECT
-	organisations_users.id,
-	organisations_users.revision,
-	organisations_users.created_at,
-	organisations_users.updated_at,
-	organisations_users.user_id,
-	organisations_users.organisation_id,
-	organisations_users.roles,
-	organisations_users.name,
-	organisations_users.family_name,
-	users.email
-	FROM organisations_users
-	INNER JOIN users
-	ON organisations_users.user_id = users.id
-	WHERE organisations_users.`+col+" = $1", val).Scan(
-		&orguser.ID,
-		&orguser.Revision,
-		&orguser.CreatedAt,
-		&orguser.UpdatedAt,
-		&orguser.UserID,
-		&orguser.OrganisationID,
-		&orguser.Roles,
-		&orguser.Name,
-		&orguser.FamilyName,
-		&orguser.Email,
-	)
-	return err
 }
 
 func (orguser OrganisationUser) Delete(ctx context.Context) error {
@@ -225,11 +110,19 @@ func (orguser OrganisationUser) FullName() string {
 }
 
 type OrganisationUsers struct {
-	Data []OrganisationUser
-	baseModel
+	Data     []OrganisationUser
+	Criteria Criteria
 }
 
 func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, criteria Criteria) error {
+	cols := util.Prefix(append([]string{
+		"id",
+		"revision",
+		"created_at",
+		"updated_at",
+	}, organisationUserCols...), "organisations_users.")
+	cols = append(cols, "(SELECT email FROM users WHERE id = user_id)")
+
 	organisationusers.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
@@ -240,66 +133,14 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, criteri
 	switch v := criteria.Query.(type) {
 	default:
 		return fmt.Errorf("Unknown query")
-	case All:
-		rows, err = db.QueryContext(ctx, `SELECT
-	organisations_users.id,
-	organisations_users.revision,
-	organisations_users.created_at,
-	organisations_users.updated_at,
-	organisations_users.user_id,
-	organisations_users.organisation_id,
-	organisations_users.roles,
-	organisations_users.name,
-	organisations_users.family_name,
-	users.email
-	FROM organisations_users
-	INNER JOIN users
-	ON organisations_users.user_id = users.id`)
-		if err != nil {
-			return err
-		}
-		defer rows.Close()
-	case ByUser:
-		rows, err = db.QueryContext(ctx, `SELECT
-	organisations_users.id,
-	organisations_users.revision,
-	organisations_users.created_at,
-	organisations_users.updated_at,
-	organisations_users.user_id,
-	organisations_users.organisation_id,
-	organisations_users.roles,
-	organisations_users.name,
-	organisations_users.family_name,
-	users.email
-	FROM organisations_users
-	INNER JOIN users
-	ON organisations_users.user_id = users.id
-	WHERE users.id = $1`, v.ID)
-		if err != nil {
-			return err
-		}
-		defer rows.Close()
-	case ByOrg:
-		rows, err = db.QueryContext(ctx, `SELECT
-	organisations_users.id,
-	organisations_users.revision,
-	organisations_users.created_at,
-	organisations_users.updated_at,
-	organisations_users.user_id,
-	organisations_users.organisation_id,
-	organisations_users.roles,
-	organisations_users.name,
-	organisations_users.family_name,
-	users.email
-	FROM organisations_users
-	INNER JOIN users
-	ON organisations_users.user_id = users.id
-	WHERE organisation_id = $1`, v.ID)
-		if err != nil {
-			return err
-		}
-		defer rows.Close()
+	case Query:
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations_users", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
 	}
+	if err != nil {
+
+		return err
+	}
+	defer rows.Close()
 
 	for rows.Next() {
 		ou := OrganisationUser{}

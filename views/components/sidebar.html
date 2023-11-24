@@ -1,0 +1,151 @@
+{{ define "sidebar" }}
+
+<!-- Static sidebar for desktop -->
+<div class="h-screen hidden lg:block lg:inset-y-0 lg:w-64">
+  &nbsp;
+</div>
+<div class="pointer-events-auto hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+  <div class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-2 pb-4">
+    <div class="flex h-16 shrink-0 items-center">
+      <a class="" href="{{logoLink .Context}}">
+        <img class="h-8 w-auto" src="/img/logo_text_white.min.svg" alt="Doubleboiler logo">
+      </a>
+    </div>
+    <nav class="flex flex-1 flex-col">
+      <ul role="list" class="flex flex-1 flex-col gap-y-7">
+        {{ block "menu-items" . }}
+        <li>
+          <ul role="list" class="space-y-1">
+            <li>
+              {{ block "orgpicker" . }}
+              {{ if (gt (len (orgsFromContext .Context).Data) 1)}}
+              {{ $orgPickerID := uniq }}
+              <div class="mx-1">
+                <select id="{{$orgPickerID}}" class="choices-picker orgpicker" name="organisationid">
+                  {{ range (orgsFromContext .Context).Data }}
+                  <option
+                      value="{{.ID}}"
+                      {{ if eq (activeOrgFromContext $.Context).ID .ID}} selected {{ end }}
+                      >{{.Name}}</option>
+                  {{ end }}
+                </select>
+                <script>
+                  (function(){
+                    const elem = document.getElementById('{{$orgPickerID}}');
+                    new Choices(elem, {});
+                    elem.addEventListener("click", function(e) {
+                      var searchParams = new URLSearchParams(window.location.search);
+                      searchParams.set('organisationID', elem.value);
+                      window.location.search = searchParams.toString();
+                    });
+                  })()
+                </script>
+              </div>
+              {{ end }}
+              {{ end }}
+            </li>
+            <li>
+              <a href="/welcome" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                {{ template "heroicons/outline/home" dict "Class" "h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600" }}
+                Dashboard
+              </a>
+            </li>
+          </ul>
+        </li>
+        {{ end }}
+        {{ block "extra-sidebar-items" . }}
+        {{ end }}
+        {{ block "sidebar-bottom" . }}
+        <li class="mt-auto">
+          <a href="/organisation-settings" class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600">
+            {{ template "heroicons/outline/cog-6-tooth" dict "Class" "h-6 w-6 shrink-0 text-gray-400 group-hover:text-indigo-600" }}
+            Settings
+          </a>
+          <div class="pl-2">
+            <div class="text-sm text-gray-400">
+              made by <a class="text-lighten-3" href="https://notbad.software">notbad software</a>
+            </div>
+            <div class="text-sm text-gray-400">
+              <a class="text-lighten-3" href="/eula.pdf">Terms and Conditions</a>
+            </div>
+            <div class="text-sm text-gray-400">
+              <a class="text-lighten-3" href="/privacy_collection_statement.pdf">Privacy Collection Statement</a>
+            </div>
+          </div>
+        </li>
+        {{ end }}
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Popout sidebar for mobile -->
+<div id="sidebar" class="pointer-events-auto w-64 hidden relative z-40" role="dialog" aria-modal="true">
+  <div class="fixed inset-0 flex">
+    <div class="relative mr-16 flex w-64 flex-0">
+      <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
+        <div class="flex h-16 shrink-0 items-center">
+          <img class="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company">
+        </div>
+        <nav class="flex flex-1 flex-col">
+          <ul role="list" class="flex flex-1 flex-col gap-y-7">
+            {{ template "menu-items" . }}
+            {{ template "extra-sidebar-items" . }}
+            {{ template "sidebar-bottom" . }}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <div style="" class="ml-64 sidebar-closer fixed inset-0 bg-gray-900/80">
+    <div class="sidebar-closer absolute top-0 flex w-16 justify-center pt-5">
+      <button type="button" class="-m-2.5 p-2.5">
+        <span class="sr-only">Close sidebar</span>
+        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="pointer-events-auto h-12">
+  <button type="button" class="sidebar-opener px-1 mt-2 text-gray-700 lg:hidden">
+    <span class="sr-only">Open sidebar</span>
+    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    </svg>
+  </button>
+</div>
+<script>
+  (function() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.addEventListener('hide', function() {
+      sidebar.classList.add('hidden')
+    });
+    sidebar.addEventListener('show', function() {
+      sidebar.classList.remove('hidden');
+      let keylistener = document.addEventListener('keydown', (e) => {
+        if (e.key == 'Escape') {
+          sidebar.dispatchEvent(new CustomEvent('hide'));
+        }
+      });
+      let remover = sidebar.addEventListener('hide', function() {
+        document.removeEventListener('keydown', keylistener);
+        sidebar.removeEventListener('hide', remover);
+      });
+    });
+    document.addEventListener("DOMContentLoaded", function() {
+      Array.prototype.filter.call(document.getElementsByClassName('sidebar-closer'), function(el) {
+        el.addEventListener('click', function() {
+          sidebar.dispatchEvent(new CustomEvent('hide'));
+        });
+      });
+      Array.prototype.filter.call(document.getElementsByClassName('sidebar-opener'), function(el) {
+        el.addEventListener('click', function() {
+          sidebar.dispatchEvent(new CustomEvent('show'))
+        });
+      });
+    });
+  })();
+</script>
+{{ end }}

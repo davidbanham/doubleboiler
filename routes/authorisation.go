@@ -96,3 +96,10 @@ func can(ctx context.Context, target models.Organisation, role string) bool {
 
 	return false
 }
+
+func isAppAdmin(ctx context.Context) bool {
+	if !isLoggedIn(ctx) {
+		return false
+	}
+	return ctx.Value("user").(models.User).SuperAdmin
+}

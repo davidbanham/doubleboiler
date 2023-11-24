@@ -31,3 +31,47 @@ div.htmx-request.spinner.fancy {
   opacity: 0;
   transition: opacity 0s ease-out 0s;
 }
+
+.choices-picker .choices__inner, .choices-picker .choices__input {
+  background-color: white;
+}
+
+.choices-picker .choices__list--multiple .choices__item {
+  background-color: white;
+  color: #3A3A3A;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  border: 1px solid #D9D9D9;
+  border-radius: 6px;
+}
+
+.choices-picker .choices__list--multiple .choices__item {
+  background-color: rgb(224 231 255/var(--tw-bg-opacity)); /* bg-indigo-100 */
+}
+
+.choices-picker .choices__list--multiple .choices__item.is-highlighted {
+  background-color: rgb(165 180 252/var(--tw-bg-opacity)); /* bg-indigo-300 */
+}
+
+.choices-picker .choices__list--dropdown .choices__item.is-highlighted {
+  background-color: white;
+}
+
+.choices-picker .choices[data-type*="select-multiple"] .choices__button, .choices-picker .choices[data-type*="text"] .choices__button {
+  border-left: 0px;
+  margin-right: 0.25em;
+  padding-left: 0.75em;
+  background-size: 1.25em;
+}
+
+/* This is necessary for the native HTML5 validation message to show up */
+.choices[data-type*="select-one"] select.choices__input {
+    display: block !important;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}

@@ -1,6 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" data-name="Layer 1" viewBox="0 0 90 90" x="0px" y="0px">
-  <title>Doubleboiler</title>
-  <text transform="translate(0, 12.5)" text-anchor="middle" x="45" y="45" fill="black" font-size="35" font-weight="bold" font-family="Oswald">
-  D
-  </text>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   fill="none"
+   viewBox="0 0 24 24"
+   stroke-width="1.5"
+   stroke="currentColor"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="logo_src.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
+  <title
+     id="title1">Doubleboiler</title>
+  <path
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"
+     id="path1" />
 </svg>
