@@ -75,7 +75,7 @@
                   });
                 })();
               </script>
-              <div class="mt-2">
+              <div class="mt-2 z-30">
                 {{$user := user .Context}}
                 {{ template "profile-dropdown" dict "UserID" $user.ID "Avatar" $user.Avatar }}
               </div>
