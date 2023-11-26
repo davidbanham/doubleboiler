@@ -173,7 +173,7 @@ func shortDur(d time.Duration) string {
 func redirToDefaultOrg(w http.ResponseWriter, r *http.Request) {
 	orgs := orgsFromContext(r.Context())
 	if len(orgs.Data) < 1 {
-		http.Redirect(w, r, "/create-organisation", http.StatusFound)
+		http.Redirect(w, r, "/organisations/create", http.StatusFound)
 		return
 	} else {
 		query := r.URL.Query()
