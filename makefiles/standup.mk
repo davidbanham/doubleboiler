@@ -55,7 +55,7 @@ new_resource:
 	$(eval lowerCamelCaseNewResourceName := $(shell go run util/cased/main.go --text "$(newResourceName)" --format lower_camel))
 	$(eval kebabCaseNewResourceName := $(shell go run util/cased/main.go --text "$(newResourceName)" --format kebab))
 	$(eval snakeCaseNewResourceName := $(shell go run util/cased/main.go --text "$(newResourceName)" --format snake))
-	for file in models/some_thing.go models/some_thing_test.go routes/some_things.go routes/some_things_test.go views/some-thing.html views/some-things.html views/create-some-thing.html ; do \
+	for file in models/some_thing.go models/some_thing_test.go routes/some_things.go routes/some_things_test.go views/pages/some-thing.html views/pages/some-things.html views/pages/create-some-thing.html ; do \
 		cat $$file | sed 's/SomeThing/$(camelCaseNewResourceName)/g' \
 		| sed 's/someThing/$(lowerCamelCaseNewResourceName)/g' \
 		| sed 's/some-thing/$(kebabCaseNewResourceName)/g' \
