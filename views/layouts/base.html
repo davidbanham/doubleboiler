@@ -36,13 +36,12 @@
   </head>
   <body class="h-full">
     <div class="h-screen">
-      {{ block "menu" . }}
       <div class="flex">
-        <div class="pointer-events-none sticky top-0 z-40 flex">
+        {{ block "menu" . }}
+        <div class="pointer-events-none sticky top-0 z-30 flex">
           {{ template "sidebar" . }}
         </div>
         {{ end }}
-
         <div class="w-full">
           {{ block "topbar" . }}
           <div class="pointer-events-none absolute top-0 left-0 w-full border-b border-gray-200 shadow-b-sm h-12">
@@ -74,30 +73,35 @@
                   });
                 })();
               </script>
-              <div class="mt-2 z-30">
+              <div class="mt-2 z-20">
                 {{$user := user .Context}}
                 {{ template "profile-dropdown" dict "UserID" $user.ID "Avatar" $user.Avatar }}
               </div>
             </div>
           </div>
           {{ end }}
+          <div class="absolute left-0 lg:static w-full">
+            <div class="w-full fixed lg:static">
+              {{ template "flashbox" dict "CSRF" (csrf .Context) "Flashes" (flashes .Context) }}
+            </div>
 
-          <div class="flex">
-            <main class="w-full py-4 min-h-screen">
-              <div class="absolute left-0 lg:relative w-full sm:px-6">
-                {{ block "content" . }}
-                {{ end }}
+
+            <div class="flex">
+              <main class="w-full py-4 min-h-screen">
+                <div class="sm:px-6">
+                  {{ block "content" . }}
+                  {{ end }}
+                </div>
+              </main>
+
+              <div class="">
+              {{ block "context-menu" . }}
+              {{ end }}
               </div>
-            </main>
 
-            {{ block "context-menu" . }}
-            {{ end }}
+            </div>
           </div>
-
         </div>
-      </div>
-      <div class="fixed bottom-20 z-30 w-full">
-      {{ template "flashbox" dict "CSRF" (csrf .Context) "Flashes" (flashes .Context) }}
       </div>
     </div>
   </body>
