@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"doubleboiler/flashes"
 	"doubleboiler/logger"
 	"doubleboiler/models"
 	"fmt"
@@ -53,6 +54,15 @@ func userMiddleware(h http.Handler) http.Handler {
 				errRes(w, r, http.StatusInternalServerError, "Error looking up flashes", err)
 				return
 			}
+		}
+
+		if r.URL.Query().Get("test-flash") == "true" {
+			flash := flashes.Flash{
+				Type: flashes.Success,
+				Text: "This is a test flash mesage",
+			}
+			flashed, _ := flash.Add(r.Context())
+			r = r.WithContext(flashed)
 		}
 
 		con := context.WithValue(r.Context(), "user", user)
