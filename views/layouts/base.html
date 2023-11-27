@@ -36,7 +36,6 @@
   </head>
   <body class="h-full">
     <div class="h-screen">
-      {{ template "flashbox" dict "CSRF" (csrf .Context) "Flashes" (flashes .Context) }}
       {{ block "menu" . }}
       <div class="flex">
         <div class="pointer-events-none sticky top-0 z-40 flex">
@@ -96,6 +95,9 @@
           </div>
 
         </div>
+      </div>
+      <div class="fixed bottom-20 z-30 w-full">
+      {{ template "flashbox" dict "CSRF" (csrf .Context) "Flashes" (flashes .Context) }}
       </div>
     </div>
   </body>
