@@ -116,6 +116,13 @@ func (this *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
 	var err error
 
 	switch v := criteria.Query.(type) {
+	default:
+		return ErrInvalidQuery{Query: v, Model: "some_things"}
+	case custom:
+		switch v := criteria.customQuery.(type) {
+		default:
+			return ErrInvalidQuery{Query: v, Model: "some_things"}
+		}
 	case Query:
 		rows, err = db.QueryContext(ctx, v.Construct(cols, "some_things", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
 	}

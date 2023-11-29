@@ -134,7 +134,12 @@ func (this *OrganisationUsers) FindAll(ctx context.Context, criteria Criteria) e
 
 	switch v := criteria.Query.(type) {
 	default:
-		return fmt.Errorf("Unknown query")
+		return ErrInvalidQuery{Query: v, Model: "audit_log"}
+	case custom:
+		switch v := criteria.customQuery.(type) {
+		default:
+			return ErrInvalidQuery{Query: v, Model: "audit_log"}
+		}
 	case Query:
 		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations_users JOIN users ON organisations_users.user_id = users.id", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
 	}

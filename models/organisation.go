@@ -110,22 +110,29 @@ func (this *Organisations) FindAll(ctx context.Context, criteria Criteria) error
 	var err error
 
 	switch v := criteria.Query.(type) {
-	case Query:
-		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
-	case *OrganisationsContainingUser:
-		filterQuery, filterProps := criteria.Filters.Query(2)
-		props := append([]any{v.ID}, filterProps...)
+	default:
+		return ErrInvalidQuery{Query: v, Model: "organisations"}
+	case custom:
+		switch v := criteria.customQuery.(type) {
+		default:
+			return ErrInvalidQuery{Query: v, Model: "organisations"}
+		case OrganisationsContainingUser:
+			filterQuery, filterProps := criteria.Filters.Query(2)
+			props := append([]any{v.ID}, filterProps...)
 
-		rows, err = db.QueryContext(ctx, `
+			rows, err = db.QueryContext(ctx, `
 		SELECT
 		`+strings.Join(cols, ",")+`
 		FROM organisations
 		`+filterQuery+`
 		AND id IN (SELECT DISTINCT organisation_id FROM organisations_users WHERE user_id = $1)
 		ORDER BY name`+criteria.Pagination.PaginationQuery(), props...)
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
 		}
+	case Query:
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
 	}
 
 	if err != nil {

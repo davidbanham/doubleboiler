@@ -26,9 +26,7 @@ func orgMiddleware(h http.Handler) http.Handler {
 			if user.SuperAdmin {
 				criteria.Query = &models.All{}
 			} else {
-				criteria.Query = &models.OrganisationsContainingUser{
-					ID: user.ID,
-				}
+				models.AddCustomQuery(models.OrganisationsContainingUser{ID: user.ID}, &criteria)
 			}
 			if err := organisations.FindAll(r.Context(), criteria); err != nil {
 				errRes(w, r, 500, "error looking up organisations", err)

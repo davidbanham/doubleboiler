@@ -11,9 +11,29 @@ import (
 )
 
 type Criteria struct {
-	Query      interface{}
-	Filters    Filters
-	Pagination Pagination
+	Query       Query
+	customQuery interface{}
+	Filters     Filters
+	Pagination  Pagination
+}
+
+// Sometimes it's simpler to define one-off behaviour directly in the model rather than satisfying the Query interface
+func AddCustomQuery[CQ CustomQuery](cus CQ, criteria *Criteria) {
+	criteria.customQuery = cus
+	criteria.Query = custom{}
+}
+
+type CustomQuery interface {
+	ByEntityID | OrganisationsContainingUser
+}
+
+type custom struct{}
+
+func (custom) Construct([]string, string, Filters, Pagination, string) string {
+	return ""
+}
+func (custom) Args() []any {
+	return []any{}
 }
 
 type Searchables = scumsearch.Searchables
@@ -27,6 +47,7 @@ type Querier = scummodel.Querier
 type Query = scumquery.Query
 
 type Colmap = scummodel.Colmap
+type ErrInvalidQuery = scummodel.ErrInvalidQuery
 
 var StandardSave = scummodel.StandardSave
 var ExecSave = scummodel.ExecSave

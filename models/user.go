@@ -242,6 +242,13 @@ func (this *Users) FindAll(ctx context.Context, criteria Criteria) error {
 	var err error
 
 	switch v := criteria.Query.(type) {
+	default:
+		return ErrInvalidQuery{Query: v, Model: "users"}
+	case custom:
+		switch v := criteria.customQuery.(type) {
+		default:
+			return ErrInvalidQuery{Query: v, Model: "users"}
+		}
 	case Query:
 		rows, err = db.QueryContext(ctx, v.Construct(cols, "users", criteria.Filters, criteria.Pagination, "email"), v.Args()...)
 	}

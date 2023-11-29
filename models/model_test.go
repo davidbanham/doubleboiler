@@ -153,6 +153,34 @@ func TestAuditLog(t *testing.T) {
 	closeTx(t, ctx)
 }
 
+func TestInvalidCustomQuery(t *testing.T) {
+	t.Parallel()
+	for _, c := range modelCollectionsUnderTest {
+		m := c.collection
+		t.Run(m.tablename(), func(t *testing.T) {
+			ctx := getCtx(t)
+			criteria := Criteria{Query: custom{}}
+			err := m.FindAll(ctx, criteria)
+			assert.NotNil(t, err)
+			closeTx(t, ctx)
+		})
+	}
+}
+
+func TestInvalidQuery(t *testing.T) {
+	t.Parallel()
+	for _, c := range modelCollectionsUnderTest {
+		m := c.collection
+		t.Run(m.tablename(), func(t *testing.T) {
+			ctx := getCtx(t)
+			criteria := Criteria{}
+			err := m.FindAll(ctx, criteria)
+			assert.NotNil(t, err)
+			closeTx(t, ctx)
+		})
+	}
+}
+
 func TestFindAll(t *testing.T) {
 	t.Parallel()
 	for _, c := range modelCollectionsUnderTest {

@@ -52,6 +52,18 @@ func (this *Audits) FindAll(ctx context.Context, criteria Criteria) error {
 	})
 
 	switch v := criteria.Query.(type) {
+	default:
+		return ErrInvalidQuery{Query: v, Model: "audit_log"}
+	case custom:
+		switch v := criteria.customQuery.(type) {
+		default:
+			return ErrInvalidQuery{Query: v, Model: "audit_log"}
+		case ByEntityID:
+			rows, err = db.QueryContext(ctx, `SELECT
+		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at', users.email,
+		lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
+		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text WHERE entity_id = $1 ORDER BY stamp DESC`+criteria.Pagination.PaginationQuery(), v.EntityID)
+		}
 	case query.Query:
 		rows, err = db.QueryContext(ctx, v.Construct(cols, "audit_log LEFT JOIN users ON audit_log.user_id = users.id::text", criteria.Filters, criteria.Pagination, "stamp"), v.Args()...)
 	}

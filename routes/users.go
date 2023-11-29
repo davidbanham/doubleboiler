@@ -145,7 +145,9 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					orgs := models.Organisations{}
-					if err := orgs.FindAll(r.Context(), models.Criteria{Query: &models.OrganisationsContainingUser{ID: user.ID}}); err != nil {
+					criteria := models.Criteria{}
+					models.AddCustomQuery(models.OrganisationsContainingUser{ID: user.ID}, &criteria)
+					if err := orgs.FindAll(r.Context(), criteria); err != nil {
 						errRes(w, r, 500, "Error looking up organisations", err)
 						return
 					}

@@ -41,7 +41,7 @@ func auditsHandler(w http.ResponseWriter, r *http.Request) {
 	var criteria models.Criteria
 
 	if vars["id"] != "" {
-		criteria.Query = &models.ByEntityID{EntityID: vars["id"]}
+		models.AddCustomQuery(models.ByEntityID{EntityID: vars["id"]}, &criteria)
 	} else {
 		criteria.Query = &models.ByOrg{ID: targetOrg.ID}
 	}
