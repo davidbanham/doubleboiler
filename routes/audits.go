@@ -41,9 +41,9 @@ func auditsHandler(w http.ResponseWriter, r *http.Request) {
 	var criteria models.Criteria
 
 	if vars["id"] != "" {
-		criteria.Query = models.ByEntityID{EntityID: vars["id"]}
+		criteria.Query = &models.ByEntityID{EntityID: vars["id"]}
 	} else {
-		criteria.Query = models.ByOrg{ID: targetOrg.ID}
+		criteria.Query = &models.ByOrg{ID: targetOrg.ID}
 	}
 
 	criteria.Pagination.DefaultPageSize = 50

@@ -22,11 +22,17 @@ type Communication struct {
 	Subject        string
 }
 
-var communicationCols = []string{
-	"organisation_id",
-	"user_id",
-	"channel",
-	"subject",
+func (this *Communication) colmap() *Colmap {
+	return &Colmap{
+		"id":              &this.ID,
+		"revision":        &this.Revision,
+		"organisation_id": &this.OrganisationID,
+		"created_at":      &this.Sent,
+		"updated_at":      &this.UpdatedAt,
+		"user_id":         &this.UserID,
+		"channel":         &this.Channel,
+		"subject":         &this.Subject,
+	}
 }
 
 func (this *Communication) New(organisationID, channel, subject string) {
@@ -53,20 +59,15 @@ func (communication *Communication) auditQuery(ctx context.Context, action strin
 }
 
 func (this *Communication) Save(ctx context.Context) error {
-	props := []any{
-		this.Revision,
-		this.ID,
-		this.OrganisationID,
-		this.UserID,
-		this.Channel,
-		this.Subject,
+	q, props, newRev := StandardSave("communications", this.colmap(), this.auditQuery(ctx, "U"))
+
+	if err := ExecSave(ctx, q, props); err != nil {
+		return err
 	}
 
-	newRev, err := StandardSave(ctx, "communications", communicationCols, this.auditQuery(ctx, "U"), props)
-	if err == nil {
-		this.Revision = newRev
-	}
-	return err
+	this.Revision = newRev
+
+	return nil
 }
 
 func (communication *Communication) FindByID(ctx context.Context, id string) error {
@@ -74,23 +75,18 @@ func (communication *Communication) FindByID(ctx context.Context, id string) err
 }
 
 func (this *Communication) FindByColumn(ctx context.Context, col, val string) error {
-	props := []any{
-		&this.Revision,
-		&this.ID,
-		&this.Sent,
-		&this.UpdatedAt,
-		&this.OrganisationID,
-		&this.UserID,
-		&this.Channel,
-		&this.Subject,
-	}
-
-	return StandardFindByColumn(ctx, "communications", communicationCols, col, val, props)
+	q, props := StandardFindByColumn("communications", this.colmap(), col)
+	return StandardExecFindByColumn(ctx, q, val, props)
 }
 
 type Communications struct {
 	Data     []Communication
 	Criteria Criteria
+}
+
+func (this Communications) colmap() *Colmap {
+	r := Communication{}
+	return r.colmap()
 }
 
 func (Communications) AvailableFilters() Filters {
@@ -138,15 +134,10 @@ func (this *Communications) FindAll(ctx context.Context, criteria Criteria) erro
 
 	db := ctx.Value("tx").(Querier)
 
+	cols, _ := this.colmap().Split()
+
 	var rows *sql.Rows
 	var err error
-
-	cols := append([]string{
-		"revision",
-		"id",
-		"created_at",
-		"updated_at",
-	}, communicationCols...)
 
 	switch v := criteria.Query.(type) {
 	case Query:
@@ -159,16 +150,8 @@ func (this *Communications) FindAll(ctx context.Context, criteria Criteria) erro
 
 	for rows.Next() {
 		communication := Communication{}
-		if err := rows.Scan(
-			&communication.Revision,
-			&communication.ID,
-			&communication.Sent,
-			&communication.UpdatedAt,
-			&communication.OrganisationID,
-			&communication.UserID,
-			&communication.Channel,
-			&communication.Subject,
-		); err != nil {
+		props := communication.colmap().ByKeys(cols)
+		if err := rows.Scan(props...); err != nil {
 			return err
 		}
 		(*this).Data = append((*this).Data, communication)
@@ -186,7 +169,7 @@ func (this Communications) Users(ctx context.Context) (Users, error) {
 
 	users := Users{}
 	if err := users.FindAll(ctx, Criteria{
-		Query:      ByIDs{IDs: util.Uniq(userIDs)},
+		Query:      &ByIDs{IDs: util.Uniq(userIDs)},
 		Filters:    Filters{},
 		Pagination: Pagination{},
 	}); err != nil {

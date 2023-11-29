@@ -35,7 +35,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	results := models.SearchResults{}
 
-	query := models.ByPhrase{
+	query := &models.ByPhrase{
 		OrganisationID: targetOrg.ID,
 		Phrase:         r.FormValue("search_field"),
 	}

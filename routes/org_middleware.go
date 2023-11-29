@@ -24,9 +24,9 @@ func orgMiddleware(h http.Handler) http.Handler {
 			criteria := models.Criteria{}
 
 			if user.SuperAdmin {
-				criteria.Query = models.All{}
+				criteria.Query = &models.All{}
 			} else {
-				criteria.Query = models.OrganisationsContainingUser{
+				criteria.Query = &models.OrganisationsContainingUser{
 					ID: user.ID,
 				}
 			}
@@ -35,7 +35,7 @@ func orgMiddleware(h http.Handler) http.Handler {
 				return
 			}
 
-			if err := organisationUsers.FindAll(r.Context(), models.Criteria{Query: models.ByUser{ID: user.ID}}); err != nil {
+			if err := organisationUsers.FindAll(r.Context(), models.Criteria{Query: &models.ByUser{ID: user.ID}}); err != nil {
 				errRes(w, r, 500, "error looking up organisation users", err)
 				return
 			}

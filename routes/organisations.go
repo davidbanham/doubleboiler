@@ -154,7 +154,7 @@ func organisationsHandler(w http.ResponseWriter, r *http.Request) {
 	organisations := models.Organisations{}
 
 	criteria := models.Criteria{
-		Query: models.All{},
+		Query: &models.All{},
 	}
 	criteria.Pagination.DefaultPageSize = 50
 	criteria.Pagination.Paginate(r.Form)
@@ -194,7 +194,7 @@ type organisationPageData struct {
 	OrganisationUsers models.OrganisationUsers
 	URI               string
 	ProductName       string
-	ValidRoles        map[string]models.Role
+	ValidRoles        models.Roles
 }
 
 func organisationHandler(w http.ResponseWriter, r *http.Request) {
@@ -214,7 +214,7 @@ func organisationHandler(w http.ResponseWriter, r *http.Request) {
 
 	orgUsers := models.OrganisationUsers{}
 
-	if err := orgUsers.FindAll(r.Context(), models.Criteria{Query: models.ByOrg{ID: targetOrg.ID}}); err != nil {
+	if err := orgUsers.FindAll(r.Context(), models.Criteria{Query: &models.ByOrg{ID: targetOrg.ID}}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Error looking up organisation users", err)
 		return
 	}

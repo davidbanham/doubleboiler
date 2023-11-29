@@ -17,7 +17,7 @@ func TestAuditsByOrg(t *testing.T) {
 	assert.Nil(t, fix.Save(ctx))
 
 	audits := Audits{}
-	assert.Nil(t, audits.FindAll(ctx, Criteria{Query: ByOrg{ID: org.ID}}))
+	assert.Nil(t, audits.FindAll(ctx, Criteria{Query: &ByOrg{ID: org.ID}}))
 
 	closeTx(t, ctx)
 }

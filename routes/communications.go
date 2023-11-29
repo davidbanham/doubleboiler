@@ -69,7 +69,7 @@ func communicationsHandler(w http.ResponseWriter, r *http.Request) {
 	communications := models.Communications{}
 
 	criteria := models.Criteria{
-		Query: models.ByOrg{ID: targetOrg.ID},
+		Query: &models.ByOrg{ID: targetOrg.ID},
 	}
 	criteria.Pagination.DefaultPageSize = 50
 	criteria.Pagination.Paginate(r.Form)
@@ -133,7 +133,7 @@ func communicationHandler(w http.ResponseWriter, r *http.Request) {
 
 	if communication.UserID.Valid {
 		orgUsers := models.OrganisationUsers{}
-		if err := orgUsers.FindAll(r.Context(), models.Criteria{Query: models.ByOrg{ID: targetOrg.ID}}); err != nil {
+		if err := orgUsers.FindAll(r.Context(), models.Criteria{Query: &models.ByOrg{ID: targetOrg.ID}}); err != nil {
 			errRes(w, r, 500, "error fetching org users", err)
 			return
 		}

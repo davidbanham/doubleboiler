@@ -115,6 +115,7 @@ func serveFeatureMarketingPage(w http.ResponseWriter, r *http.Request) {
 type basePageData struct {
 	PageTitle string
 	Context   context.Context
+	Next      string
 }
 
 func (pd basePageData) Title() string {

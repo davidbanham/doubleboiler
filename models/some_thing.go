@@ -23,10 +23,16 @@ type SomeThing struct {
 	Revision       string
 }
 
-var someThingCols = []string{
-	"organisation_id",
-	"name",
-	"description",
+func (this *SomeThing) colmap() *Colmap {
+	return &Colmap{
+		"id":              &this.ID,
+		"name":            &this.Name,
+		"description":     &this.Description,
+		"organisation_id": &this.OrganisationID,
+		"created_at":      &this.CreatedAt,
+		"updated_at":      &this.UpdatedAt,
+		"revision":        &this.Revision,
+	}
 }
 
 func (this *SomeThing) New(name, description, organisationID string) {
@@ -39,29 +45,12 @@ func (this *SomeThing) New(name, description, organisationID string) {
 }
 
 func (this *SomeThing) FindByColumn(ctx context.Context, col, val string) error {
-	props := []any{
-		&this.Revision,
-		&this.ID,
-		&this.CreatedAt,
-		&this.UpdatedAt,
-		&this.OrganisationID,
-		&this.Name,
-		&this.Description,
-	}
-
-	return StandardFindByColumn(ctx, "some_things", someThingCols, col, val, props)
+	q, props := StandardFindByColumn("some_things", this.colmap(), col)
+	return StandardExecFindByColumn(ctx, q, val, props)
 }
 
 func (this *SomeThing) FindByID(ctx context.Context, id string) error {
 	return this.FindByColumn(ctx, "id", id)
-}
-
-func (someThing SomeThing) Props() []any {
-	return []any{
-		someThing.OrganisationID,
-		someThing.Name,
-		someThing.Description,
-	}
 }
 
 func (this *SomeThing) auditQuery(ctx context.Context, action string) string {
@@ -69,19 +58,15 @@ func (this *SomeThing) auditQuery(ctx context.Context, action string) string {
 }
 
 func (this *SomeThing) Save(ctx context.Context) error {
-	props := []any{
-		this.Revision,
-		this.ID,
-		this.OrganisationID,
-		this.Name,
-		this.Description,
+	q, props, newRev := StandardSave("some_things", this.colmap(), this.auditQuery(ctx, "U"))
+
+	if err := ExecSave(ctx, q, props); err != nil {
+		return err
 	}
 
-	newRev, err := StandardSave(ctx, "some_things", someThingCols, this.auditQuery(ctx, "U"), props)
-	if err == nil {
-		this.Revision = newRev
-	}
-	return err
+	this.Revision = newRev
+
+	return nil
 }
 
 func (this SomeThing) Label() string {
@@ -91,6 +76,11 @@ func (this SomeThing) Label() string {
 type SomeThings struct {
 	Data     []SomeThing
 	Criteria Criteria
+}
+
+func (this SomeThings) colmap() *Colmap {
+	r := SomeThing{}
+	return r.colmap()
 }
 
 func (SomeThings) AvailableFilters() Filters {
@@ -120,15 +110,10 @@ func (this *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
 
 	db := ctx.Value("tx").(Querier)
 
+	cols, _ := this.colmap().Split()
+
 	var rows *sql.Rows
 	var err error
-
-	cols := append([]string{
-		"revision",
-		"id",
-		"created_at",
-		"updated_at",
-	}, someThingCols...)
 
 	switch v := criteria.Query.(type) {
 	case Query:
@@ -141,15 +126,8 @@ func (this *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
 
 	for rows.Next() {
 		someThing := SomeThing{}
-		if err := rows.Scan(
-			&someThing.Revision,
-			&someThing.ID,
-			&someThing.CreatedAt,
-			&someThing.UpdatedAt,
-			&someThing.OrganisationID,
-			&someThing.Name,
-			&someThing.Description,
-		); err != nil {
+		props := someThing.colmap().ByKeys(cols)
+		if err := rows.Scan(props...); err != nil {
 			return err
 		}
 		(*this).Data = append((*this).Data, someThing)

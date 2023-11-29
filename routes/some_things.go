@@ -159,7 +159,7 @@ func someThingsHandler(w http.ResponseWriter, r *http.Request) {
 	someThings := models.SomeThings{}
 
 	criteria := models.Criteria{
-		Query: models.ByOrg{ID: targetOrg.ID},
+		Query: &models.ByOrg{ID: targetOrg.ID},
 	}
 	criteria.Pagination.DefaultPageSize = 50
 	criteria.Pagination.Paginate(r.Form)

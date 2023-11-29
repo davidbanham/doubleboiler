@@ -38,6 +38,7 @@ func (i *OrganisationUser) nullDynamicValues() {
 	i.CreatedAt = time.Time{}
 	i.UpdatedAt = time.Time{}
 	i.Revision = ""
+	i.Roles = nil
 }
 
 func organisationUserFix() []model {
@@ -82,15 +83,12 @@ func organisationUsersFix() modelCollectionFixture {
 	}
 }
 
-func (c *OrganisationUsers) Iter() <-chan model {
-	ch := make(chan model)
-	go func() {
-		for i := 0; i < len((*c).Data); i++ {
-			ch <- &(*c).Data[i]
-		}
-		close(ch)
-	}()
-	return ch
+func (this OrganisationUsers) data() []model {
+	ret := []model{}
+	for _, m := range this.Data {
+		ret = append(ret, &m)
+	}
+	return ret
 }
 
 func TestOrganisationUserRevisionCollision(t *testing.T) {

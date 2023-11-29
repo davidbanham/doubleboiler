@@ -62,15 +62,12 @@ func organisationFix() []model {
 	}
 }
 
-func (c *Organisations) Iter() <-chan model {
-	ch := make(chan model)
-	go func() {
-		for i := 0; i < len((*c).Data); i++ {
-			ch <- &(*c).Data[i]
-		}
-		close(ch)
-	}()
-	return ch
+func (this Organisations) data() []model {
+	ret := []model{}
+	for _, m := range this.Data {
+		ret = append(ret, &m)
+	}
+	return ret
 }
 
 func TestOrganisationRevisionCollision(t *testing.T) {

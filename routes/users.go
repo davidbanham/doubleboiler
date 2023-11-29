@@ -145,7 +145,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					orgs := models.Organisations{}
-					if err := orgs.FindAll(r.Context(), models.Criteria{Query: models.OrganisationsContainingUser{ID: user.ID}}); err != nil {
+					if err := orgs.FindAll(r.Context(), models.Criteria{Query: &models.OrganisationsContainingUser{ID: user.ID}}); err != nil {
 						errRes(w, r, 500, "Error looking up organisations", err)
 						return
 					}
@@ -292,7 +292,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	users := models.Users{}
 
 	criteria := models.Criteria{
-		Query: models.All{},
+		Query: &models.All{},
 	}
 	criteria.Pagination.DefaultPageSize = 50
 	criteria.Pagination.Paginate(r.Form)

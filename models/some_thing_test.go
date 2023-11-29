@@ -65,15 +65,12 @@ func someThingFix() []model {
 	}
 }
 
-func (c *SomeThings) Iter() <-chan model {
-	ch := make(chan model)
-	go func() {
-		for i := 0; i < len((*c).Data); i++ {
-			ch <- &(*c).Data[i]
-		}
-		close(ch)
-	}()
-	return ch
+func (this SomeThings) data() []model {
+	ret := []model{}
+	for _, m := range this.Data {
+		ret = append(ret, &m)
+	}
+	return ret
 }
 
 func TestSomeThingRevisionCollision(t *testing.T) {
@@ -101,8 +98,13 @@ func TestSomeThingRevisionChange(t *testing.T) {
 	fix := someThingFixture(org.ID)
 	assert.Nil(t, fix.Save(ctx))
 	firstRev := fix.Revision
+	firstTS := fix.UpdatedAt
 	assert.Nil(t, fix.Save(ctx))
 	assert.NotEqual(t, firstRev, fix.Revision)
+	found := SomeThing{}
+	assert.Nil(t, found.FindByID(ctx, fix.ID))
+	assert.NotEqual(t, firstTS, found.UpdatedAt)
+	assert.True(t, found.UpdatedAt.After(firstTS))
 
 	closeTx(t, ctx)
 }

@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"database/sql"
-	"doubleboiler/util"
 	"fmt"
 	"time"
 
@@ -23,12 +22,19 @@ type OrganisationUser struct {
 	UpdatedAt      time.Time
 }
 
-var organisationUserCols = []string{
-	"user_id",
-	"organisation_id",
-	"roles",
-	"name",
-	"family_name",
+func (this *OrganisationUser) colmap() *Colmap {
+	return &Colmap{
+		"organisations_users.id":              &this.ID,
+		"organisations_users.user_id":         &this.UserID,
+		"organisations_users.organisation_id": &this.OrganisationID,
+		"users.email":                         &this.Email,
+		"organisations_users.revision":        &this.Revision,
+		"organisations_users.roles":           &this.Roles,
+		"organisations_users.name":            &this.Name,
+		"organisations_users.family_name":     &this.FamilyName,
+		"organisations_users.created_at":      &this.CreatedAt,
+		"organisations_users.updated_at":      &this.UpdatedAt,
+	}
 }
 
 func (orguser *OrganisationUser) New(userID, organisationID string, roles Roles) {
@@ -46,8 +52,9 @@ func (orguser *OrganisationUser) auditQuery(ctx context.Context, action string) 
 
 func (orguser OrganisationUser) checkRolesAreValid() error {
 	for _, role := range orguser.Roles {
-		if _, ok := ValidRoles[role.Name]; !ok {
-			return ClientSafeError{fmt.Sprintf("Invalid Role: %s", role)}
+		validMap := ValidRoles.ByName()
+		if _, ok := validMap[role.Name]; !ok {
+			return ClientSafeError{fmt.Sprintf("Invalid Role: %s", role.Name)}
 		}
 	}
 	return nil
@@ -58,44 +65,32 @@ func (this *OrganisationUser) Save(ctx context.Context) error {
 		return err
 	}
 
-	props := []any{
-		this.Revision,
-		this.ID,
-		this.UserID,
-		this.OrganisationID,
-		this.Roles,
-		this.Name,
-		this.FamilyName,
+	q, props, newRev := StandardSave("organisations_users", this.colmap(), this.auditQuery(ctx, "U"))
+
+	if err := ExecSave(ctx, q, props); err != nil {
+		return err
 	}
 
-	newRev, err := StandardSave(ctx, "organisations_users", organisationUserCols, this.auditQuery(ctx, "U"), props)
-	if err == nil {
-		this.Revision = newRev
-	}
-	return err
+	this.Revision = newRev
+
+	return nil
 }
 
 func (this *OrganisationUser) FindByColumn(ctx context.Context, col, val string) error {
-	props := []any{
-		&this.Revision,
-		&this.ID,
-		&this.CreatedAt,
-		&this.UpdatedAt,
-		&this.UserID,
-		&this.OrganisationID,
-		&this.Roles,
-		&this.Name,
-		&this.FamilyName,
-		&this.Email,
+	q, props := StandardFindByColumn("organisations_users JOIN users ON organisations_users.user_id = users.id", this.colmap(), col)
+	if err := StandardExecFindByColumn(ctx, q, val, props); err != nil {
+		return err
 	}
 
-	cols := append(organisationUserCols, "(SELECT email FROM users WHERE id = user_id)")
+	for _, r := range this.Roles {
+		r.ValidRoles = ValidRoles
+	}
 
-	return StandardFindByColumn(ctx, "organisations_users", cols, col, val, props)
+	return nil
 }
 
 func (orguser *OrganisationUser) FindByID(ctx context.Context, id string) error {
-	return orguser.FindByColumn(ctx, "id", id)
+	return orguser.FindByColumn(ctx, "organisations_users.id", id)
 }
 
 func (orguser OrganisationUser) Delete(ctx context.Context) error {
@@ -109,23 +104,30 @@ func (orguser OrganisationUser) FullName() string {
 	return orguser.Name + " " + orguser.FamilyName
 }
 
+func (orguser OrganisationUser) Label() string {
+	fn := orguser.FullName()
+	if fn != " " {
+		return fn
+	}
+	return orguser.Email
+}
+
 type OrganisationUsers struct {
 	Data     []OrganisationUser
 	Criteria Criteria
 }
 
-func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, criteria Criteria) error {
-	cols := util.Prefix(append([]string{
-		"id",
-		"revision",
-		"created_at",
-		"updated_at",
-	}, organisationUserCols...), "organisations_users.")
-	cols = append(cols, "(SELECT email FROM users WHERE id = user_id)")
+func (this OrganisationUsers) colmap() *Colmap {
+	r := OrganisationUser{}
+	return r.colmap()
+}
 
-	organisationusers.Criteria = criteria
+func (this *OrganisationUsers) FindAll(ctx context.Context, criteria Criteria) error {
+	this.Criteria = criteria
 
 	db := ctx.Value("tx").(Querier)
+
+	cols, _ := this.colmap().Split()
 
 	var rows *sql.Rows
 	var err error
@@ -134,7 +136,7 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, criteri
 	default:
 		return fmt.Errorf("Unknown query")
 	case Query:
-		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations_users", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations_users JOIN users ON organisations_users.user_id = users.id", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
 	}
 	if err != nil {
 
@@ -145,22 +147,16 @@ func (organisationusers *OrganisationUsers) FindAll(ctx context.Context, criteri
 	for rows.Next() {
 		ou := OrganisationUser{}
 		ou.Roles = Roles{}
-		if err := rows.Scan(
-			&ou.ID,
-			&ou.Revision,
-			&ou.CreatedAt,
-			&ou.UpdatedAt,
-			&ou.UserID,
-			&ou.OrganisationID,
-			&ou.Roles,
-			&ou.Name,
-			&ou.FamilyName,
-			&ou.Email,
-		); err != nil {
+		props := ou.colmap().ByKeys(cols)
+		if err := rows.Scan(props...); err != nil {
 			return err
 		}
 
-		(*organisationusers).Data = append((*organisationusers).Data, ou)
+		for _, r := range ou.Roles {
+			r.ValidRoles = ValidRoles
+		}
+
+		(*this).Data = append((*this).Data, ou)
 	}
 
 	return nil

@@ -26,6 +26,9 @@ type Flash struct {
 type Flashes []Flash
 
 func (this Flashes) Value() (driver.Value, error) {
+	if len(this) == 0 {
+		return "[]", nil
+	}
 	return json.Marshal(this)
 }
 

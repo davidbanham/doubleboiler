@@ -44,7 +44,7 @@ func TestSignupFlow(t *testing.T) {
 	assert.False(t, u.Verified)
 
 	orgs := models.Organisations{}
-	orgs.FindAll(ctx, models.Criteria{Query: models.OrganisationsContainingUser{ID: u.ID}})
+	orgs.FindAll(ctx, models.Criteria{Query: &models.OrganisationsContainingUser{ID: u.ID}})
 	orgfound := false
 	for _, o := range orgs.Data {
 		if o.Name == orgname {

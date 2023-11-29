@@ -2,9 +2,11 @@ package routes
 
 import (
 	"doubleboiler/config"
+	"doubleboiler/logger"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -30,7 +32,9 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	expiry := qs.Get("expiry")
 
 	user := models.User{}
-	user.FindByID(r.Context(), uid)
+	if err := user.FindByID(r.Context(), uid); err != nil {
+		logger.Log(r.Context(), logger.Info, fmt.Sprintf("Failed user lookup for verify handler %s", err.Error()))
+	}
 
 	if user.Verified {
 		http.Redirect(w, r, "/welcome", 302)

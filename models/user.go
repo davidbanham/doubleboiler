@@ -33,12 +33,20 @@ type User struct {
 	Flashes               flashes.Flashes
 }
 
-var userCols = []string{
-	"email",
-	"password",
-	"admin",
-	"verified",
-	"verification_email_sent",
+func (this *User) colmap() *Colmap {
+	return &Colmap{
+		"id":                      &this.ID,
+		"email":                   &this.Email,
+		"password":                &this.Password,
+		"admin":                   &this.SuperAdmin,
+		"verified":                &this.Verified,
+		"verification_email_sent": &this.VerificationEmailSent,
+		"revision":                &this.Revision,
+		"created_at":              &this.CreatedAt,
+		"updated_at":              &this.UpdatedAt,
+		"has_flashes":             &this.HasFlashes,
+		"flashes":                 &this.Flashes,
+	}
 }
 
 func (user *User) New(email, rawpassword string) {
@@ -81,21 +89,16 @@ func (user *User) FetchFlashes(ctx context.Context) error {
 }
 
 func (this *User) Save(ctx context.Context) error {
-	props := []any{
-		this.Revision,
-		this.ID,
-		this.Email,
-		this.Password,
-		this.SuperAdmin,
-		this.Verified,
-		this.VerificationEmailSent,
+	colmap := this.colmap().Delete("has_flashes", "flashes")
+	q, props, newRev := StandardSave("users", colmap, this.auditQuery(ctx, "U"))
+
+	if err := ExecSave(ctx, q, props); err != nil {
+		return err
 	}
 
-	newRev, err := StandardSave(ctx, "users", userCols, this.auditQuery(ctx, "U"), props)
-	if err == nil {
-		this.Revision = newRev
-	}
-	return err
+	this.Revision = newRev
+
+	return nil
 }
 
 func (user *User) FindByID(ctx context.Context, id string) error {
@@ -103,22 +106,10 @@ func (user *User) FindByID(ctx context.Context, id string) error {
 }
 
 func (this *User) FindByColumn(ctx context.Context, col, val string) error {
-	props := []any{
-		&this.Revision,
-		&this.ID,
-		&this.CreatedAt,
-		&this.UpdatedAt,
-		&this.Email,
-		&this.Password,
-		&this.SuperAdmin,
-		&this.Verified,
-		&this.VerificationEmailSent,
-		&this.HasFlashes,
-	}
+	colmap := this.colmap().Delete("flashes")
+	q, props := StandardFindByColumn("users", colmap, col)
 
-	cols := append(userCols, "(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes")
-
-	return StandardFindByColumn(ctx, "users", cols, col, val, props)
+	return StandardExecFindByColumn(ctx, q, val, props)
 }
 
 func (user *User) SendVerificationEmail(ctx context.Context, org Organisation) error {
@@ -192,6 +183,11 @@ type Users struct {
 	Criteria Criteria
 }
 
+func (this Users) colmap() *Colmap {
+	r := User{}
+	return r.colmap()
+}
+
 func (users Users) AvailableFilters() Filters {
 	viaEmail := HasProp{}
 	if err := viaEmail.Hydrate(HasPropOpts{
@@ -239,15 +235,11 @@ func (this *Users) FindAll(ctx context.Context, criteria Criteria) error {
 
 	db := ctx.Value("tx").(Querier)
 
+	colmap := this.colmap().Delete("flashes")
+	cols, _ := colmap.Split()
+
 	var rows *sql.Rows
 	var err error
-
-	cols := append(append([]string{
-		"revision",
-		"id",
-		"created_at",
-		"updated_at",
-	}, userCols...), "(jsonb_array_length(COALESCE(flashes, '[]'::jsonb)) > 0) AS has_flashes")
 
 	switch v := criteria.Query.(type) {
 	case Query:
@@ -260,18 +252,8 @@ func (this *Users) FindAll(ctx context.Context, criteria Criteria) error {
 
 	for rows.Next() {
 		user := User{}
-		if err := rows.Scan(
-			&user.Revision,
-			&user.ID,
-			&user.CreatedAt,
-			&user.UpdatedAt,
-			&user.Email,
-			&user.Password,
-			&user.SuperAdmin,
-			&user.Verified,
-			&user.VerificationEmailSent,
-			&user.HasFlashes,
-		); err != nil {
+		props := user.colmap().ByKeys(cols)
+		if err := rows.Scan(props...); err != nil {
 			return err
 		}
 		(*this).Data = append((*this).Data, user)

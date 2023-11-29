@@ -26,8 +26,12 @@ type Querier = scummodel.Querier
 
 type Query = scumquery.Query
 
+type Colmap = scummodel.Colmap
+
 var StandardSave = scummodel.StandardSave
+var ExecSave = scummodel.ExecSave
 var StandardFindByColumn = scummodel.FindByColumn
+var StandardExecFindByColumn = scummodel.ExecFindByColumn
 
 type ClientSafeError = scumutil.ClientSafeError
 
