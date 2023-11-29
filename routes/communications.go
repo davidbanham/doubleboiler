@@ -59,7 +59,8 @@ func communicationsHandler(w http.ResponseWriter, r *http.Request) {
 		orgUserFilter := models.FilterSet{
 			IsAnd:       true,
 			Filters:     models.Filters{&userFilter, &orgFilter},
-			CustomID:    fmt.Sprintf("orguser-is-%s", orgUser.ID),
+			CustomID:    fmt.Sprintf("org-user-id"),
+			Values:      []string{orgUser.ID},
 			CustomLabel: orgUser.FullName(),
 		}
 		customFilters = append(customFilters, &orgUserFilter)
