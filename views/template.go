@@ -49,7 +49,7 @@ func (this *Templater) ExecuteTemplate(w io.Writer, filename string, data interf
 		}
 		parsed, err := clone.ParseFS(FS, "pages/"+filename)
 		if err != nil {
-			return nil
+			return err
 		}
 		this.tmpl[filename] = parsed
 	}
@@ -71,7 +71,7 @@ func (this *Templater) FillCache() error {
 			}
 			parsed, err := clone.ParseFS(FS, "pages/"+filename)
 			if err != nil {
-				return nil
+				return err
 			}
 			this.tmpl[filename] = parsed
 		}
