@@ -318,8 +318,8 @@ github.com/davidbanham/notifications v1.2.15 h1:+duKUpg3qwmDaf1hNHPQHm5F9UY69eWb
 github.com/davidbanham/notifications v1.2.15/go.mod h1:dpk7AIUWD00tYhpWSGaLUO76DIXtWlYO3nhcJ/pIifU=
 github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244 h1:FgQ8KQ99RjcMqaTSqmdisj2quuDKlL1x62SoRtZQwqw=
 github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244/go.mod h1:zJVA+kv43obXkwVzNtnVJK9rIUvzRtV+rSe1qXyf4xk=
-github.com/davidbanham/scum v0.0.8 h1:XryCiMHqEIBGyE8X0nwPXbol0Y+K+JPn+acORrpafgE=
-github.com/davidbanham/scum v0.0.8/go.mod h1:Je7kLqQLbB0L2+55DsoycLaqKeA0LOINBdMidlcoO68=
+github.com/davidbanham/scum v0.0.9 h1:mzpbIeV3hY12iBnt+SFcpDAzYcnUR13S4+/M/vF/2JU=
+github.com/davidbanham/scum v0.0.9/go.mod h1:Je7kLqQLbB0L2+55DsoycLaqKeA0LOINBdMidlcoO68=
 github.com/denisenkom/go-mssqldb v0.10.0/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
 github.com/denverdino/aliyungo v0.0.0-20190125010748-a747050bb1ba/go.mod h1:dV8lFg6daOBZbT6/BDGIz6Y3WFGn8juu6G+CQ6LHtl0=
 github.com/dgrijalva/jwt-go v0.0.0-20170104182250-a601269ab70c/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=

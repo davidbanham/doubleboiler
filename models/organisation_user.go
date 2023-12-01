@@ -82,10 +82,6 @@ func (this *OrganisationUser) FindByColumn(ctx context.Context, col, val string)
 		return err
 	}
 
-	for _, r := range this.Roles {
-		r.ValidRoles = ValidRoles
-	}
-
 	return nil
 }
 
@@ -155,10 +151,6 @@ func (this *OrganisationUsers) FindAll(ctx context.Context, criteria Criteria) e
 		props := ou.colmap().ByKeys(cols)
 		if err := rows.Scan(props...); err != nil {
 			return err
-		}
-
-		for _, r := range ou.Roles {
-			r.ValidRoles = ValidRoles
 		}
 
 		(*this).Data = append((*this).Data, ou)
