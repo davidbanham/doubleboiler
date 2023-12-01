@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/davidbanham/scum/search"
@@ -17,6 +18,7 @@ type SomeThing struct {
 	ID             string
 	Name           string
 	Description    string
+	SoftDeleted    bool
 	OrganisationID string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
@@ -32,6 +34,7 @@ func (this *SomeThing) colmap() *Colmap {
 		"created_at":      &this.CreatedAt,
 		"updated_at":      &this.UpdatedAt,
 		"revision":        &this.Revision,
+		"soft_deleted":    &this.SoftDeleted,
 	}
 }
 
@@ -51,6 +54,13 @@ func (this *SomeThing) FindByColumn(ctx context.Context, col, val string) error 
 
 func (this *SomeThing) FindByID(ctx context.Context, id string) error {
 	return this.FindByColumn(ctx, "id", id)
+}
+
+func (this SomeThing) HardDelete(ctx context.Context) error {
+	db := ctx.Value("tx").(Querier)
+
+	_, err := db.ExecContext(ctx, this.auditQuery(ctx, "D")+"DELETE FROM some_things WHERE id = $1 AND revision = $2", this.ID, this.Revision)
+	return err
 }
 
 func (this *SomeThing) auditQuery(ctx context.Context, action string) string {
@@ -84,7 +94,18 @@ func (this SomeThings) colmap() *Colmap {
 }
 
 func (SomeThings) AvailableFilters() Filters {
-	return standardFilters("some_things")
+	isDeleted := HasProp{}
+	if err := isDeleted.Hydrate(HasPropOpts{
+		Label: "Is Deleted",
+		ID:    "is-deleted",
+		Table: "some_things",
+		Col:   "soft_deleted",
+		Value: "true",
+	}); err != nil {
+		log.Fatal(err)
+	}
+
+	return append(standardFilters("some_things"), &isDeleted)
 }
 
 func (SomeThings) Searchable() Searchable {
@@ -107,6 +128,20 @@ func (this SomeThings) ByID() map[string]SomeThing {
 
 func (this *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
 	this.Criteria = criteria
+
+	if _, ok := criteria.Filters.ByID()["is-deleted"]; !ok {
+		notDeleted := HasProp{}
+		if err := notDeleted.Hydrate(HasPropOpts{
+			Label: "Is Not Deleted",
+			ID:    "not-deleted",
+			Table: "some_things",
+			Col:   "soft_deleted",
+			Value: "false",
+		}); err != nil {
+			return err
+		}
+		criteria.Filters = append(criteria.Filters, &notDeleted)
+	}
 
 	db := ctx.Value("tx").(Querier)
 

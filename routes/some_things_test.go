@@ -69,6 +69,36 @@ func TestSomeThingHandler(t *testing.T) {
 	closeTx(t, ctx)
 }
 
+func TestSomeThingDeleteHandler(t *testing.T) {
+	t.Parallel()
+
+	ctx := getCtx(t)
+	org := organisationFixture(ctx, t)
+	ctx = contextifyOrgAdmin(ctx, org)
+
+	fixture := someThingFixture(ctx, t, org)
+
+	req, err := http.NewRequest("DELETE", "/some-things/"+fixture.ID, nil)
+	req = req.WithContext(ctx)
+
+	assert.Nil(t, err)
+
+	rr := httptest.NewRecorder()
+
+	r := mux.NewRouter()
+
+	r.HandleFunc("/some-things/{id}", someThingDeletionHandler).Methods("DELETE")
+
+	r.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusFound, rr.Code)
+
+	found := models.SomeThing{}
+	assert.NotNil(t, found.FindByID(ctx, fixture.ID))
+
+	closeTx(t, ctx)
+}
+
 func TestSomeThingsHandler(t *testing.T) {
 	t.Parallel()
 

@@ -5,7 +5,8 @@ CREATE TABLE some_things (
   description TEXT NOT NULL,
   organisation_id UUID REFERENCES organisations (id) ON UPDATE CASCADE ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  soft_deleted BOOLEAN NOT NULL DEFAULT false
 );
 
 ALTER TABLE some_things ADD COLUMN ts tsvector

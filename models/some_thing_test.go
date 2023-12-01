@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -105,6 +106,62 @@ func TestSomeThingRevisionChange(t *testing.T) {
 	assert.Nil(t, found.FindByID(ctx, fix.ID))
 	assert.NotEqual(t, firstTS, found.UpdatedAt)
 	assert.True(t, found.UpdatedAt.After(firstTS))
+
+	closeTx(t, ctx)
+}
+
+func TestSomeThingSoftDelete(t *testing.T) {
+	t.Parallel()
+	ctx := getCtx(t)
+
+	org := organisationFixture()
+	org.Save(ctx)
+
+	fix := someThingFixture(org.ID)
+	assert.Nil(t, fix.Save(ctx))
+
+	fix2 := someThingFixture(org.ID)
+	assert.Nil(t, fix2.Save(ctx))
+
+	found := SomeThings{}
+	assert.Nil(t, found.FindAll(ctx, Criteria{Query: &ByOrg{ID: org.ID}}))
+	assert.Equal(t, 2, len(found.Data))
+
+	fix2.SoftDeleted = true
+	assert.Nil(t, fix2.Save(ctx))
+
+	foundAfter := SomeThings{}
+	assert.Nil(t, foundAfter.FindAll(ctx, Criteria{Query: &ByOrg{ID: org.ID}}))
+	assert.Equal(t, 1, len(foundAfter.Data))
+	assert.Equal(t, fix.ID, foundAfter.Data[0].ID)
+	assert.Equal(t, 1, len(foundAfter.Data))
+
+	foundDeleted := SomeThings{}
+	assert.Nil(t, foundDeleted.FindAll(ctx, Criteria{Query: &ByOrg{ID: org.ID}, Filters: Filters{foundDeleted.AvailableFilters().ByID()["is-deleted"]}}))
+	assert.Equal(t, 1, len(foundDeleted.Data))
+	assert.Equal(t, fix2.ID, foundDeleted.Data[0].ID)
+	assert.Equal(t, 1, len(foundDeleted.Data))
+
+	closeTx(t, ctx)
+}
+
+func TestSomeThingHardDelete(t *testing.T) {
+	t.Parallel()
+	ctx := getCtx(t)
+
+	org := organisationFixture()
+	org.Save(ctx)
+
+	fix := someThingFixture(org.ID)
+	assert.Nil(t, fix.Save(ctx))
+
+	found := SomeThing{}
+	assert.Nil(t, found.FindByID(ctx, fix.ID))
+
+	assert.Nil(t, fix.HardDelete(ctx))
+
+	notFound := SomeThing{}
+	assert.Equal(t, sql.ErrNoRows, notFound.FindByID(ctx, fix.ID))
 
 	closeTx(t, ctx)
 }

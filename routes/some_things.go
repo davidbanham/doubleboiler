@@ -28,6 +28,14 @@ func init() {
 	r.Path("/some-things/{id}").
 		Methods("GET").
 		HandlerFunc(someThingHandler)
+
+	r.Path("/some-things/{id}/delete").
+		Methods("POST").
+		HandlerFunc(someThingDeletionHandler)
+
+	r.Path("/some-things/{id}").
+		Methods("DELETE").
+		HandlerFunc(someThingDeletionHandler)
 }
 
 type someThingCreationPageData struct {
@@ -103,7 +111,7 @@ func someThingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/some-things/"+someThing.ID, 302)
+	http.Redirect(w, r, nextFlow("/some-things/"+someThing.ID, r.Form), 302)
 }
 
 type someThingPageData struct {
@@ -141,6 +149,25 @@ func someThingHandler(w http.ResponseWriter, r *http.Request) {
 type someThingsPageData struct {
 	basePageData
 	SomeThings models.SomeThings
+}
+
+func someThingDeletionHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	someThing := models.SomeThing{}
+	someThing.FindByID(r.Context(), vars["id"])
+
+	org := orgFromContext(r.Context(), someThing.OrganisationID)
+
+	if !can(r.Context(), org, "admin") {
+		errRes(w, r, http.StatusForbidden, "You are not an admin of that organisation", nil)
+	}
+
+	if err := someThing.HardDelete(r.Context()); err != nil {
+		errRes(w, r, 500, "error removing user from organisation", err)
+		return
+	}
+
+	http.Redirect(w, r, nextFlow("/some-things", r.Form), 302)
 }
 
 func someThingsHandler(w http.ResponseWriter, r *http.Request) {
