@@ -37,7 +37,7 @@ func main() {
 			fmt.Println(line)
 		}
 
-		if strings.Contains(line, "DEBUG") {
+		if strings.Contains(line, "DEBUG") || strings.Contains(line, "ERROR") {
 			if !strings.Contains(line, "kewpie") {
 				fmt.Println(line)
 			}
