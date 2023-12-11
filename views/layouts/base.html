@@ -104,5 +104,12 @@
         </div>
       </div>
     </div>
+    <script>
+      (function() {
+        document.body.addEventListener('htmx:responseError', function(evt) {
+          document.body.innerHTML = evt.detail.xhr.response;
+        })
+      })();
+    </script>
   </body>
 </html>
