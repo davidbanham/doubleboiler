@@ -20,6 +20,13 @@ type Organisation struct {
 	Toggles   Toggles
 }
 
+var RequireAdmin2FA = Toggle{
+	Category: "security",
+	Label:    "Require 2FA for admins",
+	Key:      "require_admin_2fa",
+	HelpText: `Require all organisation admins to have 2-step authentication enabled.`,
+}
+
 var ValidToggles = []Toggle{RequireAdmin2FA}
 
 func (this *Organisation) colmap() *Colmap {

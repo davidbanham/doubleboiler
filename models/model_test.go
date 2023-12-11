@@ -17,6 +17,7 @@ func randString() string {
 
 func getCtx(t *testing.T) context.Context {
 	ctx := context.Background()
+	ctx = config.QUEUE.PrepareContext(ctx)
 	tx, err := config.Db.BeginTx(ctx, nil)
 	assert.Nil(t, err)
 	return context.WithValue(ctx, "tx", tx)

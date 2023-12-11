@@ -7,7 +7,9 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
+	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,6 +34,42 @@ func TestLoginHandler(t *testing.T) {
 	loginHandler(rr, req)
 
 	assert.Equal(t, http.StatusFound, rr.Code)
+}
+
+func TestLoginHandler2FA(t *testing.T) {
+	t.Parallel()
+	ctx := getCtx(t)
+	defer closeTx(t, ctx)
+
+	fixture, password := userFixture(ctx, t)
+
+	key, err := fixture.Generate2FA(ctx, "", "")
+	assert.Nil(t, err)
+	assert.NotNil(t, key)
+
+	code, err := totp.GenerateCode(key.Secret(), time.Now())
+	assert.Nil(t, err)
+
+	okay, err := fixture.Validate2FA(ctx, code, "")
+	assert.Nil(t, err)
+	assert.True(t, okay)
+
+	form := url.Values{
+		"email":    {fixture.Email},
+		"password": {password},
+	}
+	req := &http.Request{
+		Method: "POST",
+		URL:    &url.URL{Path: "/login"},
+		Form:   form,
+	}
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	loginHandler(rr, req)
+
+	assert.NotEqual(t, http.StatusFound, rr.Code)
+	assert.Contains(t, rr.Body.String(), "one-time-code")
 }
 
 func TestServeLogin(t *testing.T) {

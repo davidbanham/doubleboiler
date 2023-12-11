@@ -1,0 +1,51 @@
+{{ template "base.html" . }}
+
+{{ define "breadcrumbs" }}
+{{ template "crumbs" crumbs .User.Email (print "/users/" .User.ID) "Enable 2FA" "#" }}
+{{ end }}
+
+{{ define "content" }}
+<div class="p-4 flex flex-col gap-y-6">
+  <p>This will require you to use your authenticator app to generate a code each time you log in.</p>
+  <p>
+  Scan this QR code with an app like <a target="_blank" href="https://www.microsoft.com/en-us/security/mobile-authenticator-app">Microsoft Authenticator</a> or Google Authenticator (<a target="_blank" href="https://apps.apple.com/au/app/google-authenticator/id388497605">ios</a>, <a target="_blank" href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en&gl=US&pli=1">android</a>).
+  </p>
+  <div class="flex justify-center">
+    <img src="data:image/png;base64, {{base64 .TOTPQRImage}}">
+  </div>
+  {{ $setupModalID := uniq }}
+  {{ $setupModalContentsID := uniq }}
+  <div>
+  Unable to scan? You can use the 
+  <button data-modaltrigger="{{$setupModalID}}" type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+    setup key
+  </button>
+  to manually set up your authenticator app.
+  </div>
+  <div class="hidden">
+    <div id="{{$setupModalContentsID}}">
+      <div class="w-full flex flex-col gap-2">
+        <p>Setup key</p>
+        <textarea>{{.TOTPSecret}}</textarea>
+      </div>
+    </div>
+  </div>
+  {{ template "blank-modal" dict "Contents" $setupModalContentsID "ID" $setupModalID }}
+
+  <form action="/users/{{.User.ID}}/enrol-totp" method="post" class="flex flex-col gap-y-6">
+    <input type="hidden" name="id" value="{{.User.ID}}">
+    <input type="hidden" name="revision" value="{{.User.Revision}}">
+    <input type="hidden" name="csrf" value="{{csrf .Context}}">
+    <p>Now enter the code that your app has generated to confirm</p>
+    {{ template "2fa-input" dict "HideRecovery" true }}
+    <div class="flex justify-between">
+      <a href="/users/{{.User.ID}}" class="w-fit flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-400 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Cancel
+      </a>
+      <button type="submit" class="w-fit flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Submit
+      </button>
+    </div>
+  </form>
+</div>
+{{ end }}

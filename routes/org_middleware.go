@@ -2,8 +2,11 @@ package routes
 
 import (
 	"context"
+	"doubleboiler/flashes"
 	"doubleboiler/models"
 	"net/http"
+
+	"github.com/davidbanham/scum/util"
 )
 
 func orgMiddleware(h http.Handler) http.Handler {
@@ -36,6 +39,36 @@ func orgMiddleware(h http.Handler) http.Handler {
 			if err := organisationUsers.FindAll(r.Context(), models.Criteria{Query: &models.ByUser{ID: user.ID}}); err != nil {
 				errRes(w, r, 500, "error looking up organisation users", err)
 				return
+			}
+
+			if !user.SuperAdmin {
+				for _, org := range organisations.Data {
+					totpURL := "/users/" + user.ID + "/generate-totp"
+					if org.Toggles.ByKey(models.RequireAdmin2FA.Key).State && !user.TOTPActive && organisationUsers.ForOrgID(org.ID).Roles.Can("admin") {
+						authFree := false
+						unconv := r.Context().Value("authFree")
+						if unconv != nil {
+							authFree = unconv.(bool)
+						}
+
+						whitelist := []string{totpURL, "/logout", "/users/" + user.ID + "/enrol-totp"}
+						if !util.Contains(whitelist, r.URL.Path) && !authFree {
+							flash := flashes.Flash{
+								OnceOnlyKey: org.ID + "2fa_required",
+								Persistent:  true,
+								Type:        flashes.Warn,
+								Text:        org.Name + " requires you to set up 2-step authentication on your account",
+							}
+
+							if err := user.PersistFlash(r.Context(), flash); err != nil {
+								errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
+								return
+							}
+							http.Redirect(w, r, totpURL, 302)
+							return
+						}
+					}
+				}
 			}
 		}
 

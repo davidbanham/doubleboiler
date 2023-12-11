@@ -1,0 +1,5 @@
+ALTER TABLE users ADD COLUMN totp_secret TEXT;
+ALTER TABLE users ADD COLUMN totp_active BOOL NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN recovery_codes TEXT[];
+ALTER TABLE users ADD COLUMN totp_failure_count INT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN totp_last_failure TIMESTAMPTZ NOT NULL DEFAULT NOW();

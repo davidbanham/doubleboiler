@@ -20,6 +20,7 @@ func authFreeMiddleware(h http.Handler) http.Handler {
 		"reset-password",
 		"verify",
 		"login",
+		"login-2fa",
 		"signup",
 		"signup-successful",
 		"css",

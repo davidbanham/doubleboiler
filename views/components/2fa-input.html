@@ -1,0 +1,78 @@
+{{ define "2fa-input" }}
+{{ $uniq := uniq }}
+<div id="{{$uniq}}-totp-code-input">
+<div class="flex justify-center">
+  <div class="flex flex-col content-center">
+    <label class="flex justify-between gap-2 text-black" for="{{$uniq}}-totp-code">
+      <div>2-Step Auth Code</div>
+      {{if not .HideRecovery}}<a class="{{$uniq}}-code-flip-flop">I have lost access to this</a>{{end}}
+    </label>
+    <input
+        class="text-center"
+        required
+        id="{{$uniq}}-totp-code"
+        type="text"
+        name="totp-code"
+        autocomplete="one-time-code"
+        maxlength="6"
+        minlength="6"
+        placeholder="- -   - -  - -"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        />
+  </div>
+</div>
+</div>
+<script>
+  (function() {
+    const otpfield = document.getElementById('{{$uniq}}-totp-code');
+
+    let customActive = false;
+    otpfield.addEventListener('keyup', (event) => {
+      const re = /^[0-9]+$/;
+      if (!re.test(otpfield.value)) {
+        otpfield.setCustomValidity('Code must be numbers only.');
+        customActive = true;
+        otpfield.reportValidity();
+      } else {
+        if (customActive) {
+          otpfield.setCustomValidity('');
+          customActive = false;
+          otpfield.reportValidity();
+        }
+      }
+    });
+  })();
+</script>
+
+{{ if not .HideRecovery }}
+<div hidden id="{{$uniq}}-totp-recovery-code-input" class="hidden">
+  <label for="{{$uniq}}-totp-recovery-code">Recovery Code <a class="{{$uniq}}-code-flip-flop right">Back to 2-step auth input</a></label>
+  <input id="{{$uniq}}-totp-recovery-code" type="text" name="totp-recovery-code" autocomplete="off">
+</div>
+<script>
+  (function() {
+    const triggers = document.querySelectorAll('.{{$uniq}}-code-flip-flop');
+    const recovery = document.getElementById('{{$uniq}}-totp-recovery-code-input');
+    const normal = document.getElementById('{{$uniq}}-totp-code-input');
+
+    const flipIt = function() {
+      recovery.classList.toggle('hidden');
+      recovery.hidden = !recovery.hidden;
+      recoveryActualInput = recovery.querySelector('input');
+      recoveryActualInput.required = !recoveryActualInput.required;
+
+      normal.classList.toggle('hidden');
+      normal.hidden = !normal.hidden;
+      normalActualInput = normal.querySelector('input');
+      normalActualInput.required = !normalActualInput.required;
+    };
+
+    triggers.forEach(function(trigger) {
+      trigger.addEventListener('click', flipIt);
+    });
+  })()
+</script>
+{{ end }}
+
+{{ end }}

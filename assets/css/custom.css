@@ -75,3 +75,17 @@ div.htmx-request.spinner.fancy {
     left: 0;
     bottom: 0;
 }
+
+.printonly {
+  display: none;
+}
+
+@media print {
+  .noprint {
+    display: none;
+  }
+
+  .printonly{
+    display: block;
+  }
+}

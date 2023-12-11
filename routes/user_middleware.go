@@ -7,6 +7,7 @@ import (
 	"doubleboiler/models"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 )
@@ -21,7 +22,8 @@ func userMiddleware(h http.Handler) http.Handler {
 			return
 		}
 		cookieValue := make(map[string]string)
-		if err := secureCookie.Decode("doubleboiler-user", c.Value, &cookieValue); err != nil {
+		decodeErr := secureCookie.Decode("doubleboiler-user", c.Value, &cookieValue)
+		if decodeErr != nil || cookieValue["ID"] == "" {
 			deadCookie := http.Cookie{
 				Path:     "/",
 				Name:     "doubleboiler-user",
@@ -31,18 +33,27 @@ func userMiddleware(h http.Handler) http.Handler {
 				HttpOnly: true,
 			}
 			http.SetCookie(w, &deadCookie)
-			logger.Log(r.Context(), logger.Error, "decoding user ID from cookie", err, c.Value, cookieValue)
+			logger.Log(r.Context(), logger.Error, "decoding user ID from cookie", decodeErr, c.Value, cookieValue)
 			http.Redirect(w, r, "/login", 302)
 			return
 		}
 		user := models.User{}
-		if err = user.FindByID(r.Context(), cookieValue["ID"]); err != nil {
+		if err := user.FindByID(r.Context(), cookieValue["ID"]); err != nil {
 			if isAuthFree(r.Context()) {
 				h.ServeHTTP(w, r)
 				return
 			}
 			errRes(w, r, 403, "Invalid user", err)
 			return
+		}
+
+		if user.TOTPActive {
+			if cookieValue["TOTP"] != "true" && r.URL.Path != "/login-2fa" && r.URL.Path != "/logout" {
+				vals := url.Values{}
+				vals.Add("next", r.URL.Path)
+				http.Redirect(w, r, "/login-2fa?"+vals.Encode(), http.StatusFound)
+				return
+			}
 		}
 
 		if !assetPath.MatchString(r.URL.Path) {
@@ -66,6 +77,7 @@ func userMiddleware(h http.Handler) http.Handler {
 		}
 
 		con := context.WithValue(r.Context(), "user", user)
+		con = context.WithValue(con, "totp-verified", cookieValue["TOTP"] == "true")
 		h.ServeHTTP(w, r.WithContext(con))
 	})
 }

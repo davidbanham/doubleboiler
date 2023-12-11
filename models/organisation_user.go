@@ -118,6 +118,23 @@ func (this OrganisationUsers) colmap() *Colmap {
 	return r.colmap()
 }
 
+func (this OrganisationUsers) ByID() map[string]OrganisationUser {
+	ret := map[string]OrganisationUser{}
+	for _, t := range this.Data {
+		ret[t.ID] = t
+	}
+	return ret
+}
+
+func (this OrganisationUsers) ForOrgID(target string) OrganisationUser {
+	for _, t := range this.Data {
+		if t.OrganisationID == target {
+			return t
+		}
+	}
+	return OrganisationUser{}
+}
+
 func (this *OrganisationUsers) FindAll(ctx context.Context, criteria Criteria) error {
 	this.Criteria = criteria
 

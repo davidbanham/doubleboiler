@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"doubleboiler/config"
@@ -8,11 +9,13 @@ import (
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
+	"image/png"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func init() {
@@ -39,6 +42,26 @@ func init() {
 	r.Path("/users/{id}/impersonate").
 		Methods("POST").
 		HandlerFunc(userImpersonater)
+
+	r.Path("/users/{id}/generate-totp").
+		Methods("POST", "GET").
+		HandlerFunc(userGenerateTOTPHandler)
+
+	r.Path("/users/{id}/validate-totp").
+		Methods("GET").
+		HandlerFunc(userValidateTOTPFormHandler)
+
+	r.Path("/users/{id}/enrol-totp").
+		Methods("POST").
+		HandlerFunc(userEnrolTOTPHandler)
+
+	r.Path("/users/{id}/show-recovery-codes").
+		Methods("POST").
+		HandlerFunc(userShowRecoveryCodesHandler)
+
+	r.Path("/users/{id}/disable-totp").
+		Methods("POST").
+		HandlerFunc(userDisableTOTPHandler)
 }
 
 func userImpersonater(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +80,8 @@ func userImpersonater(w http.ResponseWriter, r *http.Request) {
 
 	expiration := time.Now().Add(30 * 24 * time.Hour)
 	encoded, err := secureCookie.Encode("doubleboiler-user", map[string]string{
-		"ID": user.ID,
+		"ID":   user.ID,
+		"TOTP": "true",
 	})
 	if err != nil {
 		errRes(w, r, 500, "Error encoding cookie", nil)
@@ -74,10 +98,10 @@ func userImpersonater(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &cookie)
 
-	relatedOrganisations := r.Context().Value("organisations").(models.Organisations)
+	orgs := orgsFromContext(r.Context())
 
 	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
-		Organisations: relatedOrganisations,
+		Organisations: orgs,
 		basePageData: basePageData{
 			PageTitle: "DoubleBoiler - Welcome",
 			Context:   r.Context(),
@@ -388,4 +412,277 @@ func createOrgFromSignup(ctx context.Context, user models.User, orgname, orgcoun
 		return err, org
 	}
 	return nil, org
+}
+
+func userGenerateTOTPHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user := models.User{}
+	if err := user.FindByID(r.Context(), vars["id"]); err != nil {
+		errRes(w, r, 500, "error fetching user", err)
+		return
+	}
+
+	targetOrg := activeOrgFromContext(r.Context())
+	loggedInUser := userFromContext(r.Context())
+
+	if loggedInUser.ID != user.ID && !can(r.Context(), targetOrg, "superadmin") {
+		errRes(w, r, 403, "You are not logged in as this user, nor are you an application admin", nil)
+		return
+	}
+
+	if loggedInUser.ID != user.ID && !can(r.Context(), targetOrg, "superadmin") && user.TOTPActive {
+		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(r.FormValue("password"))); err != nil {
+			errRes(w, r, 403, "Incorrect password", err)
+			return
+		}
+	}
+
+	key, err := user.Generate2FA(r.Context(), r.FormValue("totp-code"), r.FormValue("totp-recovery-code"))
+	if err != nil {
+		errRes(w, r, http.StatusInternalServerError, "Error generating 2-step auth code", err)
+		return
+	}
+
+	// Convert TOTP key into a QR code encoded as a PNG image.
+	var buf bytes.Buffer
+	img, err := key.Image(200, 200)
+	png.Encode(&buf, img)
+
+	orgs := orgsFromContext(r.Context())
+
+	if err := Tmpl.ExecuteTemplate(w, "generate-totp.html", totpPageData{
+		User:          user,
+		Organisations: orgs,
+		ActiveOrg:     models.Organisation{},
+		Context:       r.Context(),
+		TOTPQRImage:   buf,
+		TOTPSecret:    key.Secret(),
+	}); err != nil {
+		errRes(w, r, 500, "Problem with template", err)
+		return
+	}
+}
+
+func userValidateTOTPFormHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user := models.User{}
+	if err := user.FindByID(r.Context(), vars["id"]); err != nil {
+		errRes(w, r, 500, "error fetching user", err)
+		return
+	}
+
+	targetOrg := activeOrgFromContext(r.Context())
+	loggedInUser := userFromContext(r.Context())
+
+	if loggedInUser.ID != user.ID && !can(r.Context(), targetOrg, "superadmin") {
+		errRes(w, r, 403, "You are not logged in as this user, nor are you an application admin", nil)
+		return
+	}
+
+	orgs := orgsFromContext(r.Context())
+
+	if err := Tmpl.ExecuteTemplate(w, "generate-totp.html", totpPageData{
+		User:          user,
+		Organisations: orgs,
+		ActiveOrg:     models.Organisation{},
+		Context:       r.Context(),
+		TOTPQRImage:   bytes.Buffer{},
+	}); err != nil {
+		errRes(w, r, 500, "Problem with template", err)
+		return
+	}
+}
+
+func userEnrolTOTPHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user := models.User{}
+	if err := user.FindByID(r.Context(), vars["id"]); err != nil {
+		errRes(w, r, 500, "error fetching user", err)
+		return
+	}
+
+	targetOrg := activeOrgFromContext(r.Context())
+	loggedInUser := userFromContext(r.Context())
+
+	if loggedInUser.ID != user.ID && !can(r.Context(), targetOrg, "superadmin") {
+		errRes(w, r, 403, "You are not logged in as this user, nor are you an application admin", nil)
+		return
+	}
+
+	if ok, err := user.Validate2FA(r.Context(), r.FormValue("totp-code"), r.FormValue("totp-recovery-code")); err != nil {
+		errRes(w, r, http.StatusInternalServerError, "Error validating 2-step auth code", err)
+		return
+	} else if !ok {
+		errRes(w, r, http.StatusForbidden, "Provided 2FA code did not match expected value", nil)
+		return
+	}
+
+	flash := flashes.Flash{
+		Persistent: true,
+		Type:       flashes.Success,
+		Text:       "Two factor auth successfully set up",
+	}
+
+	if err := user.PersistFlash(r.Context(), flash); err != nil {
+		errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
+		return
+	}
+
+	codes, err := user.GenerateRecoveryCodesBypassCheck(r.Context())
+	if err != nil {
+		errRes(w, r, http.StatusInternalServerError, "Error generating recovery codes", err)
+		return
+	}
+
+	expiration := time.Now().Add(30 * 24 * time.Hour)
+	encoded, err := secureCookie.Encode("doubleboiler-user", map[string]string{
+		"ID":   user.ID,
+		"TOTP": "true",
+	})
+	if err != nil {
+		errRes(w, r, 500, "Error encoding cookie", nil)
+		return
+	}
+	cookie := http.Cookie{
+		Path:     "/",
+		Name:     "doubleboiler-user",
+		Value:    encoded,
+		Expires:  expiration,
+		Secure:   true,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+
+	if err := Tmpl.ExecuteTemplate(w, "recovery-codes.html", recoveryCodesPageData{
+		User:      user,
+		Context:   r.Context(),
+		Codes:     codes,
+		Generated: time.Now(),
+	}); err != nil {
+		errRes(w, r, 500, "Problem with template", err)
+		return
+	}
+}
+
+func userShowRecoveryCodesHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user := models.User{}
+	if err := user.FindByID(r.Context(), vars["id"]); err != nil {
+		errRes(w, r, 500, "error fetching user", err)
+		return
+	}
+
+	targetOrg := activeOrgFromContext(r.Context())
+	loggedInUser := userFromContext(r.Context())
+
+	if loggedInUser.ID != user.ID && !can(r.Context(), targetOrg, "superadmin") {
+		errRes(w, r, 403, "You are not logged in as this user, nor are you an application admin", nil)
+		return
+	}
+
+	if !user.TOTPActive {
+		errRes(w, r, http.StatusBadRequest, "Two factor authentication is not enabled for this user account", nil)
+		return
+	}
+
+	if loggedInUser.ID == user.ID {
+		if ok, err := user.Validate2FA(r.Context(), r.FormValue("totp-code"), r.FormValue("totp-recovery-code")); err != nil {
+			errRes(w, r, http.StatusInternalServerError, "Error validating 2-step auth code", err)
+			return
+		} else if !ok {
+			errRes(w, r, http.StatusForbidden, "Provided 2FA code did not match expected value", nil)
+			return
+		}
+
+		passwordFailed := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(r.FormValue("password")))
+		if passwordFailed != nil {
+			errRes(w, r, 403, "Incorrect password", nil)
+			return
+		}
+	}
+
+	codes, err := user.GenerateRecoveryCodes(r.Context(), r.FormValue("totp-code"))
+	if err != nil {
+		errRes(w, r, http.StatusInsufficientStorage, "error generating recovery codes", err)
+		return
+	}
+
+	orgs := orgsFromContext(r.Context())
+
+	if err := Tmpl.ExecuteTemplate(w, "recovery-codes.html", recoveryCodesPageData{
+		User:          user,
+		Organisations: orgs,
+		ActiveOrg:     models.Organisation{},
+		Context:       r.Context(),
+		Codes:         codes,
+		Generated:     time.Now(),
+	}); err != nil {
+		errRes(w, r, 500, "Problem with template", err)
+		return
+	}
+}
+
+func userDisableTOTPHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user := models.User{}
+	if err := user.FindByID(r.Context(), vars["id"]); err != nil {
+		errRes(w, r, 500, "error fetching user", err)
+		return
+	}
+
+	targetOrg := activeOrgFromContext(r.Context())
+	loggedInUser := userFromContext(r.Context())
+
+	if loggedInUser.ID != user.ID && !can(r.Context(), targetOrg, "superadmin") {
+		errRes(w, r, 403, "You are not logged in as this user, nor are you an application admin", nil)
+		return
+	}
+
+	if !loggedInUser.SuperAdmin || user.SuperAdmin {
+		if ok, err := user.Validate2FA(r.Context(), r.FormValue("totp-code"), r.FormValue("totp-recovery-code")); err != nil {
+			errRes(w, r, http.StatusInternalServerError, "Error validating 2-step auth code", err)
+			return
+		} else if !ok {
+			errRes(w, r, http.StatusForbidden, "Provided 2FA code did not match expected value", nil)
+			return
+		}
+	}
+
+	if err := user.Disable2FA(r.Context()); err != nil {
+		errRes(w, r, http.StatusForbidden, "Error disabling 2-step auth", err)
+		return
+	}
+
+	flash := flashes.Flash{
+		Persistent: true,
+		Type:       flashes.Success,
+		Text:       "Two factor auth successfully removed",
+	}
+
+	if err := user.PersistFlash(r.Context(), flash); err != nil {
+		errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
+		return
+	}
+
+	http.Redirect(w, r, "/users/"+user.ID, http.StatusFound)
+}
+
+type recoveryCodesPageData struct {
+	basePageData
+	ActiveOrg     models.Organisation
+	Organisations models.Organisations
+	User          models.User
+	Context       context.Context
+	Codes         []string
+	Generated     time.Time
+}
+
+type totpPageData struct {
+	basePageData
+	User          models.User
+	ActiveOrg     models.Organisation
+	Organisations models.Organisations
+	Context       context.Context
+	TOTPQRImage   bytes.Buffer
+	TOTPSecret    string
 }

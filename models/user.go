@@ -6,6 +6,7 @@ import (
 	"doubleboiler/config"
 	"doubleboiler/copy"
 	"doubleboiler/flashes"
+	"doubleboiler/logger"
 	"doubleboiler/util"
 	"fmt"
 	"log"
@@ -13,9 +14,12 @@ import (
 	"strings"
 	"time"
 
+	bandname "github.com/davidbanham/bandname_go"
 	kewpie "github.com/davidbanham/kewpie_go/v3"
 	"github.com/davidbanham/notifications"
 	"github.com/davidbanham/scum/search"
+	"github.com/pquerna/otp"
+	"github.com/pquerna/otp/totp"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -31,6 +35,9 @@ type User struct {
 	UpdatedAt             time.Time
 	HasFlashes            bool
 	Flashes               flashes.Flashes
+	totpSecret            sql.NullString
+	TOTPActive            bool
+	recoveryCodes         NullStringList
 }
 
 func (this *User) colmap() *Colmap {
@@ -46,6 +53,9 @@ func (this *User) colmap() *Colmap {
 		"updated_at":              &this.UpdatedAt,
 		"has_flashes":             &this.HasFlashes,
 		"flashes":                 &this.Flashes,
+		"totp_active":             &this.TOTPActive,
+		"totp_secret":             &this.totpSecret,
+		"recovery_codes":          &this.recoveryCodes,
 	}
 }
 
@@ -64,6 +74,16 @@ func (user *User) auditQuery(ctx context.Context, action string) string {
 }
 
 func (user User) PersistFlash(ctx context.Context, flash flashes.Flash) error {
+	alreadyThere := false
+	for _, existing := range user.Flashes {
+		if flash.OnceOnlyKey != "" && flash.OnceOnlyKey == existing.OnceOnlyKey {
+			alreadyThere = true
+		}
+	}
+	if alreadyThere {
+		return nil
+	}
+
 	user.Flashes = append(user.Flashes, flash)
 	db := ctx.Value("tx").(Querier)
 	_, err := db.ExecContext(ctx, "UPDATE users SET flashes = $2 WHERE id = $1", user.ID, user.Flashes)
@@ -86,6 +106,189 @@ WHERE id = $1`, user.ID)
 func (user *User) FetchFlashes(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
 	return db.QueryRowContext(ctx, `SELECT flashes FROM users WHERE id = $1`, user.ID).Scan(&user.Flashes)
+}
+
+func (user *User) Validate2FA(ctx context.Context, code, recoveryCode string) (bool, error) {
+	db := ctx.Value("tx").(Querier)
+
+	var failureCount int
+	var lastFailure time.Time
+	if err := db.QueryRowContext(ctx, "SELECT totp_failure_count, totp_last_failure FROM users WHERE id = $1", user.ID).Scan(&failureCount, &lastFailure); err != nil {
+		return false, err
+	} else {
+		if failureCount > 3 && lastFailure.After(time.Now().Add(-60*time.Second)) {
+			return false, ClientSafeError{"Too many attempts. Please wait 60 seconds before trying again."}
+		}
+	}
+
+	if recoveryCode != "" && code == "" {
+		for _, target := range user.recoveryCodes.Strings {
+			matched := false
+			if target == recoveryCode {
+				snipped := NullStringList{Valid: true}
+				for _, inner := range user.recoveryCodes.Strings {
+					if inner != target {
+						snipped.Strings = append(snipped.Strings, inner)
+					}
+				}
+				user.recoveryCodes = snipped
+				if err := user.saveRecoveryCodes(ctx); err != nil {
+					return false, err
+				}
+				matched = true
+
+				payload := notifications.Email{
+					To:      user.Email,
+					From:    fmt.Sprintf("%s <%s>", config.NAME, config.SYSTEM_EMAIL_ONLY),
+					ReplyTo: config.SYSTEM_EMAIL_ONLY,
+					Text:    fmt.Sprintf("The account under this email address: %s has been accessed using a one-time recovery code. If this action was not initiated by the rightful account owner, please contact us immediately.", user.Email),
+					Subject: fmt.Sprintf("%s - Recovery Code Used", config.NAME),
+				}
+
+				task := kewpie.Task{}
+				if err := task.Marshal(payload); err != nil {
+					logger.Log(ctx, logger.Error, "marshaling recovery code used email", err)
+					return false, err
+				}
+
+				if err := config.QUEUE.Buffer(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
+					logger.Log(ctx, logger.Error, "buffering recovery code used email", err)
+					return false, err
+				}
+			}
+
+			return matched, nil
+		}
+	}
+
+	valid := totp.Validate(code, user.totpSecret.String)
+	if !valid {
+		if !user.TOTPActive {
+			return valid, nil
+		} else {
+			if _, err := db.ExecContext(ctx, "UPDATE users SET totp_failure_count = $2, totp_last_failure = NOW() WHERE id = $1", user.ID, failureCount+1); err != nil {
+				return false, err
+			}
+
+			return valid, nil
+		}
+	} else {
+		if !user.TOTPActive {
+			if _, err := db.ExecContext(ctx, "UPDATE users SET totp_active = true WHERE id = $1", user.ID); err != nil {
+				return false, err
+			} else {
+				user.TOTPActive = true
+			}
+		}
+
+		if _, err := db.ExecContext(ctx, "UPDATE users SET totp_failure_count = 0 WHERE id = $1", user.ID); err != nil {
+			return false, err
+		}
+
+		return valid, nil
+	}
+}
+
+func (user *User) Generate2FA(ctx context.Context, code, recoveryCode string) (*otp.Key, error) {
+	if user.TOTPActive {
+		valid, err := user.Validate2FA(ctx, code, recoveryCode)
+		if err != nil {
+			return nil, err
+		}
+		if !valid {
+			if code == "" && recoveryCode != "" {
+				return nil, ClientSafeError{"Provided 2FA recovery phrase did not match. Each phrase may only be used once before it is invalidated."}
+			} else {
+				return nil, ClientSafeError{"Provided 2FA code did not match expected value"}
+			}
+		}
+	}
+
+	db := ctx.Value("tx").(Querier)
+
+	if key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      config.DOMAIN,
+		AccountName: user.Email,
+	}); err != nil {
+		return nil, err
+	} else {
+		user.totpSecret.Valid = true
+		user.totpSecret.String = key.Secret()
+		if _, err := db.ExecContext(ctx, "UPDATE users SET totp_secret = $2 WHERE id = $1", user.ID, key.Secret()); err != nil {
+			return nil, err
+		}
+
+		return key, nil
+	}
+}
+
+func (user User) saveRecoveryCodes(ctx context.Context) error {
+	db := ctx.Value("tx").(Querier)
+
+	if _, err := db.ExecContext(ctx, "UPDATE users SET recovery_codes = $2 WHERE id = $1", user.ID, user.recoveryCodes); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (user *User) generateRecoveryCodes(ctx context.Context) ([]string, error) {
+	fresh := NullStringList{Valid: true}
+
+	for i := 0; i < 10; i++ {
+		code := bandname.Bandname() + " " + uuid.NewV4().String()
+		fresh.Strings = append(fresh.Strings, code)
+	}
+	user.recoveryCodes = fresh
+
+	if err := user.saveRecoveryCodes(ctx); err != nil {
+		return []string{}, err
+	}
+
+	return user.recoveryCodes.Strings, nil
+}
+
+func (user *User) GenerateRecoveryCodes(ctx context.Context, code string) ([]string, error) {
+	ok, err := user.Validate2FA(ctx, code, "")
+	if err != nil {
+		return []string{}, err
+	}
+	if !ok {
+		return []string{}, ClientSafeError{"Provided 2FA code did not match expected value"}
+	}
+
+	return user.generateRecoveryCodes(ctx)
+}
+
+func (user *User) GenerateRecoveryCodesBypassCheck(ctx context.Context) ([]string, error) {
+	return user.generateRecoveryCodes(ctx)
+}
+
+func (user *User) Disable2FA(ctx context.Context) error {
+	db := ctx.Value("tx").(Querier)
+	if _, err := db.ExecContext(ctx, "UPDATE users SET totp_active = false WHERE id = $1", user.ID); err != nil {
+		return err
+	}
+
+	payload := notifications.Email{
+		To:      user.Email,
+		From:    fmt.Sprintf("%s <%s>", config.NAME, config.SYSTEM_EMAIL_ONLY),
+		ReplyTo: config.SYSTEM_EMAIL_ONLY,
+		Text:    fmt.Sprintf("2 Factor authentication has been removed from the user account with this email: %s. If this action was not initiated by the rightful account owner, please contact us immediately.", user.Email),
+		Subject: fmt.Sprintf("%s - 2 Factor Authentication Disabled", config.NAME),
+	}
+
+	task := kewpie.Task{}
+	if err := task.Marshal(payload); err != nil {
+		logger.Log(ctx, logger.Error, "marshaling 2fa disabled email", err)
+		return err
+	}
+
+	if err := config.QUEUE.Buffer(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
+		logger.Log(ctx, logger.Error, "buffering 2fa disabled email", err)
+		return err
+	}
+
+	return nil
 }
 
 func (this *User) Save(ctx context.Context) error {

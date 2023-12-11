@@ -60,8 +60,8 @@ func (this *Audits) FindAll(ctx context.Context, criteria Criteria) error {
 			return ErrInvalidQuery{Query: v, Model: "audit_log"}
 		case ByEntityID:
 			rows, err = db.QueryContext(ctx, `SELECT
-		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at', users.email,
-		lead(old_row_data - 'revision' - 'updated_at', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
+		audit_log.id, entity_id, organisation_id, table_name, stamp, user_id, action, old_row_data - 'revision' - 'updated_at' - 'password' - 'totp_secret' - 'recovery_codes', users.email,
+		lead(old_row_data - 'revision' - 'updated_at' - 'password' - 'totp_secret' - 'recovery_codes', 1) OVER (PARTITION BY entity_id ORDER BY stamp) new_row_data
 		FROM audit_log LEFT JOIN users ON audit_log.user_id = users.id::text WHERE entity_id = $1 ORDER BY stamp DESC`+criteria.Pagination.PaginationQuery(), v.EntityID)
 		}
 	case query.Query:

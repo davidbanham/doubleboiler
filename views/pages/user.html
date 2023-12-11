@@ -6,18 +6,132 @@
 
 {{ define "content" }}
 
-<form action="/users/{{.User.ID}}" method="post" class="p-4 flex flex-col gap-y-6">
-  <input type="hidden" name="id" value="{{.User.ID}}"></input>
-  <input type="hidden" name="revision" value="{{.User.Revision}}"></input>
-  <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
-  <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
-  {{ template "input" dict "Type" "text" "Label" "email" "Name" "email" "Required" true "Placeholder" "Email Address" "Value" .User.Email }}
-  <div>
-    <button type="submit" class="justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-      Save
-    </button>
+<div class="flex flex-col gap-6">
+  <form action="/users/{{.User.ID}}" method="post" class="p-4 flex flex-col gap-y-6">
+    <input type="hidden" name="id" value="{{.User.ID}}">
+    <input type="hidden" name="revision" value="{{.User.Revision}}">
+    <input type="hidden" name="csrf" value="{{csrf .Context}}">
+    <input type="hidden" name="organisationID" value="{{(activeOrgFromContext $.Context).ID}}">
+    {{ template "input" dict "Type" "text" "Label" "email" "Name" "email" "Required" true "Placeholder" "Email Address" "Value" .User.Email }}
+    <div>
+      <button type="submit" class="justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Save
+      </button>
+    </div>
+  </form>
+
+  <div class="p-4 flex flex-col gap-y-6 border border-gray-500 rounded-lg">
+    <div>2-Step Authentication</div>
+    {{ if .User.TOTPActive }}
+    {{ $totpModalID := uniq }}
+    {{ $totpModalContentsID := uniq }}
+    <div class="hidden">
+      <div id="{{$totpModalContentsID}}">
+        <form action="/users/{{.User.ID}}/generate-totp" method="post">
+          <input type="hidden" name="csrf" value="{{csrf .Context}}">
+          <div class="flex flex-col gap-2">
+            <p>This will replace the existing auth token and turn off two step authentication until the new token is validated.</p>
+            <p class="center">If you wish to continue, enter your password and validate your existing 2-step authentication token to confirm.</p>
+            <div>
+              <label for="totp_password" class="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div class="mt-1">
+                <input id="totp_password" name="password" type="password" required class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+            </div>
+            {{ template "2fa-input" }}
+            <div>
+              <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Confirm
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      {{ $recoveryCodesModalID := uniq }}
+      {{ $recoveryCodesModalContentsID := uniq }}
+      <div class="hidden">
+        <div id="{{$recoveryCodesModalContentsID}}">
+          <form action="/users/{{.User.ID}}/show-recovery-codes" method="post" class="p-4 flex flex-col gap-y-6">
+            <input type="hidden" name="csrf" value="{{csrf .Context}}">
+            <p>This will generate a new set of recovery codes, invalidating any existing recovery codes that have been shown previously</p>
+            <p>If you wish to continue, enter your password and validate your existing 2-step authentication token to confirm.</p>
+            <div>
+              <label for="recovery_totp_password" class="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div class="mt-1">
+                <input id="recovery_totp_password" name="password" type="password" required class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+            </div>
+            {{ template "2fa-input" dict "HideRecovery" true }}
+            <button type="submit" class="justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Confirm
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div>
+        <button data-modaltrigger="{{$recoveryCodesModalID}}" type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Show Recovery Codes
+        </button>
+      </div>
+      {{ template "blank-modal" dict "Contents" $recoveryCodesModalContentsID "ID" $recoveryCodesModalID }}
+      <div>
+        <button data-modaltrigger="{{$totpModalID}}" type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Re-Activate
+        </button>
+      </div>
+      {{ template "blank-modal" dict "Contents" $totpModalContentsID "ID" $totpModalID }}
+
+      {{ $disableTOTPModalID := uniq }}
+      {{ $disableTOTPModalContentsID := uniq }}
+      <div class="hidden">
+        <div id="{{$disableTOTPModalContentsID}}">
+          <form action="/users/{{.User.ID}}/disable-totp" method="post" class="p-4 flex flex-col gap-y-6">
+            <input type="hidden" name="csrf" value="{{csrf .Context}}">
+            <p>This will remove the protection of 2-step authentication from your user account.</p>
+            <p>If you wish to continue, enter your password and validate your existing 2-step authentication token to confirm.</p>
+            <div>
+              <label for="disable_totp_password" class="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div class="mt-1">
+                <input id="disable_totp_password" name="password" type="password" required class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+            </div>
+            {{ template "2fa-input" dict "HideRecovery" true }}
+            <button type="submit" class="justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Submit
+            </button>
+          </form>
+        </div>
+      </div>
+      <div>
+        <button data-modaltrigger="{{$disableTOTPModalID}}" type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Disable
+        </button>
+      </div>
+      {{ template "blank-modal" dict "Contents" $disableTOTPModalContentsID "ID" $disableTOTPModalID }}
+    </div>
+
+    {{ else }}
+    <form action="/users/{{.User.ID}}/generate-totp" method="post">
+      <input type="hidden" name="csrf" value="{{csrf .Context}}">
+      {{ $modalid := uniq }}
+      <button data-modaltrigger="{{$modalid}}" type="button" class="bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Enable 2-Step Auth
+      </button>
+      {{ template "confirm_modal" dict "Title" "2-Step Auth" "ButtonText" "Confirm" "Text" "To increase the security of your account, this will require you to use your authenticator app to generate a code each time you log in." "ID" $modalid }}
+
+    </form>
+    {{ end }}
   </div>
-</form>
+</div>
 
 {{ end }}
 

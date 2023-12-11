@@ -14,13 +14,14 @@ type Flashable interface {
 }
 
 type Flash struct {
-	Persistent bool          `json:"persistent"`
-	Sticky     bool          `json:"sticky"`
-	EntityKey  string        `json:"entity_key"`
-	ID         string        `json:"id"`
-	Text       string        `json:"text"`
-	Actions    []FlashAction `json:"actions"`
-	Type       FlashLevel    `json:"type"`
+	Persistent  bool          `json:"persistent"`
+	Sticky      bool          `json:"sticky"`
+	EntityKey   string        `json:"entity_key"`
+	ID          string        `json:"id"`
+	Text        string        `json:"text"`
+	Actions     []FlashAction `json:"actions"`
+	Type        FlashLevel    `json:"type"`
+	OnceOnlyKey string        `json:"once_only_key"`
 }
 
 type Flashes []Flash

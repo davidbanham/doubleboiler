@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"doubleboiler/config"
@@ -9,6 +10,7 @@ import (
 	"doubleboiler/logger"
 	"doubleboiler/models"
 	"doubleboiler/util"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"html/template"
@@ -84,6 +86,9 @@ var templateFuncMap = template.FuncMap{
 		roles := orgUserFromContext(ctx, org).Roles
 
 		return models.SearchTargets.FilterByRole(roles, query)
+	},
+	"base64": func(in bytes.Buffer) string {
+		return base64.StdEncoding.EncodeToString(in.Bytes())
 	},
 }
 
@@ -317,6 +322,14 @@ func userFromContext(ctx context.Context) models.User {
 		return models.User{}
 	}
 	return ctx.Value("user").(models.User)
+}
+
+func totpVerifiedFromContext(ctx context.Context) bool {
+	unconv := ctx.Value("totp-verified")
+	if unconv == nil {
+		return false
+	}
+	return unconv.(bool)
 }
 
 func orgUserFromContext(ctx context.Context, org models.Organisation) models.OrganisationUser {
