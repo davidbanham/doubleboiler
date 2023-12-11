@@ -137,7 +137,7 @@ func TestSomeThingSoftDelete(t *testing.T) {
 	assert.Equal(t, 1, len(foundAfter.Data))
 
 	foundDeleted := SomeThings{}
-	assert.Nil(t, foundDeleted.FindAll(ctx, Criteria{Query: &ByOrg{ID: org.ID}, Filters: Filters{foundDeleted.AvailableFilters().ByID()["is-deleted"]}}))
+	assert.Nil(t, foundDeleted.FindAll(ctx, Criteria{Query: &ByOrg{ID: org.ID}, Filters: Filters{foundDeleted.AvailableFilters().ByID("is-deleted")}}))
 	assert.Equal(t, 1, len(foundDeleted.Data))
 	assert.Equal(t, fix2.ID, foundDeleted.Data[0].ID)
 	assert.Equal(t, 1, len(foundDeleted.Data))

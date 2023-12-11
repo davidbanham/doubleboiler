@@ -129,7 +129,7 @@ func (this SomeThings) ByID() map[string]SomeThing {
 func (this *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
 	this.Criteria = criteria
 
-	if _, ok := criteria.Filters.ByID()["is-deleted"]; !ok {
+	if criteria.Filters.ByID("is-deleted").ID() == "" {
 		notDeleted := HasProp{}
 		if err := notDeleted.Hydrate(HasPropOpts{
 			Label: "Is Not Deleted",

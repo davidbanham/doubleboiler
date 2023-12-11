@@ -52,7 +52,7 @@ func (orguser *OrganisationUser) auditQuery(ctx context.Context, action string) 
 
 func (orguser OrganisationUser) checkRolesAreValid() error {
 	for _, role := range orguser.Roles {
-		validMap := ValidRoles.ByName()
+		validMap := ValidRoles.NamedMap()
 		if _, ok := validMap[role.Name]; !ok {
 			return ClientSafeError{fmt.Sprintf("Invalid Role: %s", role.Name)}
 		}

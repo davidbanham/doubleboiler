@@ -32,10 +32,10 @@ func getCtx(t *testing.T) context.Context {
 }
 
 func contextifyOrgAdmin(ctx context.Context, org models.Organisation) context.Context {
-	adminRole := models.ValidRoles.ByName()["admin"]
+	adminRole := models.ValidRoles.ByName("admin")
 	ctx = context.WithValue(ctx, "organisation_users", models.OrganisationUsers{
 		Data: []models.OrganisationUser{
-			models.OrganisationUser{
+			{
 				OrganisationID: org.ID,
 				Roles: models.Roles{
 					adminRole,
