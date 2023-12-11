@@ -131,12 +131,14 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		org.Country = "Australia"
 	}
 
+	org.Toggles.FromForm(r.Form)
+
 	if err := org.Save(r.Context()); err != nil {
 		errRes(w, r, 500, "A database error has occurred", err)
 		return
 	}
 
-	http.Redirect(w, r, "/organisations/"+org.ID, 302)
+	http.Redirect(w, r, nextFlow("/organisations/"+org.ID, r.Form), 302)
 }
 
 type organisationsPageData struct {

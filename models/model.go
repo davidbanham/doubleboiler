@@ -7,6 +7,7 @@ import (
 	scummodel "github.com/davidbanham/scum/model"
 	scumquery "github.com/davidbanham/scum/query"
 	scumsearch "github.com/davidbanham/scum/search"
+	scumtoggle "github.com/davidbanham/scum/toggle"
 	scumutil "github.com/davidbanham/scum/util"
 )
 
@@ -55,6 +56,10 @@ var StandardFindByColumn = scummodel.FindByColumn
 var StandardExecFindByColumn = scummodel.ExecFindByColumn
 
 type ClientSafeError = scumutil.ClientSafeError
+type NullStringList = scumutil.NullStringList
+
+type Toggle = scumtoggle.Toggle
+type Toggles = scumtoggle.Toggles
 
 var ErrWrongRev = scummodel.ErrWrongRev
 

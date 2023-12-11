@@ -17,7 +17,10 @@ type Organisation struct {
 	Revision  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	Toggles   Toggles
 }
+
+var ValidToggles = []Toggle{RequireAdmin2FA}
 
 func (this *Organisation) colmap() *Colmap {
 	return &Colmap{
@@ -27,6 +30,7 @@ func (this *Organisation) colmap() *Colmap {
 		"revision":   &this.Revision,
 		"created_at": &this.CreatedAt,
 		"updated_at": &this.UpdatedAt,
+		"toggles":    &this.Toggles,
 	}
 }
 
@@ -43,6 +47,8 @@ func (org *Organisation) auditQuery(ctx context.Context, action string) string {
 }
 
 func (this *Organisation) Save(ctx context.Context) error {
+	this.Toggles.Populate(ValidToggles)
+
 	q, props, newRev := StandardSave("organisations", this.colmap(), this.auditQuery(ctx, "U"))
 
 	if err := ExecSave(ctx, q, props); err != nil {
@@ -56,7 +62,11 @@ func (this *Organisation) Save(ctx context.Context) error {
 
 func (this *Organisation) FindByColumn(ctx context.Context, col, val string) error {
 	q, props := StandardFindByColumn("organisations", this.colmap(), col)
-	return StandardExecFindByColumn(ctx, q, val, props)
+	if err := StandardExecFindByColumn(ctx, q, val, props); err != nil {
+		return err
+	}
+	this.Toggles.Populate(ValidToggles)
+	return nil
 }
 
 func (this *Organisation) FindByID(ctx context.Context, id string) error {
@@ -146,6 +156,8 @@ func (this *Organisations) FindAll(ctx context.Context, criteria Criteria) error
 		if err = rows.Scan(props...); err != nil {
 			return err
 		}
+
+		org.Toggles.Populate(ValidToggles)
 
 		(*this).Data = append((*this).Data, org)
 	}
