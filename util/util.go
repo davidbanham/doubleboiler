@@ -30,6 +30,8 @@ var PrettyJsonString = scumutil.PrettyJsonString
 var Diff = scumutil.Diff
 var DiffOnly = scumutil.DiffOnly
 var Hash = scumutil.Hash
+var Contains = scumutil.Contains
+var NextFlow = scumutil.NextFlow
 
 func GetTxCtx() (context.Context, *sql.Tx, error) {
 	return scumutil.GetTxCtx(config.Db)

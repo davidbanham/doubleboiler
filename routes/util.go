@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"doubleboiler/config"
-	"doubleboiler/copy"
 	"doubleboiler/flashes"
 	"doubleboiler/logger"
 	"doubleboiler/models"
@@ -20,9 +19,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	kewpie "github.com/davidbanham/kewpie_go/v3"
-	"github.com/davidbanham/notifications"
 )
 
 var templateFuncMap = template.FuncMap{
@@ -48,7 +44,6 @@ var templateFuncMap = template.FuncMap{
 	"user":                 userFromContext,
 	"orgsFromContext":      orgsFromContext,
 	"flashes":              flashesFromContext,
-	"searchQuery":          searchQueryFromContext,
 	"activeOrgFromContext": activeOrgFromContext,
 	"can": func(ctx context.Context, role string) bool {
 		org := activeOrgFromContext(ctx)
@@ -112,26 +107,25 @@ type errorPageData struct {
 	Context context.Context
 }
 
-func errRes(w http.ResponseWriter, r *http.Request, code int, message string, err error) {
+func errRes(w http.ResponseWriter, r *http.Request, code int, message string, passedErr error) {
 	sendErr := func() {
-		if err != nil && err.Error() == "http2: stream closed" {
+		if passedErr != nil && passedErr.Error() == "http2: stream closed" {
 			return
 		}
-		reportableErr := err
-		if err == nil {
-			reportableErr = errors.New(strconv.Itoa(code) + " " + message)
-		}
-		if err != nil {
-			config.ReportError(reportableErr)
+
+		if passedErr == nil {
+			config.ReportError(errors.New(strconv.Itoa(code) + " " + message))
+		} else {
+			config.ReportError(passedErr)
 		}
 
-		if clientSafe, addendum := isClientSafe(err); clientSafe {
+		if clientSafe, addendum := isClientSafe(passedErr); clientSafe {
 			message += " " + addendum
 		}
 
-		logger.Log(r.Context(), logger.Warning, fmt.Sprintf("Sending Error Response: %+v, %+v, %+v, %+v", code, message, r.URL.String(), err))
+		logger.Log(r.Context(), logger.Warning, fmt.Sprintf("Sending Error Response: %+v, %+v, %+v, %+v", code, message, r.URL.String(), passedErr))
 		if code == 500 {
-			logger.Log(r.Context(), logger.Error, err)
+			logger.Log(r.Context(), logger.Error, passedErr)
 			logger.Log(r.Context(), logger.Debug, string(debug.Stack()))
 		}
 
@@ -139,15 +133,15 @@ func errRes(w http.ResponseWriter, r *http.Request, code int, message string, er
 		if r.Header.Get("Accept") == "application/json" {
 			w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, message)))
 			return
-		}
-
-		ohshit := Tmpl.ExecuteTemplate(w, "error.html", errorPageData{
-			Message: message,
-			Context: r.Context(),
-		})
-		if ohshit != nil {
-			w.Write([]byte("Error rendering the error template. Oh dear."))
-			return
+		} else {
+			if err := Tmpl.ExecuteTemplate(w, "error.html", errorPageData{
+				Message: message,
+				Context: r.Context(),
+			}); err != nil {
+				config.ReportError(err)
+				w.Write([]byte("Error rendering the error template. Oh dear."))
+				return
+			}
 		}
 	}
 
@@ -164,17 +158,6 @@ func errRes(w http.ResponseWriter, r *http.Request, code int, message string, er
 	sendErr()
 }
 
-func shortDur(d time.Duration) string {
-	s := d.String()
-	if strings.HasSuffix(s, "m0s") {
-		s = s[:len(s)-2]
-	}
-	if strings.HasSuffix(s, "h0m") {
-		s = s[:len(s)-2]
-	}
-	return s
-}
-
 func redirToDefaultOrg(w http.ResponseWriter, r *http.Request) {
 	orgs := orgsFromContext(r.Context())
 	if len(orgs.Data) < 1 {
@@ -187,122 +170,6 @@ func redirToDefaultOrg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, r.URL.String(), http.StatusFound)
-}
-
-func parseFormDate(input string) (time.Time, error) {
-	return time.Parse("2006-01-02", input)
-}
-
-func defaultedDatesFromQueryString(query url.Values, numDaysFromNowDefault int, weekBoundary bool) (startTime, endTime time.Time, err error) {
-	start := query.Get("start")
-	end := query.Get("end")
-
-	format := "2006-01-02"
-	begin := time.Now()
-
-	if weekBoundary {
-		begin = util.NextDay(begin, time.Sunday)
-	}
-
-	now := begin.Format(format)
-	then := begin.Add(24 * time.Duration(numDaysFromNowDefault) * time.Hour).Format(format)
-
-	startTime, _ = time.Parse(format, now)
-	endTime, _ = time.Parse(format, then)
-
-	if start != "" {
-		parsed, err := time.Parse(format, start)
-		if err != nil {
-			return startTime, endTime, err
-		}
-		startTime = parsed
-	}
-	if end != "" {
-		parsed, err := time.Parse(format, end)
-		if err != nil {
-			return startTime, endTime, err
-		}
-		endTime = parsed
-	}
-
-	return startTime, endTime, nil
-}
-
-func deblank(arr []string) (deblanked []string) {
-	for _, v := range arr {
-		if v != "" {
-			deblanked = append(deblanked, v)
-		}
-	}
-	return
-}
-
-func sendEmailChangedNotification(ctx context.Context, target, old string) error {
-	emailHTML, emailText := copy.EmailChangedEmail(target, old)
-
-	subject := fmt.Sprintf("%s email changed", config.NAME)
-
-	recipients := []string{target, old}
-
-	for _, recipient := range recipients {
-		mail := notifications.Email{
-			To:      recipient,
-			From:    config.SYSTEM_EMAIL,
-			ReplyTo: config.SUPPORT_EMAIL,
-			Text:    emailText,
-			HTML:    emailHTML,
-			Subject: subject,
-		}
-
-		task := kewpie.Task{}
-		if err := task.Marshal(mail); err != nil {
-			return err
-		}
-
-		if err := config.QUEUE.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func dollarsToCents(in string) (int, error) {
-	dollars, err := strconv.ParseFloat(in, 64)
-	return int((dollars * 1000) / 10), err
-}
-
-func redirToLogin(w http.ResponseWriter, r *http.Request) {
-	values := url.Values{
-		"next": []string{r.URL.String()},
-	}
-
-	http.Redirect(w, r, "/login?"+values.Encode(), 302)
-	return
-}
-
-func nextFlow(defaultURL string, form url.Values) string {
-	ret, _ := url.Parse(defaultURL)
-	next := form.Get("next")
-	if next != "" {
-		parsed, _ := url.Parse(next)
-		if parsed.Path != "login" && parsed.Path != "/login" {
-			ret.Path = parsed.Path
-		}
-		for k, v := range parsed.Query() {
-			q := ret.Query()
-			q[k] = v
-			ret.RawQuery = q.Encode()
-		}
-	}
-	if form.Get("flow") != "" {
-		q := ret.Query()
-		q.Set("flow", form.Get("flow"))
-		ret.RawQuery = q.Encode()
-	}
-	if form.Get("next_fragment") != "" {
-		ret.Fragment = form.Get("next_fragment")
-	}
-	return ret.String()
 }
 
 func isClientSafe(err error) (bool, string) {
@@ -347,36 +214,16 @@ func flashesFromContext(ctx context.Context) flashes.Flashes {
 	if ctx == nil {
 		return flashes.Flashes{}
 	}
-	unconv := ctx.Value("flashes")
-	unconvUser := ctx.Value("user")
-	if unconv == nil && unconvUser == nil {
-		return flashes.Flashes{}
-	}
-
-	f := flashes.Flashes{}
-	if unconv != nil {
-		f = unconv.(flashes.Flashes)
-	}
-	if unconvUser != nil {
-		user := unconvUser.(models.User)
+	switch user := ctx.Value("user").(type) {
+	case models.User:
 		for _, flash := range user.Flashes {
 			if !flash.Sticky {
 				user.DeleteFlash(ctx, flash)
 			}
 		}
-		f = append(f, user.Flashes...)
+		return user.Flashes
 	}
-	return f
+	return flashes.Flashes{}
 }
 
-func searchQueryFromContext(ctx context.Context) string {
-	if ctx == nil {
-		return ""
-	}
-	unconv := ctx.Value("searchquery")
-	if unconv == nil {
-		return ""
-	}
-
-	return unconv.(string)
-}
+var nextFlow = util.NextFlow

@@ -182,7 +182,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 						}
 					}
 				} else {
-					if err := sendEmailChangedNotification(r.Context(), r.FormValue("email"), user.Email); err != nil {
+					if err := user.SendEmailChangedNotification(r.Context(), r.FormValue("email")); err != nil {
 						errRes(w, r, 500, "Error queueing notification", err)
 						return
 					}
@@ -242,13 +242,23 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if r.FormValue("password") != "" {
-				flash := flashes.Flash{
-					Persistent: true,
-					Type:       flashes.Success,
-					Text:       "Password set successfully.",
+				if util.Contains([]string{"reset_password", "signup"}, r.FormValue("flow")) {
+					flash := flashes.Flash{
+						Persistent: true,
+						Type:       flashes.Success,
+						Text:       "Please use your new password to log in.",
+					}
+					flashed, _ := flash.Add(r.Context())
+					r = r.WithContext(flashed)
+				} else {
+					flash := flashes.Flash{
+						Persistent: true,
+						Type:       flashes.Success,
+						Text:       "Password set successfully.",
+					}
+					flashed, _ := flash.Add(r.Context())
+					r = r.WithContext(flashed)
 				}
-				flashed, _ := flash.Add(r.Context())
-				r = r.WithContext(flashed)
 			}
 			errRes(w, r, 500, "A database error has occurred", err)
 			return

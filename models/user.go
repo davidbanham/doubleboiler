@@ -365,6 +365,35 @@ func (user *User) SendVerificationEmail(ctx context.Context, org Organisation) e
 	return err
 }
 
+func (user User) SendEmailChangedNotification(ctx context.Context, newEmail string) error {
+	emailHTML, emailText := copy.EmailChangedEmail(newEmail, user.Email)
+
+	subject := fmt.Sprintf("%s email changed", config.NAME)
+
+	recipients := []string{newEmail, user.Email}
+
+	for _, recipient := range recipients {
+		mail := notifications.Email{
+			To:      recipient,
+			From:    config.SYSTEM_EMAIL,
+			ReplyTo: config.SUPPORT_EMAIL,
+			Text:    emailText,
+			HTML:    emailHTML,
+			Subject: subject,
+		}
+
+		task := kewpie.Task{}
+		if err := task.Marshal(mail); err != nil {
+			return err
+		}
+
+		if err := config.QUEUE.Publish(ctx, config.SEND_EMAIL_QUEUE_NAME, &task); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (user User) HasEmail() bool {
 	if user.Email == "" {
 		return false

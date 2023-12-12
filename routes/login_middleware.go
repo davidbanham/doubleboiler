@@ -65,10 +65,26 @@ func loginMiddleware(h http.Handler) http.Handler {
 			return
 		}
 
-		unconv := r.Context().Value("user")
-		if unconv == nil {
-			redirToLogin(w, r)
+		nextVal := r.FormValue("next")
+		if r.FormValue("next") == "" && !util.Contains([]string{"/login", "/login-2fa"}, r.URL.Path) {
+			nextVal = r.URL.Path
+		}
+
+		switch user := r.Context().Value("user").(type) {
+		default:
+			vals := r.URL.Query()
+			vals.Add("next", nextVal)
+
+			http.Redirect(w, r, "/login?"+vals.Encode(), 302)
 			return
+		case models.User:
+			if user.TOTPActive && r.Context().Value("totp-verified") != nil && r.Context().Value("totp-verified").(bool) != true {
+				vals := r.URL.Query()
+				vals.Add("next", nextVal)
+
+				http.Redirect(w, r, "/login-2fa?"+vals.Encode(), http.StatusFound)
+				return
+			}
 		}
 
 		h.ServeHTTP(w, r)

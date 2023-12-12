@@ -75,10 +75,6 @@ func organisationCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.Form["custom_fields"] = deblank(r.Form["custom_fields"])
-	r.Form["read_only_fields"] = deblank(r.Form["read_only_fields"])
-	r.Form["private_fields"] = deblank(r.Form["private_fields"])
-
 	var org models.Organisation
 
 	// Org already exists. This is an update.

@@ -4,9 +4,8 @@ import (
 	"context"
 	"doubleboiler/flashes"
 	"doubleboiler/models"
+	"doubleboiler/util"
 	"net/http"
-
-	"github.com/davidbanham/scum/util"
 )
 
 func orgMiddleware(h http.Handler) http.Handler {

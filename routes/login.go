@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"doubleboiler/flashes"
 	"doubleboiler/logger"
 	"doubleboiler/models"
 	"net/http"
@@ -40,22 +39,8 @@ type loginPageData struct {
 }
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Get("flow") == "signup" {
-		flash := flashes.Flash{
-			Type: flashes.Success,
-			Text: "Please use your new password to log in.",
-		}
-		flashed, _ := flash.Add(r.Context())
-		r = r.WithContext(flashed)
-	}
-
-	next := r.URL.Query().Get("next")
-	if next == "" {
-		next = "/welcome"
-	}
-
 	if isLoggedIn(r.Context()) {
-		http.Redirect(w, r, next, 302)
+		http.Redirect(w, r, nextFlow("/dashboard", r.Form), 302)
 		return
 	}
 
@@ -64,7 +49,7 @@ func serveLogin(w http.ResponseWriter, r *http.Request) {
 			PageTitle: "DoubleBoiler - Login",
 			Context:   r.Context(),
 		},
-		Next: next,
+		Next: r.FormValue("next"),
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
@@ -117,13 +102,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	next := "/dashboard"
-	if r.FormValue("next") != "" {
-		if r.FormValue("next") != "/login" {
-			next = r.FormValue("next")
-		}
-	}
-
 	if user.TOTPActive {
 		// When posting to login the usual user middleware is bypassed
 		ctx := context.WithValue(r.Context(), "user", user)
@@ -134,10 +112,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 				Context:   ctx,
 			},
 			User: user,
-			Next: next,
+			Next: r.FormValue("next"),
 		})
 	} else {
-		http.Redirect(w, r, nextFlow("/welcome", r.Form), 302)
+		http.Redirect(w, r, nextFlow("/dashboard", r.Form), 302)
 	}
 }
 
@@ -190,15 +168,8 @@ func login2FAHandler(w http.ResponseWriter, r *http.Request) {
 func login2FAFormHandler(w http.ResponseWriter, r *http.Request) {
 	user := userFromContext(r.Context())
 
-	next := "/welcome"
-	if r.FormValue("next") != "" {
-		if r.FormValue("next") != "/login" && r.FormValue("next") != "/login-2fa" {
-			next = r.FormValue("next")
-		}
-	}
-
 	if !user.TOTPActive || totpVerifiedFromContext(r.Context()) {
-		http.Redirect(w, r, next, http.StatusFound)
+		http.Redirect(w, r, nextFlow("/dashboard", r.Form), http.StatusFound)
 		return
 	}
 
@@ -208,7 +179,7 @@ func login2FAFormHandler(w http.ResponseWriter, r *http.Request) {
 			Context:   r.Context(),
 		},
 		User: user,
-		Next: next,
+		Next: r.FormValue("next"),
 	})
 }
 

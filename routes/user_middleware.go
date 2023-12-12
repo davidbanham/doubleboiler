@@ -7,7 +7,6 @@ import (
 	"doubleboiler/models"
 	"fmt"
 	"net/http"
-	"net/url"
 	"regexp"
 	"time"
 )
@@ -45,15 +44,6 @@ func userMiddleware(h http.Handler) http.Handler {
 			}
 			errRes(w, r, 403, "Invalid user", err)
 			return
-		}
-
-		if user.TOTPActive {
-			if cookieValue["TOTP"] != "true" && r.URL.Path != "/login-2fa" && r.URL.Path != "/logout" {
-				vals := url.Values{}
-				vals.Add("next", r.URL.Path)
-				http.Redirect(w, r, "/login-2fa?"+vals.Encode(), http.StatusFound)
-				return
-			}
 		}
 
 		if !assetPath.MatchString(r.URL.Path) {
