@@ -52,18 +52,16 @@ func orgMiddleware(h http.Handler) http.Handler {
 
 						whitelist := []string{totpURL, "/logout", "/users/" + user.ID + "/enrol-totp"}
 						if !util.Contains(whitelist, r.URL.Path) && !authFree {
-							flash := flashes.Flash{
+							if ctx, err := user.PersistFlash(r.Context(), flashes.Flash{
 								OnceOnlyKey: org.ID + "2fa_required",
 								Persistent:  true,
 								Type:        flashes.Warn,
 								Text:        org.Name + " requires you to set up 2-step authentication on your account",
-							}
-
-							if flashed, err := flash.Add(r.Context()); err != nil {
+							}); err != nil {
 								errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
 								return
 							} else {
-								r = r.WithContext(flashed)
+								r = r.WithContext(ctx)
 							}
 
 							http.Redirect(w, r, totpURL, 302)

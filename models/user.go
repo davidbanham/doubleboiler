@@ -73,31 +73,43 @@ func (user *User) auditQuery(ctx context.Context, action string) string {
 	return auditQuery(ctx, action, "users", user.ID, user.ID)
 }
 
-func (user User) PersistFlash(ctx context.Context, flash flashes.Flash) error {
-	alreadyThere := false
-	for _, existing := range user.Flashes {
-		if flash.OnceOnlyKey != "" && flash.OnceOnlyKey == existing.OnceOnlyKey {
-			alreadyThere = true
+func (user User) PersistFlashes(ctx context.Context) (context.Context, error) {
+	persisted := flashes.Flashes{}
+	for _, flash := range user.Flashes {
+		if flash.Persistent {
+			persisted = append(persisted, flash)
 		}
 	}
-	if alreadyThere {
-		return nil
+
+	if len(persisted) > 0 {
+		db := ctx.Value("tx").(Querier)
+		if _, err := db.ExecContext(ctx, "UPDATE users SET flashes = $2 WHERE id = $1", user.ID, persisted); err != nil {
+			return ctx, err
+		}
 	}
 
-	user.Flashes = append(user.Flashes, flash)
-	db := ctx.Value("tx").(Querier)
-	_, err := db.ExecContext(ctx, "UPDATE users SET flashes = $2 WHERE id = $1", user.ID, user.Flashes)
-	return err
+	return context.WithValue(ctx, "user", user), nil
 }
 
-func (user User) DeleteFlash(ctx context.Context, flash flashes.Flash) error {
+func (user *User) PersistFlash(ctx context.Context, flash flashes.Flash) (context.Context, error) {
+	if err := user.FetchFlashes(ctx); err != nil {
+		return ctx, err
+	}
+
+	(*user).Flashes.Add(flash)
+	(*user).HasFlashes = len(user.Flashes) > 0
+
+	return user.PersistFlashes(ctx)
+}
+
+func (user User) DeleteFlash(ctx context.Context, id string) error {
 	db := ctx.Value("tx").(Querier)
 	_, err := db.ExecContext(ctx, `
 UPDATE users
 SET flashes = flashes #- coalesce(('{' || (
 	SELECT i
 		FROM generate_series(0, jsonb_array_length(flashes) - 1) AS i
-	 WHERE (flashes->i->'id' = '"`+flash.ID+`"')
+	 WHERE (flashes->i->'id' = '"`+id+`"')
 ) || '}')::text[], '{}')
 WHERE id = $1`, user.ID)
 	return err
@@ -105,7 +117,17 @@ WHERE id = $1`, user.ID)
 
 func (user *User) FetchFlashes(ctx context.Context) error {
 	db := ctx.Value("tx").(Querier)
-	return db.QueryRowContext(ctx, `SELECT flashes FROM users WHERE id = $1`, user.ID).Scan(&user.Flashes)
+	persisted := flashes.Flashes{}
+	if err := db.QueryRowContext(ctx, `SELECT flashes FROM users WHERE id = $1`, user.ID).Scan(&persisted); err != nil {
+		return err
+	}
+	for _, existing := range user.Flashes {
+		if !existing.Persistent {
+			persisted = append(persisted, existing)
+		}
+	}
+	(*user).Flashes = persisted
+	return nil
 }
 
 func (user *User) Validate2FA(ctx context.Context, code, recoveryCode string) (bool, error) {

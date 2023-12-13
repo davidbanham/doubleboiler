@@ -216,9 +216,9 @@ func flashesFromContext(ctx context.Context) flashes.Flashes {
 	}
 	switch user := ctx.Value("user").(type) {
 	case models.User:
-		for _, flash := range user.Flashes {
-			if !flash.Sticky {
-				user.DeleteFlash(ctx, flash)
+		if user.HasFlashes {
+			if err := user.FetchFlashes(context.WithValue(ctx, "tx", config.Db)); err != nil {
+				logger.Log(ctx, logger.Error, fmt.Sprintf("Error fetching user flashes %s - %s", user.ID, user.Email), err)
 			}
 		}
 		return user.Flashes

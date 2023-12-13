@@ -243,21 +243,16 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if r.FormValue("password") != "" {
 				if util.Contains([]string{"reset_password", "signup"}, r.FormValue("flow")) {
-					flash := flashes.Flash{
+					if ctx, err := user.PersistFlash(r.Context(), flashes.Flash{
 						Persistent: true,
 						Type:       flashes.Success,
 						Text:       "Please use your new password to log in.",
+					}); err != nil {
+						errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
+						return
+					} else {
+						r = r.WithContext(ctx)
 					}
-					flashed, _ := flash.Add(r.Context())
-					r = r.WithContext(flashed)
-				} else {
-					flash := flashes.Flash{
-						Persistent: true,
-						Type:       flashes.Success,
-						Text:       "Password set successfully.",
-					}
-					flashed, _ := flash.Add(r.Context())
-					r = r.WithContext(flashed)
 				}
 			}
 			errRes(w, r, 500, "A database error has occurred", err)
@@ -527,16 +522,15 @@ func userEnrolTOTPHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	flash := flashes.Flash{
+	if ctx, err := user.PersistFlash(r.Context(), flashes.Flash{
 		Persistent: true,
 		Type:       flashes.Success,
 		Text:       "Two factor auth successfully set up",
-	}
-	if flashed, err := flash.Add(r.Context()); err != nil {
+	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
 		return
 	} else {
-		r = r.WithContext(flashed)
+		r = r.WithContext(ctx)
 	}
 
 	codes, err := user.GenerateRecoveryCodesBypassCheck(r.Context())
@@ -664,17 +658,15 @@ func userDisableTOTPHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	flash := flashes.Flash{
+	if ctx, err := user.PersistFlash(r.Context(), flashes.Flash{
 		Persistent: true,
 		Type:       flashes.Success,
 		Text:       "Two factor auth successfully removed",
-	}
-
-	if flashed, err := flash.Add(r.Context()); err != nil {
+	}); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
 		return
 	} else {
-		r = r.WithContext(flashed)
+		r = r.WithContext(ctx)
 	}
 
 	http.Redirect(w, r, "/users/"+user.ID, http.StatusFound)

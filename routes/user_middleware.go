@@ -50,20 +50,16 @@ func userMiddleware(h http.Handler) http.Handler {
 			logger.Log(r.Context(), logger.Info, fmt.Sprintf("User seen: %s, %s, %s, %s\n", user.ID, user.Email, r.Method, r.URL.Path))
 		}
 
-		if user.HasFlashes {
-			if err := user.FetchFlashes(r.Context()); err != nil {
-				errRes(w, r, http.StatusInternalServerError, "Error looking up flashes", err)
-				return
-			}
-		}
-
 		if r.URL.Query().Get("test-flash") == "true" {
-			flash := flashes.Flash{
+			if ctx, err := user.PersistFlash(r.Context(), flashes.Flash{
 				Type: flashes.Success,
 				Text: "This is a test flash mesage",
+			}); err != nil {
+				errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
+				return
+			} else {
+				r = r.WithContext(ctx)
 			}
-			flashed, _ := flash.Add(r.Context())
-			r = r.WithContext(flashed)
 		}
 
 		con := context.WithValue(r.Context(), "user", user)
