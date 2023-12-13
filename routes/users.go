@@ -532,10 +532,11 @@ func userEnrolTOTPHandler(w http.ResponseWriter, r *http.Request) {
 		Type:       flashes.Success,
 		Text:       "Two factor auth successfully set up",
 	}
-
-	if err := user.PersistFlash(r.Context(), flash); err != nil {
+	if flashed, err := flash.Add(r.Context()); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
 		return
+	} else {
+		r = r.WithContext(flashed)
 	}
 
 	codes, err := user.GenerateRecoveryCodesBypassCheck(r.Context())
@@ -669,9 +670,11 @@ func userDisableTOTPHandler(w http.ResponseWriter, r *http.Request) {
 		Text:       "Two factor auth successfully removed",
 	}
 
-	if err := user.PersistFlash(r.Context(), flash); err != nil {
+	if flashed, err := flash.Add(r.Context()); err != nil {
 		errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
 		return
+	} else {
+		r = r.WithContext(flashed)
 	}
 
 	http.Redirect(w, r, "/users/"+user.ID, http.StatusFound)

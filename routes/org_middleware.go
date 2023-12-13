@@ -59,10 +59,13 @@ func orgMiddleware(h http.Handler) http.Handler {
 								Text:        org.Name + " requires you to set up 2-step authentication on your account",
 							}
 
-							if err := user.PersistFlash(r.Context(), flash); err != nil {
+							if flashed, err := flash.Add(r.Context()); err != nil {
 								errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
 								return
+							} else {
+								r = r.WithContext(flashed)
 							}
+
 							http.Redirect(w, r, totpURL, 302)
 							return
 						}
