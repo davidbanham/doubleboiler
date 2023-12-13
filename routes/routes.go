@@ -41,9 +41,9 @@ func Init() (h http.Handler) {
 	h = recoverWrap(h)
 	h = handlers.LoggingHandler(os.Stdout, h)
 
-	r.Path("/welcome").
+	r.Path("/dashboard").
 		Methods("GET").
-		HandlerFunc(serveWelcome)
+		HandlerFunc(serveDashboard)
 
 	r.Path("/").
 		Methods("GET").
@@ -125,16 +125,16 @@ func (pd basePageData) Title() string {
 	return pd.PageTitle
 }
 
-type welcomePageData struct {
+type dashboardPageData struct {
 	basePageData
 	Organisations models.Organisations
 }
 
-func serveWelcome(w http.ResponseWriter, r *http.Request) {
-	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
+func serveDashboard(w http.ResponseWriter, r *http.Request) {
+	if err := Tmpl.ExecuteTemplate(w, "dashboard.html", dashboardPageData{
 		basePageData: basePageData{
 			Context:   r.Context(),
-			PageTitle: "DoubleBoiler - Welcome",
+			PageTitle: "DoubleBoiler - Dashboard",
 		},
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)

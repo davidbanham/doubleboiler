@@ -68,10 +68,10 @@ var templateFuncMap = template.FuncMap{
 			return "/"
 		}
 		url := unconv.(*url.URL)
-		if strings.Contains(url.Path, "/welcome") {
+		if strings.Contains(url.Path, "/dashboard") {
 			return "/"
 		}
-		return "/welcome"
+		return "/dashboard"
 	},
 	"subComponent": func(name string, data interface{}) (template.HTML, error) {
 		return Tmpl.Component(name, data)

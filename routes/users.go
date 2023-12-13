@@ -100,10 +100,10 @@ func userImpersonater(w http.ResponseWriter, r *http.Request) {
 
 	orgs := orgsFromContext(r.Context())
 
-	if err := Tmpl.ExecuteTemplate(w, "welcome.html", welcomePageData{
+	if err := Tmpl.ExecuteTemplate(w, "dashboard.html", dashboardPageData{
 		Organisations: orgs,
 		basePageData: basePageData{
-			PageTitle: "DoubleBoiler - Welcome",
+			PageTitle: "DoubleBoiler - Dashboard",
 			Context:   r.Context(),
 		},
 	}); err != nil {

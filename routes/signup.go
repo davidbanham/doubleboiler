@@ -37,7 +37,7 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.Verified {
-		http.Redirect(w, r, "/welcome", 302)
+		http.Redirect(w, r, "/dashboard", 302)
 		return
 	}
 
