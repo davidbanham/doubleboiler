@@ -21,13 +21,16 @@ func TestUserCreateOrUpdateHandler(t *testing.T) {
 	t.Parallel()
 	ctx := getCtx(t)
 
+	pass := bandname()
+
 	form := url.Values{
-		"email":       {bandEmail()},
-		"password":    {bandname()},
-		"orgname":     {bandname()},
-		"country":     {"Australia"},
-		"orgcurrency": {"AUD"},
-		"terms":       {"agreed"},
+		"email":            {bandEmail()},
+		"password":         {pass},
+		"confirm-password": {pass},
+		"orgname":          {bandname()},
+		"country":          {"Australia"},
+		"orgcurrency":      {"AUD"},
+		"terms":            {"agreed"},
 	}
 	req := &http.Request{
 		Method: "POST",

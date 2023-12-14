@@ -65,7 +65,7 @@ func init() {
 }
 
 func userImpersonater(w http.ResponseWriter, r *http.Request) {
-	loggedInUser := r.Context().Value("user").(models.User)
+	loggedInUser := userFromContext(r.Context())
 	if !loggedInUser.SuperAdmin {
 		errRes(w, r, 403, "You are not an admin", nil)
 		return
@@ -124,6 +124,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newUser := false
 	user := models.User{}
 	if r.FormValue("id") != "" {
 		if err := user.FindByID(r.Context(), r.FormValue("id")); err != nil {
@@ -134,19 +135,15 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			errRes(w, r, http.StatusBadRequest, models.ErrWrongRev.Message, nil)
 			return
 		}
-	} else {
-		if err := user.FindByColumn(r.Context(), "email", r.FormValue("email")); err != nil {
-			if err != sql.ErrNoRows {
-				errRes(w, r, 500, "Error looking up user", err)
+
+		if r.FormValue("email") != user.Email {
+			if err := user.SendEmailChangedNotification(r.Context(), r.FormValue("email")); err != nil {
+				errRes(w, r, 500, "Error queueing notification", err)
 				return
 			}
 		}
-	}
 
-	newUser := false
-
-	if user.ID == "" {
-		newUser = true
+	} else {
 		if r.FormValue("terms") != "agreed" {
 			errRes(w, r, 400, "You must agree to the terms and conditions", nil)
 			return
@@ -160,44 +157,25 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			r.FormValue("email"),
 			rawpassword,
 		)
-	} else {
-		if r.FormValue("email") != user.Email {
-			if user.HasEmail() {
-				if !user.Verified {
-					if r.FormValue("terms") != "agreed" {
-						errRes(w, r, http.StatusBadRequest, "You must accept the terms and conditions if you wish to sign up", nil)
-						return
-					}
-					orgs := models.Organisations{}
-					criteria := models.Criteria{}
-					models.AddCustomQuery(models.OrganisationsContainingUser{ID: user.ID}, &criteria)
-					if err := orgs.FindAll(r.Context(), criteria); err != nil {
-						errRes(w, r, 500, "Error looking up organisations", err)
-						return
-					}
-					for _, org := range orgs.Data {
-						if err := user.SendVerificationEmail(r.Context(), org); err != nil {
-							errRes(w, r, 500, "Error queueing verification email", err)
-							return
-						}
-					}
-				} else {
-					if err := user.SendEmailChangedNotification(r.Context(), r.FormValue("email")); err != nil {
-						errRes(w, r, 500, "Error queueing notification", err)
-						return
-					}
-				}
-			}
+		newUser = true
+	}
+
+	loggedInUser := userFromContext(r.Context())
+
+	if !newUser && loggedInUser.ID != user.ID && !loggedInUser.SuperAdmin {
+		errRes(w, r, 403, "You are not logged in as this user, nor are you an application admin", nil)
+		return
+	}
+
+	if r.FormValue("password") != "" {
+		if r.FormValue("confirm-password") != r.FormValue("password") {
+			errRes(w, r, http.StatusBadRequest, "Submitted passwords do not match", nil)
+			return
 		}
-		if r.FormValue("email") != "noop" {
-			user.Email = r.FormValue("email")
-		}
-		if r.FormValue("password") != "" {
-			if r.FormValue("confirm-password") != "" {
-				if r.FormValue("confirm-password") != r.FormValue("password") {
-					errRes(w, r, http.StatusBadRequest, "Submitted passwords do not match", nil)
-					return
-				}
+		if r.FormValue("token") != "" {
+			if err := util.CheckToken(config.SECRET, r.FormValue("expiry"), user.Email, r.FormValue("token")); err != nil {
+				errRes(w, r, http.StatusUnauthorized, "Invalid token", err)
+				return
 			}
 			hash, err := util.HashPassword(r.FormValue("password"))
 			if err != nil {
@@ -205,59 +183,29 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			user.Password = hash
-		}
-
-		if !user.Verified {
-			if r.FormValue("terms") != "agreed" {
-				errRes(w, r, http.StatusBadRequest, "You must accept the terms and conditions if you wish to sign up", nil)
-				return
-			}
 			user.Verified = true
-		}
-	}
 
-	savePermitted := newUser
-	untypedUser := r.Context().Value("user")
-	if untypedUser != nil {
-		loggedInUser := untypedUser.(models.User)
-		if loggedInUser.SuperAdmin || user.ID == loggedInUser.ID {
-			savePermitted = true
-		}
-	}
-
-	if r.FormValue("token") != "" {
-		if err := util.CheckToken(config.SECRET, r.FormValue("expiry"), user.Email, r.FormValue("token")); err != nil {
-			errRes(w, r, http.StatusUnauthorized, "Invalid token", err)
-			return
-		} else {
-			savePermitted = true
-		}
-	}
-
-	if savePermitted {
-		if err := user.Save(r.Context()); err != nil {
-			if err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"` {
-				config.ReportError(errors.New("Duplicate email hit: " + user.Email))
-				errRes(w, r, 409, "That email address already exists in our system.", err)
+			if ctx, err := user.PersistFlash(r.Context(), flashes.Flash{
+				Persistent: true,
+				Type:       flashes.Success,
+				Text:       "Please use your new password to log in.",
+			}); err != nil {
+				errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
 				return
+			} else {
+				r = r.WithContext(ctx)
 			}
-			if r.FormValue("password") != "" {
-				if util.Contains([]string{"reset_password", "signup"}, r.FormValue("flow")) {
-					if ctx, err := user.PersistFlash(r.Context(), flashes.Flash{
-						Persistent: true,
-						Type:       flashes.Success,
-						Text:       "Please use your new password to log in.",
-					}); err != nil {
-						errRes(w, r, http.StatusInternalServerError, "Error adding flash message", err)
-						return
-					} else {
-						r = r.WithContext(ctx)
-					}
-				}
-			}
-			errRes(w, r, 500, "A database error has occurred", err)
+		}
+	}
+
+	if err := user.Save(r.Context()); err != nil {
+		if err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"` {
+			config.ReportError(errors.New("Duplicate email hit: " + user.Email))
+			errRes(w, r, 409, "That email address already exists in our system.", err)
 			return
 		}
+		errRes(w, r, 500, "A database error has occurred", err)
+		return
 	}
 
 	orgname := r.FormValue("orgname")
@@ -268,29 +216,32 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		var err error
 		err, createdOrg = createOrgFromSignup(r.Context(), user, orgname, orgcountry, orgcurrency)
 		if err != nil {
-			if err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"` {
-				errRes(w, r, 409, "That email address already exists in our system.", err)
-				return
-			}
 			errRes(w, r, 500, "Error saving new organisation", err)
 			return
 		}
 	}
 
 	if !user.Verified {
-		if err := user.SendVerificationEmail(r.Context(), createdOrg); err != nil {
-			errRes(w, r, 500, "Error sending verification email", err)
-			return
+		orgs := models.Organisations{}
+		if createdOrg.ID != "" {
+			orgs.Data = []models.Organisation{createdOrg}
+		} else {
+			criteria := models.Criteria{}
+			models.AddCustomQuery(models.OrganisationsContainingUser{ID: user.ID}, &criteria)
+			if err := orgs.FindAll(r.Context(), criteria); err != nil {
+				errRes(w, r, 500, "Error looking up organisations", err)
+				return
+			}
+		}
+		for _, org := range orgs.Data {
+			if err := user.SendVerificationEmail(r.Context(), org); err != nil {
+				errRes(w, r, 500, "Error queueing verification email", err)
+				return
+			}
 		}
 	}
 
-	defaultNext := "/users/" + user.ID
-
-	if user.Verified && orgname != "" {
-		defaultNext = "/organisations"
-	}
-
-	http.Redirect(w, r, nextFlow(defaultNext, r.Form), 302)
+	http.Redirect(w, r, nextFlow("/dashboard", r.Form), 302)
 }
 
 type usersPageData struct {
@@ -300,7 +251,7 @@ type usersPageData struct {
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
-	loggedInUser := r.Context().Value("user").(models.User)
+	loggedInUser := userFromContext(r.Context())
 	if !loggedInUser.SuperAdmin {
 		errRes(w, r, http.StatusForbidden, "Only application admins may list users", nil)
 		return
@@ -347,7 +298,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	loggedInUser := r.Context().Value("user").(models.User)
+	loggedInUser := userFromContext(r.Context())
 	if loggedInUser.ID != vars["id"] && !loggedInUser.SuperAdmin {
 		errRes(w, r, http.StatusForbidden, "You are not authorized to view this user", nil)
 		return
@@ -375,7 +326,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func userSettingsRedir(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value("user").(models.User)
+	user := userFromContext(r.Context())
 	http.Redirect(w, r, "/users/"+user.ID, 302)
 }
 

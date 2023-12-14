@@ -61,17 +61,20 @@ func TestSignupFlow(t *testing.T) {
 func TestSignupFlowDuplicateEmail(t *testing.T) {
 	t.Parallel()
 	ctx := getCtx(t)
+	defer closeTx(t, ctx)
 
 	fix, _ := userFixture(ctx, t)
 
+	pass := bandname()
 	form := url.Values{
-		"email":       {fix.Email},
-		"password":    {bandname()},
-		"next":        {"signup"},
-		"orgname":     {bandname()},
-		"country":     {"Australia"},
-		"orgcurrency": {"AUD"},
-		"terms":       {"agreed"},
+		"email":            {fix.Email},
+		"password":         {pass},
+		"confirm-password": {pass},
+		"next":             {"signup"},
+		"orgname":          {bandname()},
+		"country":          {"Australia"},
+		"orgcurrency":      {"AUD"},
+		"terms":            {"agreed"},
 	}
 
 	req := &http.Request{
@@ -84,11 +87,7 @@ func TestSignupFlowDuplicateEmail(t *testing.T) {
 	rr := httptest.NewRecorder()
 	userCreateOrUpdateHandler(rr, req)
 
-	assert.Equal(t, http.StatusFound, rr.Code)
-	org := models.Organisation{}
-	assert.Nil(t, org.FindByColumn(ctx, "name", form.Get("orgname")))
-
-	closeTx(t, ctx)
+	assert.Equal(t, http.StatusConflict, rr.Code)
 }
 
 func TestVerificationHandlerValid(t *testing.T) {
@@ -116,12 +115,16 @@ func TestVerificationHandlerValid(t *testing.T) {
 	assert.False(t, u.Verified)
 
 	// Set password for new user
+	pass := bandname()
 	form := url.Values{
-		"id":       {fix.ID},
-		"revision": {fix.Revision},
-		"email":    {bandname()},
-		"password": {bandname()},
-		"terms":    {"agreed"},
+		"id":               {fix.ID},
+		"revision":         {fix.Revision},
+		"email":            {bandname()},
+		"password":         {pass},
+		"confirm-password": {pass},
+		"terms":            {"agreed"},
+		"token":            {token.String()},
+		"expiry":           {token.ExpiryString()},
 	}
 	req2 := &http.Request{
 		Method: "POST",

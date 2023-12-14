@@ -37,7 +37,6 @@ func Init() (h http.Handler) {
 	h = userMiddleware(h)
 	h = txMiddleware(h)
 	h = traceMiddleware(h)
-	h = authFreeMiddleware(h)
 	h = recoverWrap(h)
 	h = handlers.LoggingHandler(os.Stdout, h)
 
@@ -48,14 +47,6 @@ func Init() (h http.Handler) {
 	r.Path("/").
 		Methods("GET").
 		HandlerFunc(serveIndex)
-
-	r.Path("/pricing").
-		Methods("GET").
-		HandlerFunc(servePricing)
-
-	r.Path("/features/{name}").
-		Methods("GET").
-		HandlerFunc(serveFeatureMarketingPage)
 
 	if config.STAGE != "production" {
 		r.Path("/change-watcher").
@@ -77,35 +68,8 @@ func servePrivacy(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
-	if err := Tmpl.ExecuteTemplate(w, "index.html", marketingPageData{
-		basePageData: basePageData{
-			Context: r.Context(),
-		},
-	}); err != nil {
-		errRes(w, r, 500, "Problem with template", err)
-		return
-	}
-}
-
-func servePricing(w http.ResponseWriter, r *http.Request) {
-	if err := Tmpl.ExecuteTemplate(w, "pricing.html", marketingPageData{
-		basePageData: basePageData{
-			PageTitle: "DoubleBoiler - Pricing",
-			Context:   r.Context(),
-		},
-	}); err != nil {
-		errRes(w, r, 500, "Problem with template", err)
-		return
-	}
-}
-
-func serveFeatureMarketingPage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	if err := Tmpl.ExecuteTemplate(w, "feature_"+vars["name"]+".html", marketingPageData{
-		basePageData: basePageData{
-			Context: r.Context(),
-		},
+	if err := Tmpl.ExecuteTemplate(w, "index.html", basePageData{
+		Context: r.Context(),
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
@@ -175,10 +139,6 @@ func serveChangeWatcher(w http.ResponseWriter, r *http.Request) {
 	}
 
 	<-done
-}
-
-type marketingPageData struct {
-	basePageData
 }
 
 func isLoggedIn(ctx context.Context) bool {

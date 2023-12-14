@@ -28,14 +28,6 @@ func init() {
 		Methods("GET").
 		HandlerFunc(serveHelp)
 
-	r.Path("/sales-enquiry").
-		Methods("GET").
-		HandlerFunc(serveSalesEnquiry)
-
-	r.Path("/trial-mode-upgrade").
-		Methods("GET").
-		HandlerFunc(serveTrialModeUpgrade)
-
 	r.Path("/contact").
 		Methods("POST").
 		HandlerFunc(handleFeedback)
@@ -58,41 +50,6 @@ func serveHelp(w http.ResponseWriter, r *http.Request) {
 	if err := Tmpl.ExecuteTemplate(w, "help.html", helpPageData{
 		Organisations: relatedOrganisations,
 		Email:         config.SUPPORT_EMAIL,
-		Context:       r.Context(),
-		User:          user,
-	}); err != nil {
-		errRes(w, r, http.StatusBadRequest, "Templating error", err)
-		return
-	}
-}
-
-func serveSalesEnquiry(w http.ResponseWriter, r *http.Request) {
-	if err := Tmpl.ExecuteTemplate(w, "sales_enquiry.html", helpPageData{
-		Email:   config.SYSTEM_EMAIL,
-		Context: r.Context(),
-	}); err != nil {
-		errRes(w, r, http.StatusBadRequest, "Templating error", err)
-		return
-	}
-}
-
-func serveTrialModeUpgrade(w http.ResponseWriter, r *http.Request) {
-	user := models.User{}
-
-	con := r.Context().Value("user")
-	if con != nil {
-		user = con.(models.User)
-	}
-
-	relatedOrganisations := models.Organisations{}
-	ptr := r.Context().Value("organisations")
-	if ptr != nil {
-		relatedOrganisations = ptr.(models.Organisations)
-	}
-
-	if err := Tmpl.ExecuteTemplate(w, "trial_mode_upgrade.html", helpPageData{
-		Organisations: relatedOrganisations,
-		Email:         config.SYSTEM_EMAIL,
 		Context:       r.Context(),
 		User:          user,
 	}); err != nil {

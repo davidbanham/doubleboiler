@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +15,7 @@ var final = http.HandlerFunc(okHandler)
 func TestUserMiddleware(t *testing.T) {
 	t.Parallel()
 
-	var middle = authFreeMiddleware(userMiddleware(loginMiddleware(final)))
+	var middle = userMiddleware(loginMiddleware(final))
 
 	var rr *httptest.ResponseRecorder
 	var err error
