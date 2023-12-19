@@ -35,7 +35,6 @@ func init() {
 
 type loginPageData struct {
 	basePageData
-	Next string
 }
 
 func serveLogin(w http.ResponseWriter, r *http.Request) {
@@ -48,8 +47,8 @@ func serveLogin(w http.ResponseWriter, r *http.Request) {
 		basePageData: basePageData{
 			PageTitle: "DoubleBoiler - Login",
 			Context:   r.Context(),
+			Next:      r.FormValue("next"),
 		},
-		Next: r.FormValue("next"),
 	}); err != nil {
 		errRes(w, r, 500, "Problem with template", err)
 		return
@@ -110,9 +109,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			basePageData: basePageData{
 				PageTitle: "DoubleBoiler - Login - 2FA",
 				Context:   ctx,
+				Next:      r.FormValue("next"),
 			},
 			User: user,
-			Next: r.FormValue("next"),
 		})
 	} else {
 		http.Redirect(w, r, nextFlow("/dashboard", r.Form), 302)
@@ -177,14 +176,13 @@ func login2FAFormHandler(w http.ResponseWriter, r *http.Request) {
 		basePageData: basePageData{
 			PageTitle: "DoubleBoiler - Login - 2FA",
 			Context:   r.Context(),
+			Next:      r.FormValue("next"),
 		},
 		User: user,
-		Next: r.FormValue("next"),
 	})
 }
 
 type login2FAPageData struct {
 	basePageData
 	User models.User
-	Next string
 }
