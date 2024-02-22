@@ -154,6 +154,10 @@ func init() {
 		return nil
 	})
 
+	QUEUE.AddPublishMiddleware(func(ctx context.Context, t *kewpie.Task, queueName string) error {
+		return t.Sign(SECRET)
+	})
+
 	KEWPIE_BACKEND = os.Getenv("KEWPIE_BACKEND")
 
 	if err := QUEUE.Connect(KEWPIE_BACKEND, allQueues, Db); err != nil {
