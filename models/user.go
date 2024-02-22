@@ -99,6 +99,14 @@ func (user *User) PersistFlash(ctx context.Context, flash flashes.Flash) (contex
 	(*user).Flashes.Add(flash)
 	(*user).HasFlashes = len(user.Flashes) > 0
 
+	db := ctx.Value("tx").(Querier)
+	if _, err := db.ExecContext(ctx, `
+UPDATE users
+SET flashes = flashes || $2
+WHERE id = $1`, user.ID, flash); err != nil {
+		return ctx, err
+	}
+
 	return user.PersistFlashes(ctx)
 }
 
@@ -504,7 +512,7 @@ func (this *Users) FindAll(ctx context.Context, criteria Criteria) error {
 			return ErrInvalidQuery{Query: v, Model: "users"}
 		}
 	case Query:
-		rows, err = db.QueryContext(ctx, v.Construct(cols, "users", criteria.Filters, criteria.Pagination, "email"), v.Args()...)
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "users", criteria.Filters, criteria.Pagination, Order{By: "email"}), v.Args()...)
 	}
 	if err != nil {
 		return err

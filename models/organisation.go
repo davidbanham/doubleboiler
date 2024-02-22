@@ -149,7 +149,7 @@ func (this *Organisations) FindAll(ctx context.Context, criteria Criteria) error
 			}
 		}
 	case Query:
-		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "organisations", criteria.Filters, criteria.Pagination, Order{By: "name"}), v.Args()...)
 	}
 
 	if err != nil {

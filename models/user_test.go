@@ -1,11 +1,13 @@
 package models
 
 import (
+	"doubleboiler/flashes"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/pquerna/otp/totp"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -97,6 +99,64 @@ func TestUserRevisionChange(t *testing.T) {
 	assert.Nil(t, fix.Save(ctx))
 	assert.NotEqual(t, firstRev, fix.Revision)
 
+	closeTx(t, ctx)
+}
+
+func TestUserPersistFlash(t *testing.T) {
+	t.Parallel()
+	ctx := getCtx(t)
+
+	fix := userFixture()
+	assert.Nil(t, fix.Save(ctx))
+
+	one := flashes.Flash{Persistent: true, ID: uuid.NewV4().String()}
+
+	_, err := fix.PersistFlash(ctx, one)
+	assert.Nil(t, err)
+	assert.Contains(t, fix.Flashes, one)
+
+	assert.Nil(t, fix.FetchFlashes(ctx))
+	assert.Contains(t, fix.Flashes, one)
+
+	found := User{}
+	assert.Nil(t, found.FindByID(ctx, fix.ID))
+	assert.Nil(t, found.FetchFlashes(ctx))
+	assert.Contains(t, found.Flashes, one)
+
+	closeTx(t, ctx)
+}
+
+func TestUserPersistFlashRace(t *testing.T) {
+	t.Parallel()
+	ctx := getCtx(t)
+
+	fix := userFixture()
+	assert.Nil(t, fix.Save(ctx))
+
+	otherFix := userFixture()
+	otherFix.ID = fix.ID
+	otherFix.Revision = fix.Revision
+	assert.Nil(t, otherFix.Save(ctx))
+
+	one := flashes.Flash{Persistent: true, ID: uuid.NewV4().String()}
+	two := flashes.Flash{Persistent: true, ID: uuid.NewV4().String()}
+
+	if _, err := fix.PersistFlash(ctx, one); err != nil {
+		assert.Nil(t, err)
+	}
+	if _, err := otherFix.PersistFlash(ctx, two); err != nil {
+		assert.Nil(t, err)
+	}
+
+	assert.Nil(t, fix.FetchFlashes(ctx))
+	assert.Contains(t, fix.Flashes, one)
+	assert.Contains(t, fix.Flashes, two)
+
+	found := User{}
+	assert.Nil(t, found.FindByID(ctx, fix.ID))
+	assert.Nil(t, found.FetchFlashes(ctx))
+	assert.Contains(t, found.Flashes, one)
+	assert.Contains(t, found.Flashes, two)
 	closeTx(t, ctx)
 }
 

@@ -10,7 +10,7 @@ require (
 	github.com/davidbanham/kewpie_go/v3 v3.3.0
 	github.com/davidbanham/notifications v1.2.15
 	github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244
-	github.com/davidbanham/scum v0.0.19
+	github.com/davidbanham/scum v0.0.30
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1

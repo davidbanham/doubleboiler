@@ -10,11 +10,6 @@ import (
 
 func orgMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Context().Value("authFree").(bool) {
-			h.ServeHTTP(w, r)
-			return
-		}
-
 		organisations := models.Organisations{}
 		organisationUsers := models.OrganisationUsers{}
 
@@ -44,14 +39,8 @@ func orgMiddleware(h http.Handler) http.Handler {
 				for _, org := range organisations.Data {
 					totpURL := "/users/" + user.ID + "/generate-totp"
 					if org.Toggles.ByKey(models.RequireAdmin2FA.Key).State && !user.TOTPActive && organisationUsers.ForOrgID(org.ID).Roles.Can("admin") {
-						authFree := false
-						unconv := r.Context().Value("authFree")
-						if unconv != nil {
-							authFree = unconv.(bool)
-						}
-
 						whitelist := []string{totpURL, "/logout", "/users/" + user.ID + "/enrol-totp"}
-						if !util.Contains(whitelist, r.URL.Path) && !authFree {
+						if !util.Contains(whitelist, r.URL.Path) {
 							if ctx, err := user.PersistFlash(r.Context(), flashes.Flash{
 								OnceOnlyKey: org.ID + "2fa_required",
 								Persistent:  true,

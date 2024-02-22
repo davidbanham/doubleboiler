@@ -30,7 +30,7 @@ type CustomQuery interface {
 
 type custom struct{}
 
-func (custom) Construct([]string, string, Filters, Pagination, string) string {
+func (custom) Construct([]string, string, Filters, Pagination, Order) string {
 	return ""
 }
 func (custom) Args() []any {
@@ -46,6 +46,7 @@ var SearchTargets = Searchables{}
 type Querier = scummodel.Querier
 
 type Query = scumquery.Query
+type Order = scumquery.Order
 
 type Colmap = scummodel.Colmap
 type ErrInvalidQuery = scummodel.ErrInvalidQuery

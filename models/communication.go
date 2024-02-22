@@ -148,7 +148,7 @@ func (this *Communications) FindAll(ctx context.Context, criteria Criteria) erro
 			return ErrInvalidQuery{Query: v, Model: "communications"}
 		}
 	case Query:
-		rows, err = db.QueryContext(ctx, v.Construct(cols, "communications", criteria.Filters, criteria.Pagination, "subject"), v.Args()...)
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "communications", criteria.Filters, criteria.Pagination, Order{By: "created_at"}), v.Args()...)
 	}
 	if err != nil {
 		return err

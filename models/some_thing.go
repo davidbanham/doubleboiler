@@ -159,7 +159,7 @@ func (this *SomeThings) FindAll(ctx context.Context, criteria Criteria) error {
 			return ErrInvalidQuery{Query: v, Model: "some_things"}
 		}
 	case Query:
-		rows, err = db.QueryContext(ctx, v.Construct(cols, "some_things", criteria.Filters, criteria.Pagination, "name"), v.Args()...)
+		rows, err = db.QueryContext(ctx, v.Construct(cols, "some_things", criteria.Filters, criteria.Pagination, Order{By: "name"}), v.Args()...)
 	}
 	if err != nil {
 		return err
