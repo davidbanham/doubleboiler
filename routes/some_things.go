@@ -160,6 +160,7 @@ func someThingDeletionHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !can(r.Context(), org, "admin") {
 		errRes(w, r, http.StatusForbidden, "You are not an admin of that organisation", nil)
+		return
 	}
 
 	if err := someThing.HardDelete(r.Context()); err != nil {
