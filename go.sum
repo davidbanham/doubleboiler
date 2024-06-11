@@ -318,10 +318,12 @@ github.com/davidbanham/marcel v0.0.14 h1:QuvP6RQvV1u0YiW40VJvhyX4q+hPWbHCwB8kknd
 github.com/davidbanham/marcel v0.0.14/go.mod h1:/R3ZujeZepkWIvcC13X/Va0l2yhl3xYZIL61GHZ1C/Y=
 github.com/davidbanham/notifications v1.2.15 h1:+duKUpg3qwmDaf1hNHPQHm5F9UY69eWbaH8u+2yH8UM=
 github.com/davidbanham/notifications v1.2.15/go.mod h1:dpk7AIUWD00tYhpWSGaLUO76DIXtWlYO3nhcJ/pIifU=
+github.com/davidbanham/recaptcha v0.0.0-20200701113227-9cf0286ee5cf h1:tHdEtx6WbaprjHHGj77wPngQqomtSK6xXch/EN2XqJg=
+github.com/davidbanham/recaptcha v0.0.0-20200701113227-9cf0286ee5cf/go.mod h1:QEkvAMfu0F9yYSPkz9ewSbmp+2i7x4FmxqSfPdBAPqc=
 github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244 h1:FgQ8KQ99RjcMqaTSqmdisj2quuDKlL1x62SoRtZQwqw=
 github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244/go.mod h1:zJVA+kv43obXkwVzNtnVJK9rIUvzRtV+rSe1qXyf4xk=
-github.com/davidbanham/scum v0.0.30 h1:mMpO/IZyNbY1g9FrEs+Yie2t3eY84Rw6CCNb3O7y16c=
-github.com/davidbanham/scum v0.0.30/go.mod h1:HKJ+iVDM7uJU7VIyrY5/hhYjCdrnNxH6igzE08pzAd4=
+github.com/davidbanham/scum v0.0.37 h1:vOVQULgWB/LBCYGGGwLjs5+N5biWPMAYyl7CeI1m1Qc=
+github.com/davidbanham/scum v0.0.37/go.mod h1:HKJ+iVDM7uJU7VIyrY5/hhYjCdrnNxH6igzE08pzAd4=
 github.com/denisenkom/go-mssqldb v0.10.0/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
 github.com/denverdino/aliyungo v0.0.0-20190125010748-a747050bb1ba/go.mod h1:dV8lFg6daOBZbT6/BDGIz6Y3WFGn8juu6G+CQ6LHtl0=
 github.com/dgrijalva/jwt-go v0.0.0-20170104182250-a601269ab70c/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
