@@ -86,6 +86,10 @@ func userMiddleware(h http.Handler) http.Handler {
 					return
 				}
 			}
+			if c.Value == "logged_out" {
+				h.ServeHTTP(w, r)
+				return
+			}
 			cookieValue := make(map[string]string)
 			decodeErr := secureCookie.Decode("doubleboiler-user", c.Value, &cookieValue)
 			if decodeErr != nil || cookieValue["ID"] == "" {

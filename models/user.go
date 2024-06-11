@@ -73,41 +73,25 @@ func (user *User) auditQuery(ctx context.Context, action string) string {
 	return auditQuery(ctx, action, "users", user.ID, user.ID)
 }
 
-func (user User) PersistFlashes(ctx context.Context) (context.Context, error) {
-	persisted := flashes.Flashes{}
-	for _, flash := range user.Flashes {
-		if flash.Persistent {
-			persisted = append(persisted, flash)
-		}
-	}
-
-	if len(persisted) > 0 {
-		db := ctx.Value("tx").(Querier)
-		if _, err := db.ExecContext(ctx, "UPDATE users SET flashes = $2 WHERE id = $1", user.ID, persisted); err != nil {
-			return ctx, err
-		}
-	}
-
-	return context.WithValue(ctx, "user", user), nil
-}
-
 func (user *User) PersistFlash(ctx context.Context, flash flashes.Flash) (context.Context, error) {
 	if err := user.FetchFlashes(ctx); err != nil {
 		return ctx, err
 	}
 
-	(*user).Flashes.Add(flash)
+	flash = (*user).Flashes.Add(flash)
 	(*user).HasFlashes = len(user.Flashes) > 0
 
-	db := ctx.Value("tx").(Querier)
-	if _, err := db.ExecContext(ctx, `
+	if flash.Persistent {
+		db := ctx.Value("tx").(Querier)
+		if _, err := db.ExecContext(ctx, `
 UPDATE users
 SET flashes = flashes || $2
 WHERE id = $1`, user.ID, flash); err != nil {
-		return ctx, err
+			return ctx, err
+		}
 	}
 
-	return user.PersistFlashes(ctx)
+	return context.WithValue(ctx, "user", user), nil
 }
 
 func (user User) DeleteFlash(ctx context.Context, id string) error {
