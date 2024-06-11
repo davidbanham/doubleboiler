@@ -88,8 +88,7 @@ func someThingCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// SomeThing already exists. This is an update.
 	if r.FormValue("id") != "" {
-		err := someThing.FindByID(r.Context(), r.FormValue("id"))
-		if err != nil {
+		if err := someThing.FindByID(r.Context(), r.FormValue("id")); err != nil {
 			errRes(w, r, 500, "Error looking up someThing", err)
 			return
 		}
