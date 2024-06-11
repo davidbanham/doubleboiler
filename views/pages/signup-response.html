@@ -4,13 +4,20 @@
 &nbsp;
 {{ end }}
 
+{{ define "menu" }}
+&nbsp;
+{{ end }}
+
 {{ define "content" }}
-<div class="flex flex-col gap-y-6">
-  <h2 class="font-extrabold text-gray-900">
-    Thanks for signing up!
-  </h2>
-  <div>
-    We just need to verify your email address. Check your inbox for an email from us, click on the verification link, and you'll be ready to go!
+<div class="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="px-4 flex flex-col gap-6 sm:mx-auto sm:w-full sm:max-w-md">
+    <img class="mx-auto h-12 w-auto" src="/img/logo_text_white.png" alt="FullyFormed">
+    <h2 class="text-center text-3xl font-extrabold text-gray-900">
+      Thanks for signing up!
+    </h2>
+    <div class="mt-12">
+      We just need to verify your email address. Check your inbox for an email from us, click on the verification link, and you'll be ready to go!
+    </div>
   </div>
 </div>
 {{ end }}

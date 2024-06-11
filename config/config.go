@@ -15,6 +15,7 @@ import (
 	"cloud.google.com/go/errorreporting"
 	"cloud.google.com/go/storage"
 	kewpie "github.com/davidbanham/kewpie_go/v3"
+	"github.com/davidbanham/recaptcha"
 	"github.com/davidbanham/required_env"
 	_ "github.com/lib/pq"
 )
@@ -41,6 +42,7 @@ var REPORT_ERRORS bool
 var MAINTENANCE_MODE bool
 var KEWPIE_BACKEND string
 var GOOGLE_PROJECT_ID string
+var RECAPTCHA_SITE_KEY string
 var SAMPLEORG_ID string
 var START_WORKERS bool
 
@@ -50,6 +52,8 @@ var MAX_TIME, _ = time.Parse(time.RFC3339, "9999-05-05T15:04:05Z")
 var MIN_TIME = time.Unix(0, 0)
 
 var QUEUE kewpie.Kewpie
+
+var AntiSpam recaptcha.Client
 
 var ErrorReporter *errorreporting.Client
 
@@ -78,6 +82,8 @@ func init() {
 		"REPORT_ERRORS":         "true",
 		"MAINTENANCE_MODE":      "false",
 		"KEWPIE_BACKEND":        "",
+		"RECAPTCHA_SECRET":      "",
+		"RECAPTCHA_SITE_KEY":    "",
 		"GOOGLE_PROJECT_ID":     "",
 		"SAMPLEORG_ID":          "3f815ebd-2eb7-4dae-be2d-460c726438e2",
 		"START_WORKERS":         "",
@@ -188,6 +194,10 @@ func init() {
 	LOCAL = os.Getenv("LOCAL") == "true"
 
 	GOOGLE_PROJECT_ID = os.Getenv("GOOGLE_PROJECT_ID")
+
+	RECAPTCHA_SITE_KEY = os.Getenv("RECAPTCHA_SITE_KEY")
+
+	AntiSpam = recaptcha.New(os.Getenv("RECAPTCHA_SECRET"))
 
 	ErrorReporter, err = errorreporting.NewClient(ctx, GOOGLE_PROJECT_ID, errorreporting.Config{
 		ServiceName: "doubleboiler",

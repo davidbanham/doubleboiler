@@ -3,6 +3,7 @@ package routes
 import (
 	"context"
 	"doubleboiler/config"
+	"doubleboiler/logger"
 	"doubleboiler/models"
 	"fmt"
 	"net/http"
@@ -16,6 +17,7 @@ type helpPageData struct {
 	Email         string
 	Context       context.Context
 	User          models.User
+	SiteKey       string
 }
 
 type contactPagedata struct {
@@ -52,6 +54,7 @@ func serveHelp(w http.ResponseWriter, r *http.Request) {
 		Email:         config.SUPPORT_EMAIL,
 		Context:       r.Context(),
 		User:          user,
+		SiteKey:       config.RECAPTCHA_SITE_KEY,
 	}); err != nil {
 		errRes(w, r, http.StatusBadRequest, "Templating error", err)
 		return
@@ -69,6 +72,24 @@ func handleFeedback(w http.ResponseWriter, r *http.Request) {
 	okay := checkFormInput(required, r.Form, w, r)
 	if !okay {
 		return
+	}
+
+	if !isLoggedIn(r.Context()) {
+		// No log in, demand a captcha
+		if r.FormValue("g-recaptcha-response") == "" {
+			logger.Log(r.Context(), logger.Info, "no captcha received", r.URL.RawPath, r.Referer(), r.Form)
+			errRes(w, r, http.StatusBadRequest, "No anti-spam key provided", nil)
+			return
+		}
+		verified, err := config.AntiSpam.Verify(r.FormValue("g-recaptcha-response"))
+		if err != nil {
+			errRes(w, r, http.StatusBadRequest, "error verifying anti spam protection", err)
+			return
+		}
+		if !verified {
+			errRes(w, r, http.StatusForbidden, "error verifying anti spam protection", nil)
+			return
+		}
 	}
 
 	emailText := fmt.Sprintf(`

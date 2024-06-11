@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"doubleboiler/config"
 	"doubleboiler/flashes"
+	"doubleboiler/logger"
 	"doubleboiler/models"
 	"doubleboiler/util"
 	"errors"
@@ -148,6 +149,25 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			errRes(w, r, 400, "You must agree to the terms and conditions", nil)
 			return
 		}
+
+		if config.STAGE != "testing" {
+			// Demand a captcha
+			if r.FormValue("g-recaptcha-response") == "" {
+				logger.Log(r.Context(), logger.Info, "no captcha received", r.URL.RawPath, r.Referer(), r.Form)
+				errRes(w, r, http.StatusBadRequest, "No anti-spam key provided", nil)
+				return
+			}
+			verified, err := config.AntiSpam.Verify(r.FormValue("g-recaptcha-response"))
+			if err != nil {
+				errRes(w, r, http.StatusBadRequest, "error verifying anti spam protection", err)
+				return
+			}
+			if !verified {
+				errRes(w, r, http.StatusForbidden, "error verifying anti spam protection", nil)
+				return
+			}
+		}
+
 		rawpassword := r.FormValue("password")
 		if rawpassword == "" {
 			rawpassword = uuid.NewV4().String()

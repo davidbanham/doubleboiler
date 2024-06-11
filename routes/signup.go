@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"doubleboiler/config"
 	"doubleboiler/logger"
 	"doubleboiler/models"
@@ -61,6 +62,7 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 
 type signupPageData struct {
 	basePageData
+	SiteKey string
 }
 
 func serveSignup(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +72,7 @@ func serveSignup(w http.ResponseWriter, r *http.Request) {
 				PageTitle: "DoubleBoiler - Sign Up",
 				Context:   r.Context(),
 			},
+			SiteKey: config.RECAPTCHA_SITE_KEY,
 		}); err != nil {
 		errRes(w, r, 500, "Templating error", err)
 		return
@@ -77,7 +80,7 @@ func serveSignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveSignupSuccessful(w http.ResponseWriter, r *http.Request) {
-	if err := Tmpl.ExecuteTemplate(w, "signup-response.html", nil); err != nil {
+	if err := Tmpl.ExecuteTemplate(w, "signup-response.html", basePageData{Context: context.Background()}); err != nil {
 		errRes(w, r, 500, "Templating error", err)
 		return
 	}
