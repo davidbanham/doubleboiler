@@ -119,7 +119,7 @@ func TestVerificationHandlerValid(t *testing.T) {
 	form := url.Values{
 		"id":               {fix.ID},
 		"revision":         {fix.Revision},
-		"email":            {bandname()},
+		"email":            {fix.Email},
 		"password":         {pass},
 		"confirm-password": {pass},
 		"terms":            {"agreed"},

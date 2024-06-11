@@ -71,7 +71,12 @@ func currentUser(ctx context.Context) string {
 	unconv := ctx.Value("user")
 
 	if unconv != nil {
-		return unconv.(User).ID
+		switch user := unconv.(type) {
+		default:
+			return ""
+		case User:
+			return user.ID
+		}
 	}
 	return ""
 }
