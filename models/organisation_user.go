@@ -82,6 +82,8 @@ func (this *OrganisationUser) FindByColumn(ctx context.Context, col, val string)
 		return err
 	}
 
+	this.Roles.Implications(ValidRoles)
+
 	return nil
 }
 
@@ -169,6 +171,8 @@ func (this *OrganisationUsers) FindAll(ctx context.Context, criteria Criteria) e
 		if err := rows.Scan(props...); err != nil {
 			return err
 		}
+
+		ou.Roles.Implications(ValidRoles)
 
 		(*this).Data = append((*this).Data, ou)
 	}
