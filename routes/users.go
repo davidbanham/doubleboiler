@@ -142,6 +142,7 @@ func userCreateOrUpdateHandler(w http.ResponseWriter, r *http.Request) {
 				errRes(w, r, 500, "Error queueing notification", err)
 				return
 			}
+			user.Email = r.FormValue("email")
 		}
 
 	} else {
