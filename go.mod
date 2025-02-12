@@ -7,11 +7,11 @@ require (
 	cloud.google.com/go/storage v1.35.1
 	github.com/davidbanham/bandname_go v0.0.0-20180317100912-bb6893a85259
 	github.com/davidbanham/certcache v0.0.0-20180228104134-93d5ff2ba3a1
-	github.com/davidbanham/kewpie_go/v3 v3.3.0
-	github.com/davidbanham/notifications v1.2.15
+	github.com/davidbanham/kewpie_go/v3 v3.4.1
+	github.com/davidbanham/notifications v1.4.1
 	github.com/davidbanham/recaptcha v0.0.0-20200701113227-9cf0286ee5cf
 	github.com/davidbanham/required_env v0.0.0-20150902120453-a84628a4c244
-	github.com/davidbanham/scum v0.0.37
+	github.com/davidbanham/scum v0.0.87
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
@@ -36,14 +36,14 @@ require (
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/cockroachdb/cockroach-go/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/davidbanham/heroicons v0.0.6 // indirect
-	github.com/davidbanham/marcel v0.0.14 // indirect
+	github.com/davidbanham/heroicons v0.0.8 // indirect
+	github.com/davidbanham/marcel v0.0.19 // indirect
 	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/gomarkdown/markdown v0.0.0-20231115200524-a660076da3fd // indirect
+	github.com/gomarkdown/markdown v0.0.0-20240729212818-a2a9c4f76ef5 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
