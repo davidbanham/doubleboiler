@@ -28,8 +28,8 @@
         <input type="hidden" name="expiry" value="{{.Expiry}}"></input>
         <input type="hidden" name="email" value="{{.User.Email}}"></input>
         <input type="hidden" name="csrf" value="{{csrf .Context}}"></input>
-        {{ template "input" dict "Type" "password" "Label" "Password" "Name" "password" "Required" true "Placeholder" "Password" }}
-        {{ template "input" dict "Type" "password" "Label" "Confirm Password" "Name" "confirm-password" "Required" true "Placeholder" "Confirm Password" }}
+        {{ template "input" dict "Type" "password" "Label" "Password" "Name" "password" "Required" true "Placeholder" "Password" "MaxLength" 50 }}
+        {{ template "input" dict "Type" "password" "Label" "Confirm Password" "Name" "confirm-password" "Required" true "Placeholder" "Confirm Password" "MaxLength" 50 }}
 
         <div class="flex items-center">
           <input required id="terms" type="checkbox" value="agreed" name="terms" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
